@@ -14,14 +14,14 @@ Axe is a cross multi-platform toy game engine.
 
 |Platform|Compiler| Graphics API|
 |---|---|---|
-|Windows| MSVC(2019+), Clang 14.0+, GCC 12.0+ | Vulkan 1.3, Direct3D 12|
-|Linux| Clang 14.0+, GCC 12.0+ | Vulkan 1.3|
-|MacOS| Clang 14.0+, GCC 12.0+ | Metal 3 |
+|Windows| MSVC(2019+), Clang 14.0+, GCC 11.0+ | Vulkan 1.3, Direct3D 12|
+|Linux| Clang 14.0+, GCC 11.0+ | Vulkan 1.3|
+|MacOS| Clang 14.0+, GCC 11.0+ | Metal 3 |
 
 ## Requirements
 - [CMake 3.20](https://cmake.org/download/)
 - [Python 3.10](https://www.python.org/downloads/)
-- [Vulkan SDK 1.3](https://vulkan.lunarg.com/)
+- [Vulkan SDK 1.3](https://vulkan.lunarg.com/) ([start on linux](https://vulkan.lunarg.com/doc/view/latest/linux/getting_started.html), [start on windows](https://vulkan.lunarg.com/doc/view/latest/windows/getting_started.html))
 - (Optional) Windows 10 SDK containing [Direct3D 12](https://learn.microsoft.com/en-us/windows/win32/direct3d12/direct3d-12-graphics)
 
 ## How to build

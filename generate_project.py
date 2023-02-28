@@ -53,7 +53,7 @@ def run_Build(compiler, mode="Debug"):
     if compiler in ["clang", "gcc"] and sys.platform in ["win32", "linux"]:
         mode = "Release" if input("Debug(default) or Release? [d/r]").lower() == 'r' else "Debug"
         build_folder = os.path.join(PJ_ROOT, f"Build_{mode}_{compiler}")
-        if os.path.isdir(build_folder) or run_CMake(compiler, mode):
+        if run_CMake(compiler, mode):
             print(f"Begin build with compiler {shutil.which(compiler)}")
             result = subprocess.check_call("ninja", shell=True, cwd=build_folder)
     else:
