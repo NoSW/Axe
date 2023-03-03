@@ -37,40 +37,37 @@ python generate_project.py --clang
 
 Axe is basically designed according to the architecture shown right(from Book [Game Engine Architecture, Third Edition](https://www.gameenginebook.com/)). Thanks to the powerful standard libraries, and lots of high-quality open source third-party libraries, it can be built directly from the core layer. Runtime of Axe has x well-designed layers:
 
-- [**00Core**](Source/Runtime/00Core/README.md)
+- **00Core**
    - (WIP) High performance math library for graphics based on [glm](https://github.com/g-truc/glm)
    - (WIP) High performance memory management base on [mimalloc](https://github.com/microsoft/mimalloc)
    - (WIP) Cross-platform logging system based on [spdlog](https://github.com/gabime/spdlog)
    - (WIP) Reflection of C++ based on ...
-- [**01Resource**](Source/Runtime/01Resource/README.md)
+- **01Resource**
   - (WIP) Multi-threaded and asynchronous resource loading
   - (WIP) Cross-compile Shader based on [DirectXShaderCompiler](https://github.com/microsoft/DirectXShaderCompiler), [glslang](https://github.com/KhronosGroup/glslang)/[shaderc](https://github.com/google/shaderc) and [SPIRV-Cross](https://github.com/KhronosGroup/SPIRV-Cross).
   - (WIP) Universal scene description based on [USD](https://github.com/PixarAnimationStudios/USD) of pixar
   - (WIP) Universal material description based on [MaterialX](https://github.com/AcademySoftwareFoundation/MaterialX)
-- [**02Rhi**](Source/Runtime/02Rhi/README.md)(Render Hardware Interface)
+- **02Rhi**(Rendering Hardware Interface)
   - (WIP) wrap multi modern rendering apis with [WebGPU](https://www.w3.org/TR/webgpu/) style, supporting D3D12, Vulkan, Metal
   - (WIP) Dynamic Descriptor Management.
   - (WIP) Memory Management based on [VulkanMemoryAllocation](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator).
   - (WIP) Multi-threaded Command Buffer Generation
-- [**04RenderGraph**](Source/Runtime/03RenderGraph/README.md)
-- [**06Pipeline**](Source/Runtime/06Pipeline/README.md)
+- **04RenderGraph**
+- **06Pipeline**
   - (WIP) Modern deferred rendering pipeline based on visibility buffer
   - (WIP) Global Illumination system with an unlimited number of light sources and minimal memory footprint
-- [**08System**](Source/Runtime/08System/README.md) 
+- **08System**
   - (WIP) Animation System based on ...
   - (WIP) Physics System based on ...
   - (WIP) ECS(Entity-Component-System) base on [entt](https://github.com/skypjack/entt)
   - (WIP) GUI system based on [Dear imgui](https://github.com/ocornut/imgui)
-- [**10Scene**](Source/Runtime/10Scene/README.md)
+- **10Scene**
   - Partitioning, Culling ...
-- [**12GamePlay**](Source/Runtime/12GamePlay/README.md)
+- **12GamePlay**
   - (WIP) Lua Scripting System based on ...
   - (WIP) Camera ...
-- [**14App**](Source/Runtime/14App/README.md)
+- **14App**
   - (WIP) Cross-platform windows management based on [SDL](https://github.com/libsdl-org/SDL)
-- [**Other**]
-  - (WIP) Modular packaging with high extensibility
-  - (WIP) Module of C++20 for fast compile speed
 
 See [Documents/Runtime.md](/Documents/Runtime.md) and [Documents/AssetSystem.md](/Documents/AssetSystem.md) for more details.
 
