@@ -22,7 +22,7 @@ def check_exec(name, link):
         print(f"Failed to found {name} that's need to be added into PATH, download link {link}")
         return False
 
-PJ_ROOT = os.path.dirname(__file__)
+PJ_ROOT = os.path.split(os.path.realpath(__file__))[0]
 
 def print_then_run(cmd):
     print(cmd)
