@@ -1,5 +1,5 @@
 #pragma once
-#include "02Rhi/Vulkan/VulkanDriver.hpp"
+#include "02Rhi/Vulkan/VulkanDevice.hpp"
 #include "02Rhi/Vulkan/VulkanQueue.hpp"
 #include "02Rhi/Vulkan/VulkanRenderTarget.hpp"
 
@@ -8,10 +8,10 @@ namespace axe::rhi
 
 class VulkanSwapChain final : public SwapChain
 {
-    friend class VulkanDriver;
+    friend class VulkanDevice;
     friend class VulkanQueue;
     AXE_NON_COPYABLE(VulkanSwapChain);
-    VulkanSwapChain(VulkanDriver* driver) noexcept : _mpDriver(driver) {}
+    VulkanSwapChain(VulkanDevice* device) noexcept : _mpDevice(device) {}
     bool _create(SwapChainDesc&) noexcept;
     bool _destroy() noexcept;
 
@@ -23,10 +23,10 @@ public:
 
 private:
     std::vector<VulkanRenderTarget*> _mpRenderTargets;  // created from the swapchain back buffers
-    VulkanDriver* const _mpDriver = nullptr;
+    VulkanDevice* const _mpDevice = nullptr;
     /// Present queue if one exists (queuePresent will use this queue if the hardware has a dedicated present queue)
     VulkanQueue* _mpPresentQueue  = nullptr;
-    VkSwapchainKHR _mpVkSwapChain = VK_NULL_HANDLE;
+    VkSwapchainKHR _mpHandle      = VK_NULL_HANDLE;
     VkSurfaceKHR _mpVkSurface     = VK_NULL_HANDLE;
     SwapChainDesc* _mpDesc        = nullptr;
     VkFormat _mVkSwapchainFormat  = VK_FORMAT_UNDEFINED;

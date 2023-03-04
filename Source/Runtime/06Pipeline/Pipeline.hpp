@@ -12,7 +12,7 @@ namespace axe::pipeline
 struct PipelineDesc
 {
     window::Window* mpWindow = nullptr;
-    const char* mAppName     = nullptr;
+    std::string_view mAppName;
 };
 
 enum LoadFlag

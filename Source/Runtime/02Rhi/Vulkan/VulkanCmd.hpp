@@ -6,16 +6,16 @@
 
 namespace axe::rhi
 {
-class VulkanDriver;
+class VulkanDevice;
 class VulkanQueue;
 class VulkanCmdPool;
 
 class VulkanCmd final : public Cmd
 {
-    friend class VulkanDriver;
+    friend class VulkanDevice;
     friend class VulkanQueue;
     AXE_NON_COPYABLE(VulkanCmd);
-    VulkanCmd(VulkanDriver* driver) noexcept : _mpDriver(driver) {}
+    VulkanCmd(VulkanDevice* device) noexcept : _mpDevice(device) {}
     bool _create(CmdDesc&) noexcept;
     bool _destroy() noexcept;
 
@@ -51,11 +51,11 @@ public:
     void endDebugMarker() noexcept override;
 
 private:
-    VkCommandBuffer _mVkCmdBuffer           = VK_NULL_HANDLE;
+    VkCommandBuffer _mpHandle               = VK_NULL_HANDLE;
     VkRenderPass _mpVkActiveRenderPass      = VK_NULL_HANDLE;
     VkPipelineLayout _mpBoundPipelineLayout = VK_NULL_HANDLE;
     VulkanQueue* _mpQueue                   = nullptr;
-    VulkanDriver* const _mpDriver           = nullptr;
+    VulkanDevice* const _mpDevice           = nullptr;
     VulkanCmdPool* _mpCmdPool               = nullptr;
 
     u32 _mCmdBufferCount                    = 0;

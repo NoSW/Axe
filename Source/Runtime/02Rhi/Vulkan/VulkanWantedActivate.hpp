@@ -9,7 +9,7 @@
 namespace axe::rhi
 {
 // clang-format off
-static void filter_unsupported(const std::vector<const char*>& supported, std::vector<const char*>& wanted) noexcept
+static void filter_unsupported(const std::pmr::vector<const char*>& supported, std::pmr::vector<const char*>& wanted) noexcept
 {
     wanted.erase(std::remove_if(wanted.begin(), wanted.end(),
             [supported](const char* wantToActivateLayer)
@@ -24,20 +24,22 @@ static void filter_unsupported(const std::vector<const char*>& supported, std::v
 }
 // clang-format on
 
-static std::vector<const char*> gsWantedInstanceLayers = {
+static std::pmr::vector<const char*> gsWantedInstanceLayers = {
 #if AXE_RHI_VULKAN_ENABLE_DEBUG
     "VK_LAYER_KHRONOS_validation",
 #endif
     "VK_LAYER_RENDERDOC_Capture",
 };
 
-static std::vector<const char*> gsWantedInstanceExtensions = {
+static std::pmr::vector<const char*> gsWantedInstanceExtensions = {
     // Surface
     VK_KHR_SURFACE_EXTENSION_NAME,
 #if _WIN32
     VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #elif __linux__
     VK_KHR_XLIB_SURFACE_EXTENSION_NAME,
+#elif __APPLE__
+#error "Unsupported platform"
 #endif
 
 // For debug
@@ -64,8 +66,9 @@ static std::vector<const char*> gsWantedInstanceExtensions = {
     VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
 
 };
-static std::vector<const char*> gWantedDeviceLayers     = {};
-static std::vector<const char*> gWantedDeviceExtensions = {
+
+static std::pmr::vector<const char*> gWantedDeviceLayers     = {};
+static std::pmr::vector<const char*> gWantedDeviceExtensions = {
 
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     VK_KHR_MAINTENANCE1_EXTENSION_NAME,

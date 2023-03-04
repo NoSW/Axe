@@ -13,15 +13,30 @@ class Window;
 
 namespace axe::rhi
 {
-class Driver;
+
+class RhiObjectBase
+{
+public:
+    // developer-provided label which is used in an implementation-defined way.
+    // It can be used by high layers, or other tools to help identify the underlying internal object to the developer.
+    // Examples include displaying the label in GPUError messages, console warnings, and platform debugging utilities.
+    std::pmr::string mLabel;
+};
+
+struct DescBase
+{
+    std::string_view mLabel = "Untitled";
+};
+
+class Backend;
 ///////////////////////////////////////////////
 //                  Semaphore
 ///////////////////////////////////////////////
-struct SemaphoreDesc
+struct SemaphoreDesc : public DescBase
 {
 };
 
-class Semaphore
+class Semaphore : public RhiObjectBase
 {
 public:
     virtual ~Semaphore() noexcept = default;
@@ -37,12 +52,12 @@ enum FenceStatus
     FENCE_STATUS_NOTSUBMITTED,
 };
 
-struct FenceDesc
+struct FenceDesc : public DescBase
 {
     u8 mIsSignaled : 1 = 0;
 };
 
-class Fence
+class Fence : public RhiObjectBase
 {
 public:
     virtual ~Fence() noexcept                           = default;
@@ -78,7 +93,7 @@ enum QueuePriority
     MAX_QUEUE_PRIORITY
 };
 
-struct QueueDesc
+struct QueueDesc : public DescBase
 {
     u32 mNodeIndex          = 0;
     QueueType mType         = QUEUE_TYPE_GRAPHICS;
@@ -104,7 +119,7 @@ struct QueuePresentDesc
     bool mSubmitDone  = false;
 };
 
-class Queue
+class Queue : public RhiObjectBase
 {
 public:
     virtual ~Queue() noexcept                             = default;
@@ -130,7 +145,7 @@ union ClearValue
     } depthStencil;
 };
 
-struct SwapChainDesc
+struct SwapChainDesc : public DescBase
 {
     window::Window* mpWindow = nullptr;
     std::pmr::vector<Queue*> mpPresentQueues;  /// Queues which should be allowed to present
@@ -143,7 +158,7 @@ struct SwapChainDesc
     // TinyImageFormat mColorFormat;    /// Color format of the swapchain
 };
 
-class SwapChain
+class SwapChain : public RhiObjectBase
 {
 public:
     virtual ~SwapChain() noexcept                                                  = default;
@@ -154,14 +169,14 @@ public:
 ///////////////////////////////////////////////
 //                  CmdPool
 ///////////////////////////////////////////////
-struct CmdPoolDesc
+struct CmdPoolDesc : public DescBase
 {
     Queue* mpUsedForQueue        = nullptr;
     u8 mShortLived           : 1 = 1;
     u8 mAllowIndividualReset : 1 = 1;
 };
 
-class CmdPool
+class CmdPool : public RhiObjectBase
 {
 public:
     virtual ~CmdPool() noexcept   = default;
@@ -171,14 +186,14 @@ public:
 ///////////////////////////////////////////////
 //                    Cmd
 ///////////////////////////////////////////////
-struct CmdDesc
+struct CmdDesc : public DescBase
 {
     CmdPool* mpCmdPool = nullptr;
     u32 mCmdCount      = 1;
     bool mSecondary    = false;
 };
 
-class Cmd
+class Cmd : public RhiObjectBase
 {
 public:
     virtual ~Cmd() noexcept                                                                                                           = default;
@@ -334,7 +349,7 @@ enum MSAASampleCount
     MSAA_SAMPLE_COUNT_COUNT = 5,
 };
 
-struct TextureDesc
+struct TextureDesc : public DescBase
 {
     ClearValue mClearValue;     // Optimized clear value (recommended to use this same value when clearing the render target)
     const void* pNativeHandle;  // Pointer to native texture handle if the texture does not own underlying resource
@@ -359,7 +374,7 @@ struct TextureDesc
     u32 mNodeIndex;               // GPU which will own this texture
 };
 
-class Texture
+class Texture : public RhiObjectBase
 {
 public:
     virtual ~Texture() noexcept = default;
@@ -394,7 +409,7 @@ enum ResourceFlag
                                  RESOURCE_FLAG_INDIRECT_ARGUMENT | RESOURCE_FLAG_COPY_SOURCE,
 };
 
-struct RenderTargetDesc
+struct RenderTargetDesc : public DescBase
 {
     // TextureCreationFlags mFlags; // decides memory allocation strategy, sharing access,...
     u32 mWidth;
@@ -415,13 +430,13 @@ struct RenderTargetDesc
     u32 mNodeIndex;             // GPU which will own this texture
 };
 
-class RenderTarget
+class RenderTarget : public RhiObjectBase
 {
 public:
     virtual ~RenderTarget() noexcept = default;
 };
 
-struct RenderTargetBarrier
+struct RenderTargetBarrier : public RhiObjectBase
 {
     RenderTarget* mpRenderTarget = nullptr;
     ResourceFlag mCurrentFlag    = RESOURCE_FLAG_UNDEFINED;
@@ -435,14 +450,76 @@ struct RenderTargetBarrier
     u32 mMipLevel           : 7  = 0;  // ignored if mSubresourceBarrier is false
     u32 mArrayLayer              = 0;  // ignored if mSubresourceBarrier is false
 };
+///////////////////////////////////////////////
+//                    Device
+///////////////////////////////////////////////
+struct DeviceDesc : public DescBase
+{
+    bool mEnableRenderDocLayer      = false;
+    bool mRequestAllAvailableQueues = true;
+};
+
+class Device : public RhiObjectBase
+{
+public:
+    virtual ~Device() noexcept                                                         = 0 {}
+    [[nodiscard]] virtual Semaphore* createSemaphore(SemaphoreDesc&) noexcept          = 0;
+    [[nodiscard]] virtual Fence* createFence(FenceDesc&) noexcept                      = 0;
+    [[nodiscard]] virtual Queue* requestQueue(QueueDesc&) noexcept                     = 0;
+    [[nodiscard]] virtual SwapChain* createSwapChain(SwapChainDesc&) noexcept          = 0;
+    [[nodiscard]] virtual CmdPool* createCmdPool(CmdPoolDesc&) noexcept                = 0;
+    [[nodiscard]] virtual Cmd* createCmd(CmdDesc&) noexcept                            = 0;
+    [[nodiscard]] virtual RenderTarget* createRenderTarget(RenderTargetDesc&) noexcept = 0;
+    virtual bool destroySemaphore(Semaphore*&) noexcept                                = 0;
+    virtual bool destroyFence(Fence*&) noexcept                                        = 0;
+    virtual bool releaseQueue(Queue*&) noexcept                                        = 0;
+    virtual bool destroySwapChain(SwapChain*&) noexcept                                = 0;
+    virtual bool destroyCmdPool(CmdPool*&) noexcept                                    = 0;  // will destroy all cmds allocated from it automatically
+    virtual bool destroyCmd(Cmd*&) noexcept                                            = 0;  // destroy the cmd individually
+    virtual bool destroyRenderTarget(RenderTarget*&) noexcept                          = 0;
+};
+///////////////////////////////////////////////
+//                    Adapter
+///////////////////////////////////////////////
+
+inline constexpr u8 MAX_NUM_ADAPTER_PER_BACKEND = 4;
+inline constexpr u8 MAX_NUM_DEVICE_PER_ADAPTER  = 4;
+
+enum AdapterType
+{
+    ADAPTER_TYPE_OTHER          = 0,
+    ADAPTER_TYPE_INTEGRATED_GPU = 1,
+    ADAPTER_TYPE_DISCRETE_GPU   = 2,
+    ADAPTER_TYPE_VIRTUAL_GPU    = 3,
+    ADAPTER_TYPE_CPU            = 4,
+    ADAPTER_TYPE_COUNT
+};
+
+struct AdapterInfo
+{
+};
+
+struct AdapterDesc
+{
+    bool mSelectedBest = true;
+};
+
+class Adapter : public RhiObjectBase
+{
+public:
+    virtual ~Adapter() noexcept                         = 0 {}
+    virtual Device* requestDevice(DeviceDesc&) noexcept = 0;
+    virtual void releaseDevice(Device*&) noexcept       = 0;
+    virtual GPUSettings requestGPUSettings() noexcept   = 0;
+};
 
 ///////////////////////////////////////////////
-//                    Driver
+//                    Backend
 ///////////////////////////////////////////////
-struct DriverDesc
+struct BackendDesc
 {
-    const char* m_appName = nullptr;
-    GpuMode mGpuMode      = GPU_MODE_LINKED;
+    std::string_view mAppName;
+    GpuMode mGpuMode = GPU_MODE_UNLINKED;
 };
 
 enum GraphicsApi
@@ -454,31 +531,18 @@ enum GraphicsApi
     GRAPHICS_API_AVAILABLE = AXE_02RHI_API_FLAG_AVAILABLE,
 };
 
-class VulkanDriver;
-class D3D12Driver;
-class Driver
+class VulkanBackend;
+class D3D12Backend;
+
+class Backend : public RhiObjectBase
 {
 public:
-    virtual ~Driver() noexcept                                                         = default;
-
-    // All available rhi interfaces:
-    virtual bool init(DriverDesc&) noexcept                                            = 0;
-    virtual void exit() noexcept                                                       = 0;
-
-    [[nodiscard]] virtual Semaphore* createSemaphore(SemaphoreDesc&) noexcept          = 0;
-    [[nodiscard]] virtual Fence* createFence(FenceDesc&) noexcept                      = 0;
-    [[nodiscard]] virtual Queue* createQueue(QueueDesc&) noexcept                      = 0;
-    [[nodiscard]] virtual SwapChain* createSwapChain(SwapChainDesc&) noexcept          = 0;
-    [[nodiscard]] virtual CmdPool* createCmdPool(CmdPoolDesc&) noexcept                = 0;
-    [[nodiscard]] virtual Cmd* createCmd(CmdDesc&) noexcept                            = 0;
-    [[nodiscard]] virtual RenderTarget* createRenderTarget(RenderTargetDesc&) noexcept = 0;
-    virtual bool destroySemaphore(Semaphore*&) noexcept                                = 0;
-    virtual bool destroyFence(Fence*&) noexcept                                        = 0;
-    virtual bool destroyQueue(Queue*&) noexcept                                        = 0;
-    virtual bool destroySwapChain(SwapChain*&) noexcept                                = 0;
-    virtual bool destroyCmdPool(CmdPool*&) noexcept                                    = 0;  // will destroy all cmds allocated from it automatically
-    virtual bool destroyCmd(Cmd*&) noexcept                                            = 0;  // destroy the cmd individually
-    virtual bool destroyRenderTarget(RenderTarget*&) noexcept                          = 0;
+    virtual ~Backend() noexcept                            = 0 {}
+    virtual Adapter* requestAdapter(AdapterDesc&) noexcept = 0;
+    virtual void releaseAdapter(Adapter*&) noexcept        = 0;
 };
+
+AXE_PUBLIC Backend* createBackend(GraphicsApi, BackendDesc&) noexcept;
+AXE_PUBLIC void destroyBackend(Backend*&) noexcept;
 
 }  // namespace axe::rhi

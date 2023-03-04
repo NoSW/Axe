@@ -1,12 +1,14 @@
 # Axe
-Axe is a cross multi-platform toy game engine.
+Axe is a cross multi-platform game engine, and an engineering practice about *[Game Engine Architecture, Third Edition](https://www.gameenginebook.com/)*.
 
 ## Goal
 
+- summarize the main points of each chapter, in the form of project documentation
 - practice modern c++ programming skills (C++20, OOP, STL, template, multi-threading, reflection, etc)
+- look up rich c++ open source libraries (entt, mimalloc, filament, The-Forge, godot, etc)
 - learn cross platform build and develop skills (Windows, Linux, MacOS)
 - dive into more underlying details about modern graphics apis (Vulkan, D3D12, Metal)
-- explore architecture of modern game engine (abstraction, layering, compile-time/edit-time/runtime designs)
+- explore architecture of modern game engine (abstraction, layering, compile-time/edit-time/runtime/loop-time designs)
 - experiment some fundamental and interested graphics features(forward, deferred pipeline, shadow, GI,  etc)
 
 
@@ -33,7 +35,7 @@ python generate_project.py --clang
 
 ## Features
 
-Axe is basically designed according to the architecture shown in  [Runtime game engine architecture](Documents/Images/Game_Engine_Architecture_3rd_Figure_1.16.png)(from Book [Game Engine Architecture, Third Edition](https://www.gameenginebook.com/)). Thanks to the powerful standard libraries, and lots of high-quality open source third-party libraries, it can be built directly from the core layer. Runtime of Axe has x well-designed layers:
+Axe is basically designed according to the architecture shown in  [Runtime game engine architecture](Documents/Images/Game_Engine_Architecture_3rd_Figure_1.16.png). Thanks to the powerful standard libraries, and lots of high-quality open source third-party libraries, it can be built directly from the core layer. Runtime of Axe has x well-designed layers:
 
 - [**00Core**](Source/Runtime/00Core/README.md)
    - (WIP) High performance math library for graphics based on [glm](https://github.com/g-truc/glm)

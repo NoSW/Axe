@@ -40,7 +40,7 @@ enum GpuVender
     GPU_VENDOR_ID_INTEL_2 = 0x8087
 };
 
-// default capability levels of the driver
+// default capability levels of the backend
 enum CapabilityLevel
 {
     MAX_INSTANCE_EXTENSIONS       = 64,
@@ -76,11 +76,11 @@ struct GPUCapBits
 
 struct GPUVendorPreset
 {
-    u32 mVendorId                                                         = 0x0;
-    u32 mModelId                                                          = 0x0;
-    u32 mRevisionId                                                       = 0x0;  // Optional as not all gpu's have that. Default is : 0x00
-    char mGpuDriverVersion[CapabilityLevel::MAX_GPU_VENDOR_STRING_LENGTH] = {0};
-    char mGpuName[CapabilityLevel::MAX_GPU_VENDOR_STRING_LENGTH]          = {0};
+    u32 mVendorId                                                          = 0x0;
+    u32 mModelId                                                           = 0x0;
+    u32 mRevisionId                                                        = 0x0;  // Optional as not all gpu's have that. Default is : 0x00
+    char mGpuBackendVersion[CapabilityLevel::MAX_GPU_VENDOR_STRING_LENGTH] = {0};
+    char mGpuName[CapabilityLevel::MAX_GPU_VENDOR_STRING_LENGTH]           = {0};
 };
 
 struct GPUSettings
@@ -98,6 +98,7 @@ struct GPUSettings
     // ShadingRateCaps m_shadingRateCaps;
     u32 mShadingRateTexelWidth       = 0;
     u32 mShadingRateTexelHeight      = 0;
+    u32 mTimestampPeriod             = 0;
 
     u32 mMultiDrawIndirect       : 1 = 0;
     u32 mROVsSupported           : 1 = 0;

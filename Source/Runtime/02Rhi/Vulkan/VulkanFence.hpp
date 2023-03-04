@@ -7,17 +7,17 @@
 namespace axe::rhi
 {
 
-class VulkanDriver;
+class VulkanDevice;
 class VulkanQueue;
 class VulkanSwapChain;
 
 class VulkanFence final : public Fence
 {
-    friend class VulkanDriver;
+    friend class VulkanDevice;
     friend class VulkanQueue;
     friend class VulkanSwapChain;
     AXE_NON_COPYABLE(VulkanFence);
-    VulkanFence(VulkanDriver* driver) noexcept : _mpDriver(driver) {}
+    VulkanFence(VulkanDevice* device) noexcept : _mpDevice(device) {}
     bool _create(FenceDesc& desc) noexcept;
     bool _destroy() noexcept;
 
@@ -27,8 +27,8 @@ public:
     FenceStatus status() noexcept override;
 
 private:
-    VulkanDriver* const _mpDriver = nullptr;
-    VkFence _mpVkFence            = VK_NULL_HANDLE;
+    VulkanDevice* const _mpDevice = nullptr;
+    VkFence __mpHandle            = VK_NULL_HANDLE;
     u32 _mSubmitted : 1           = 0;
     u32 _mPadA                    = 0;
     u64 _mPadB                    = 0;

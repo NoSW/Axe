@@ -1,5 +1,5 @@
 #pragma once
-#include "02Rhi/Vulkan/VulkanDriver.hpp"
+#include "02Rhi/Vulkan/VulkanDevice.hpp"
 
 namespace axe::rhi
 {
@@ -7,9 +7,9 @@ class VmaAllocation_T;
 
 class VulkanTexture : public Texture
 {
-    friend class VulkanDriver;
+    friend class VulkanDevice;
     AXE_NON_COPYABLE(VulkanTexture);
-    VulkanTexture(VulkanDriver* driver) noexcept : _mpDriver(driver) {}
+    VulkanTexture(VulkanDevice* device) noexcept : _mpDevice(device) {}
     bool _create(TextureDesc&) noexcept { return true; }
     bool _destroy() noexcept { return true; }
 
@@ -17,7 +17,7 @@ public:
     ~VulkanTexture() noexcept override = default;
 
 private:
-    VulkanDriver* const _mpDriver = nullptr;
+    VulkanDevice* const _mpDevice = nullptr;
     VkImageView _mpVkSRVDescriptor;
     VkImageView _mpVkSRVStencilDescriptor;
     std::vector<VkImageView> _mpVkUAVDescriptors;

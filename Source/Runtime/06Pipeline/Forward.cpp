@@ -10,23 +10,31 @@ bool Forward::init(PipelineDesc& desc) noexcept
     _mHeight  = desc.mpWindow->height();
     _mpWindow = desc.mpWindow;
 
-    // Driver
-    _mpDriver = std::make_unique<rhi::VulkanDriver>();
-    rhi::DriverDesc driverDesc{.m_appName = desc.mAppName};
-    if (!_mpDriver->init(driverDesc)) { return false; }
+    // Backend
+    rhi::BackendDesc backendDesc{.mAppName = desc.mAppName};
+    _mpBackend = rhi::createBackend(rhi::GRAPHICS_API_VULKAN, backendDesc);
+
+    // Adapter
+    rhi::AdapterDesc adapterDesc{};
+    _mpAdapter = _mpBackend->requestAdapter(adapterDesc);
+
+    // Device
+    rhi::DeviceDesc deviceDesc{};
+    _mpDevice = _mpAdapter->requestDevice(deviceDesc);
 
     // Queue
     rhi::QueueDesc queueDesc{
         .mType = rhi::QUEUE_TYPE_GRAPHICS,
         .mFlag = rhi::QUEUE_FLAG_NONE};
-    _mpGraphicsQueue = _mpDriver->createQueue(queueDesc);
+    queueDesc.mLabel = "Graphics Queue";
+    _mpGraphicsQueue = _mpDevice->requestQueue(queueDesc);
     if (!_mpGraphicsQueue) { return false; }
 
     for (u32 i = 0; i < _IMAGE_COUNT; ++i)
     {
         // CmdPool
         rhi::CmdPoolDesc cmdPoolDesc{.mpUsedForQueue = _mpGraphicsQueue};
-        _mpCmdPools[i] = _mpDriver->createCmdPool(cmdPoolDesc);
+        _mpCmdPools[i] = _mpDevice->createCmdPool(cmdPoolDesc);
         if (!_mpCmdPools[i]) { return false; }
 
         //  Cmd
@@ -34,21 +42,21 @@ bool Forward::init(PipelineDesc& desc) noexcept
             .mpCmdPool  = _mpCmdPools[i],
             .mCmdCount  = 1,
             .mSecondary = false};
-        _mpCmds[i] = _mpDriver->createCmd(cmdDesc);
+        _mpCmds[i] = _mpDevice->createCmd(cmdDesc);
         if (!_mpCmds[i]) { return false; }
 
         // Fence
         rhi::FenceDesc fenceDesc{.mIsSignaled = false};
-        _mpRenderCompleteFences[i] = _mpDriver->createFence(fenceDesc);
+        _mpRenderCompleteFences[i] = _mpDevice->createFence(fenceDesc);
         if (!_mpRenderCompleteFences[i]) { return false; }
 
         // Semaphore
         rhi::SemaphoreDesc semaphoreDesc{};
-        _mpRenderCompleteSemaphores[i] = _mpDriver->createSemaphore(semaphoreDesc);
+        _mpRenderCompleteSemaphores[i] = _mpDevice->createSemaphore(semaphoreDesc);
         if (!_mpRenderCompleteSemaphores[i]) { return false; }
     }
     rhi::SemaphoreDesc semaphoreDesc{};
-    _mpImageAcquiredSemaphore = _mpDriver->createSemaphore(semaphoreDesc);
+    _mpImageAcquiredSemaphore = _mpDevice->createSemaphore(semaphoreDesc);
     if (!_mpImageAcquiredSemaphore) { return false; }
 
     // frameIndex
@@ -59,17 +67,19 @@ bool Forward::init(PipelineDesc& desc) noexcept
 bool Forward::exit() noexcept
 {
     bool succ = true;
-    _mpDriver->destroySemaphore(_mpImageAcquiredSemaphore);
+    _mpDevice->destroySemaphore(_mpImageAcquiredSemaphore);
     for (u32 i = 0; i < _IMAGE_COUNT; ++i)
     {
-        succ = _mpDriver->destroySemaphore(_mpRenderCompleteSemaphores[i]) ? succ : false;
-        succ = _mpDriver->destroyFence((_mpRenderCompleteFences[i])) ? succ : false;
-        succ = _mpDriver->destroyCmd(_mpCmds[i]) ? succ : false;
-        succ = _mpDriver->destroyCmdPool(_mpCmdPools[i]) ? succ : false;
+        succ = _mpDevice->destroySemaphore(_mpRenderCompleteSemaphores[i]) ? succ : false;
+        succ = _mpDevice->destroyFence((_mpRenderCompleteFences[i])) ? succ : false;
+        succ = _mpDevice->destroyCmd(_mpCmds[i]) ? succ : false;
+        succ = _mpDevice->destroyCmdPool(_mpCmdPools[i]) ? succ : false;
     }
-    succ = _mpDriver->destroyQueue(_mpGraphicsQueue) ? succ : false;
+    succ = _mpDevice->releaseQueue(_mpGraphicsQueue) ? succ : false;
 
-    _mpDriver->exit();
+    _mpAdapter->releaseDevice(_mpDevice);
+    _mpBackend->releaseAdapter(_mpAdapter);
+    rhi::destroyBackend(_mpBackend);
     return succ;
 }
 
@@ -91,7 +101,7 @@ bool Forward::load(LoadFlag loadFlag) noexcept
             .mHeight          = _mHeight,
             .mColorClearValue = rhi::ClearValue{.rgba{1.0f, 0.8f, 0.4f, 0.0f}},
         };
-        _mpSwapChain = _mpDriver->createSwapChain(swapchainDesc);
+        _mpSwapChain = _mpDevice->createSwapChain(swapchainDesc);
         if (!_mpSwapChain) { return false; }
 
         // if (!addDepthBuffer())
@@ -121,9 +131,9 @@ bool Forward::unload(LoadFlag loadFlag) noexcept
 
     if (loadFlag & (LOAD_FLAG_RESIZE | LOAD_FLAG_RENDER_TARGET))
     {
-        succ = !_mpDriver->destroySwapChain(_mpSwapChain) ? succ : false;
+        succ = !_mpDevice->destroySwapChain(_mpSwapChain) ? succ : false;
 
-        // succ = !_mpDriver->removeRenderTarget(depthBuffer) ? succ : false;
+        // succ = !_mpBackend->removeRenderTarget(depthBuffer) ? succ : false;
     }
 
     if (loadFlag & LOAD_FLAG_SHADER)
@@ -133,7 +143,7 @@ bool Forward::unload(LoadFlag loadFlag) noexcept
         // removeShaders();
     }
 
-    _mpDriver->destroySwapChain(_mpSwapChain);
+    _mpDevice->destroySwapChain(_mpSwapChain);
 
     return true;
 }

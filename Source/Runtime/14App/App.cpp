@@ -15,7 +15,7 @@ i32 MainLoop(i32 argc, char** argv, app::App* app)
         bool succ     = app->mpWindow->init(app->name());
         AXE_ASSERT(succ);
     }
-    /* init Driver */
+    /* init Backend */
     {
         pipeline::PipelineDesc pipelineDesc;
         pipelineDesc.mAppName = app->name();
@@ -86,7 +86,7 @@ i32 MainLoop(i32 argc, char** argv, app::App* app)
         app->mpWindow->exit();
     }
 
-    /* exit driver */
+    /* exit backend */
     {
         bool succ = app->mpPipeline->unload(pipeline::LoadFlag::LOAD_FLAG_ALL);
         AXE_ASSERT(succ);

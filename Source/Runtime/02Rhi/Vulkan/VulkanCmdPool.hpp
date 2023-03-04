@@ -13,10 +13,10 @@ class VulkanCmd;
 
 class VulkanCmdPool final : public CmdPool
 {
-    friend class VulkanDriver;
+    friend class VulkanDevice;
     friend class VulkanCmd;
     AXE_NON_COPYABLE(VulkanCmdPool);
-    VulkanCmdPool(VulkanDriver* driver) noexcept : _mpDriver(driver) {}
+    VulkanCmdPool(VulkanDevice* device) noexcept : _mpDevice(device) {}
     bool _create(CmdPoolDesc&) noexcept;
     bool _destroy() noexcept;
 
@@ -25,9 +25,9 @@ public:
     void reset() noexcept override;
 
 private:
-    VulkanDriver* const _mpDriver = nullptr;
+    VulkanDevice* const _mpDevice = nullptr;
     VulkanQueue* _mpQueue         = nullptr;
-    VkCommandPool _mpVkCmdPool    = VK_NULL_HANDLE;
+    VkCommandPool _mpHandle       = VK_NULL_HANDLE;
 };
 
 }  // namespace axe::rhi
