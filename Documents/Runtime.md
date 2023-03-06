@@ -1,4 +1,4 @@
-# Runtime (Chapter 1)
+# Runtime
 
 Runtime divides all modules into xx layers to represent dependencies between different modules. For each layer:
 - is a module(e.g., 02Rhi), or a bundle of modules(e.g., 00Core, 08System)
@@ -15,7 +15,7 @@ List the features of all modules(alphabetically) in this layer:
 ### Log
 a wrapper for spdlog.
 
-### Config (Chapter 6)
+### Config
 
 Axe has lots of configurable options, which can be grouped into a few types:
 
@@ -46,7 +46,7 @@ Axe has lots of configurable options, which can be grouped into a few types:
 
 a header-only module that defines lots of useful macros. It is also all global macros of axe. That is to say: All global macros of axe are placed here. In other words, It is not allowed to define any global macros outside of the header.
 
-### Math (Chapter 5)
+### Math
 
 a wrapper for glm
 
@@ -56,7 +56,7 @@ a wrapper for mimalloc.
 - Overloaded operator `new` and `delete`
 - Modified the default `std::pmr::memory_resource()`
 
-### Thread (Chapter 4)
+### Thread
 
 Concept:
 
@@ -70,11 +70,9 @@ Concept:
 ### Window
 a wrapper for SDL_Window
 
-### [NEVER ADD]  HID(Human Interface Devices) (Chapter 9)
-
 ---
 
-## 01Resource (Chapter 7)
+## 01Resource
 
 NOTE: "Resource" refers to all files except for source code; "Asset" and "Resource" have similar meanings, but "Asset" emphasizes more on art resources.
 
@@ -102,6 +100,13 @@ NOTE: "Resource" refers to all files except for source code; "Asset" and "Resour
 Choose one of hlsl and glsl as handwritten, and then run it on all platforms.
 ![](Images/cross_shader_compile.png)
 
-## 08 System(Chapter 6, 12, 13, 14)
 
-## 12 Gameplay(Chapter 15, 16)
+## 02Rhi
+
+Based on webGPU draft and open source framework The-Forge.
+
+## 08System
+
+## 12Gameplay
+
+## 14App

@@ -10,7 +10,7 @@ namespace axe::window
 class Window final
 {
 public:
-    bool init(const char* title) noexcept;
+    bool init(std::string_view title) noexcept;
     void exit() noexcept;
     bool load() noexcept { return true; }
     bool unload() noexcept { return true; }

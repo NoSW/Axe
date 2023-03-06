@@ -1,5 +1,5 @@
 #pragma once
-#include "02Rhi/Vulkan/VulkanDriver.hpp"
+#include "02Rhi/Vulkan/VulkanDevice.hpp"
 #include "02Rhi/Vulkan/VulkanSemaphore.hpp"
 
 namespace axe::rhi
@@ -9,9 +9,9 @@ class VulkanTexture;
 
 class VulkanRenderTarget : public RenderTarget
 {
-    friend class VulkanDriver;
+    friend class VulkanDevice;
     AXE_NON_COPYABLE(VulkanRenderTarget);
-    VulkanRenderTarget(VulkanDriver* driver) noexcept : _mpDriver(driver) {}
+    VulkanRenderTarget(VulkanDevice* device) noexcept : _mpDevice(device) {}
     bool _create(RenderTargetDesc&) noexcept { return true; }
     bool _destroy() noexcept { return true; }
 
@@ -19,7 +19,7 @@ public:
     ~VulkanRenderTarget() noexcept override = default;
 
 private:
-    VulkanDriver* const _mpDriver = nullptr;
+    VulkanDevice* const _mpDevice = nullptr;
     VulkanTexture* mTexture       = nullptr;
 
     VkImageView _mpVkDescriptor   = VK_NULL_HANDLE;

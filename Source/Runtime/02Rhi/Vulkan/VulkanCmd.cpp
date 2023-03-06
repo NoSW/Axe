@@ -2,6 +2,8 @@
 #include "02Rhi/Vulkan/VulkanCmdPool.hpp"
 #include "02Rhi/Vulkan/VulkanQueue.hpp"
 
+#include "02Rhi/Vulkan/VulkanDevice.hpp"
+
 #include <volk/volk.h>
 
 namespace axe::rhi
@@ -18,21 +20,21 @@ bool VulkanCmd::_create(CmdDesc& desc) noexcept
     VkCommandBufferAllocateInfo allocInfo{
         .sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
         .pNext              = nullptr,
-        .commandPool        = _mpCmdPool->_mpVkCmdPool,
+        .commandPool        = _mpCmdPool->_mpHandle,
         .level              = desc.mSecondary ? VK_COMMAND_BUFFER_LEVEL_SECONDARY : VK_COMMAND_BUFFER_LEVEL_PRIMARY,
         .commandBufferCount = _mCmdBufferCount,
     };
-    auto result = vkAllocateCommandBuffers(_mpDriver->mpVkDevice, &allocInfo, &_mVkCmdBuffer);
+    auto result = vkAllocateCommandBuffers(_mpDevice->_mpHandle, &allocInfo, &_mpHandle);
     if (VK_FAILED(result)) { AXE_ERROR("Failed to create VulkanCmd due to {}", string_VkResult(result)); }
-    return _mVkCmdBuffer != VK_NULL_HANDLE;
+    return _mpHandle != VK_NULL_HANDLE;
 }
 
 bool VulkanCmd::_destroy() noexcept
 {
-    assert(_mpDriver && _mpDriver->mpVkDevice && _mVkCmdBuffer);
-    // vkDeviceWaitIdle(mpDriver->getDevice());
-    vkFreeCommandBuffers(_mpDriver->mpVkDevice, _mpCmdPool->_mpVkCmdPool, _mCmdBufferCount, &_mVkCmdBuffer);
-    _mVkCmdBuffer = VK_NULL_HANDLE;
+    AXE_ASSERT(_mpDevice && _mpDevice->_mpHandle && _mpHandle);
+    // vkDeviceWaitIdle(mpDevice->getDevice());
+    vkFreeCommandBuffers(_mpDevice->_mpHandle, _mpCmdPool->_mpHandle, _mCmdBufferCount, &_mpHandle);
+    _mpHandle = VK_NULL_HANDLE;
     return true;
 }
 
@@ -50,12 +52,12 @@ void VulkanCmd::begin() noexcept
         .pNext = nullptr,
 
     };
-    if (_mpDriver->mGpuMode == GPU_MODE_LINKED)
+    if (false /*mGpuMode == GPU_MODE_LINKED*/)
     {
         deviceGroupBeginInfo.deviceMask = (1 << _mNodeIndex);
         beginInfo.pNext                 = &deviceGroupBeginInfo;
     }
-    auto result = vkBeginCommandBuffer(_mVkCmdBuffer, &beginInfo);
+    auto result = vkBeginCommandBuffer(_mpHandle, &beginInfo);
     if (VK_FAILED(result)) { AXE_ERROR("Failed to begin VulkanCmd due to {}", string_VkResult(result)); }
 
     // reset CPU side data
@@ -64,9 +66,9 @@ void VulkanCmd::begin() noexcept
 
 void VulkanCmd::end() noexcept
 {
-    if (_mpVkActiveRenderPass) { vkCmdEndRenderPass(_mVkCmdBuffer); }
+    if (_mpVkActiveRenderPass) { vkCmdEndRenderPass(_mpHandle); }
     _mpVkActiveRenderPass = VK_NULL_HANDLE;
-    auto result           = vkEndCommandBuffer(_mVkCmdBuffer);
+    auto result           = vkEndCommandBuffer(_mpHandle);
     if (VK_FAILED(result)) { AXE_ERROR("Failed to begin VulkanCmd due to {}", string_VkResult(result)); }
 }
 void VulkanCmd::bindRenderTargets() noexcept {}
@@ -82,7 +84,7 @@ void VulkanCmd::setViewport(float x, float y, float width, float height, float m
         .minDepth = minDepth,
         .maxDepth = maxDepth,
     };
-    vkCmdSetViewport(_mVkCmdBuffer, 0, 1, &viewport);
+    vkCmdSetViewport(_mpHandle, 0, 1, &viewport);
 }
 
 void VulkanCmd::setScissor(u32 x, u32 y, u32 width, u32 height) noexcept
@@ -91,7 +93,7 @@ void VulkanCmd::setScissor(u32 x, u32 y, u32 width, u32 height) noexcept
         .offset = {.x = (i32)x, .y = (i32)y},
         .extent = {.width = width, .height = height},
     };
-    vkCmdSetScissor(_mVkCmdBuffer, 0, 1, &rect);
+    vkCmdSetScissor(_mpHandle, 0, 1, &rect);
 }
 
 void VulkanCmd::setStencilReferenceValue(u32 val) noexcept {}

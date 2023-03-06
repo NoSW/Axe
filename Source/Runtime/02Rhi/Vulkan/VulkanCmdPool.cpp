@@ -2,6 +2,8 @@
 #include "02Rhi/Vulkan/VulkanQueue.hpp"
 #include <volk/volk.h>
 
+#include "02Rhi/Vulkan/VulkanDevice.hpp"
+
 namespace axe::rhi
 {
 
@@ -21,28 +23,28 @@ bool VulkanCmdPool::_create(CmdPoolDesc& desc) noexcept
     // implicitly by calling the vkBeginCommandBuffer() function.
     if (desc.mAllowIndividualReset) { createInfo.flags |= VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT; }
 
-    // VK_COMMAND_POOL_CREATE_TRANSIENT_BIT: This flag tells the driver that command buffers allocated from this pool will be living for a short
+    // VK_COMMAND_POOL_CREATE_TRANSIENT_BIT: This flag tells the backend that command buffers allocated from this pool will be living for a short
     // amount of time, they will be often recorded and reset (re-recorded). This information helps optimize command buffer allocation and perform it
     // more optimally.
     if (desc.mShortLived) { createInfo.flags |= VK_COMMAND_POOL_CREATE_TRANSIENT_BIT; }
 
-    auto result = vkCreateCommandPool(_mpDriver->mpVkDevice, &createInfo, nullptr, &_mpVkCmdPool);
+    auto result = vkCreateCommandPool(_mpDevice->_mpHandle, &createInfo, nullptr, &_mpHandle);
     if (VK_FAILED(result)) { AXE_ERROR("Failed to create VulkanCmdPool due to {}", string_VkResult(result)); }
-    return _mpVkCmdPool != VK_NULL_HANDLE;
+    return _mpHandle != VK_NULL_HANDLE;
 }
 
 bool VulkanCmdPool::_destroy() noexcept
 {
-    AXE_ASSERT(_mpDriver && _mpDriver->mpVkDevice && _mpVkCmdPool);
-    vkDestroyCommandPool(_mpDriver->mpVkDevice, _mpVkCmdPool, nullptr);
-    _mpVkCmdPool = VK_NULL_HANDLE;
+    AXE_ASSERT(_mpDevice && _mpDevice->_mpHandle && _mpHandle);
+    vkDestroyCommandPool(_mpDevice->_mpHandle, _mpHandle, nullptr);
+    _mpHandle = VK_NULL_HANDLE;
     return true;
 }
 
 void VulkanCmdPool::reset() noexcept
 {
-    AXE_ASSERT(_mpDriver && _mpDriver->mpVkDevice && _mpVkCmdPool);
-    auto result = vkResetCommandPool(_mpDriver->mpVkDevice, _mpVkCmdPool, 0);
+    AXE_ASSERT(_mpDevice && _mpDevice->_mpHandle && _mpHandle);
+    auto result = vkResetCommandPool(_mpDevice->_mpHandle, _mpHandle, 0);
     if (VK_FAILED(result)) { AXE_ERROR("Failed to reset VulkanCmdPool due to   {}", string_VkResult(result)); }
 }
 

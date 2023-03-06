@@ -15,16 +15,16 @@ namespace axe::rhi
 // Also, implementation of swapchain is dependent on OS
 bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
 {
-    AXE_CHECK(SDL_Vulkan_CreateSurface(desc.mpWindow->handle(), _mpDriver->mpVkInstance, &_mpVkSurface) == SDL_TRUE);
+    AXE_CHECK(SDL_Vulkan_CreateSurface(desc.mpWindow->handle(), _mpDevice->_mpAdapter->backendHandle(), &_mpVkSurface) == SDL_TRUE);
     _mImageCount               = desc.mImageCount;
     _mEnableVsync              = desc.mEnableVsync;
 
     // Find best queue family
     //// Get queue family properties
     u32 presentQuFamIndexCount = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties(_mpDriver->mpVkActiveGPU, &presentQuFamIndexCount, nullptr);
+    vkGetPhysicalDeviceQueueFamilyProperties(_mpDevice->_mpAdapter->handle(), &presentQuFamIndexCount, nullptr);
     std::vector<VkQueueFamilyProperties> queueFamilyProperties(presentQuFamIndexCount);
-    vkGetPhysicalDeviceQueueFamilyProperties(_mpDriver->mpVkActiveGPU, &presentQuFamIndexCount, queueFamilyProperties.data());
+    vkGetPhysicalDeviceQueueFamilyProperties(_mpDevice->_mpAdapter->handle(), &presentQuFamIndexCount, queueFamilyProperties.data());
     AXE_ASSERT(presentQuFamIndexCount);
 
     //// find the first dedicated queue and first available queue which supports present
@@ -33,7 +33,7 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
     for (u32 i = 0; i < queueFamilyProperties.size(); ++i)
     {
         VkBool32 isSupport = false;
-        auto result        = vkGetPhysicalDeviceSurfaceSupportKHR(_mpDriver->mpVkActiveGPU, i, _mpVkSurface, &isSupport);
+        auto result        = vkGetPhysicalDeviceSurfaceSupportKHR(_mpDevice->_mpAdapter->handle(), i, _mpVkSurface, &isSupport);
         if (VK_SUCCEEDED(result) && isSupport == VK_TRUE)
         {
             if (firstAvailablePresentQuFamIndex == U32_MAX)
@@ -62,7 +62,7 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
 
     // Capabilities
     VkSurfaceCapabilitiesKHR surfaceCapabilities;
-    auto result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_mpDriver->mpVkActiveGPU, _mpVkSurface, &surfaceCapabilities);
+    auto result = vkGetPhysicalDeviceSurfaceCapabilitiesKHR(_mpDevice->_mpAdapter->handle(), _mpVkSurface, &surfaceCapabilities);
     if (VK_FAILED(result))
     {
         AXE_ERROR("Failed to get surface capabilities, {}", string_VkResult(result));
@@ -93,13 +93,13 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
 
     // Format
     u32 formatsCount             = 0;
-    if (VK_FAILED(vkGetPhysicalDeviceSurfaceFormatsKHR(_mpDriver->mpVkActiveGPU, _mpVkSurface, &formatsCount, nullptr)) || (formatsCount == 0))
+    if (VK_FAILED(vkGetPhysicalDeviceSurfaceFormatsKHR(_mpDevice->_mpAdapter->handle(), _mpVkSurface, &formatsCount, nullptr)) || (formatsCount == 0))
     {
         AXE_ERROR("Error occurred during presentation surface formats enumeration!");
         return false;
     }
     std::vector<VkSurfaceFormatKHR> surfaceFormats(formatsCount);
-    if (VK_FAILED(vkGetPhysicalDeviceSurfaceFormatsKHR(_mpDriver->mpVkActiveGPU, _mpVkSurface, &formatsCount, surfaceFormats.data())))
+    if (VK_FAILED(vkGetPhysicalDeviceSurfaceFormatsKHR(_mpDevice->_mpAdapter->handle(), _mpVkSurface, &formatsCount, surfaceFormats.data())))
     {
         AXE_ERROR("Error occurred during presentation surface formats enumeration!");
         return false;
@@ -117,13 +117,13 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
     // Present Mode, 6 types
     // https://www.intel.com/content/www/us/en/developer/articles/training/api-without-secrets-introduction-to-vulkan-part-2.html
     u32 presentModesCount = 0;
-    if (VK_FAILED(vkGetPhysicalDeviceSurfacePresentModesKHR(_mpDriver->mpVkActiveGPU, _mpVkSurface, &presentModesCount, nullptr)) || (presentModesCount == 0))
+    if (VK_FAILED(vkGetPhysicalDeviceSurfacePresentModesKHR(_mpDevice->_mpAdapter->handle(), _mpVkSurface, &presentModesCount, nullptr)) || (presentModesCount == 0))
     {
         AXE_ERROR("Error occurred during presentation surface formats enumeration!");
         return false;
     }
     std::vector<VkPresentModeKHR> presentModes(presentModesCount);
-    if (VK_FAILED(vkGetPhysicalDeviceSurfacePresentModesKHR(_mpDriver->mpVkActiveGPU, _mpVkSurface, &presentModesCount, presentModes.data())))
+    if (VK_FAILED(vkGetPhysicalDeviceSurfacePresentModesKHR(_mpDevice->_mpAdapter->handle(), _mpVkSurface, &presentModesCount, presentModes.data())))
     {
         AXE_ERROR("Error occurred during presentation surface formats enumeration!");
         return false;
@@ -144,7 +144,7 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
         return false;
     }
 
-    auto oldSwapchain                            = _mpVkSwapChain;
+    auto oldSwapchain                            = _mpHandle;
     _mVkSwapchainFormat                          = desiredSurfaceFormat.format;
     VkSwapchainCreateInfoKHR swapchainCreateInfo = {
         .sType                 = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -166,7 +166,7 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
         .clipped               = true,
         .oldSwapchain          = oldSwapchain};
 
-    result = vkCreateSwapchainKHR(_mpDriver->mpVkDevice, &swapchainCreateInfo, nullptr, &_mpVkSwapChain);
+    result = vkCreateSwapchainKHR(_mpDevice->_mpHandle, &swapchainCreateInfo, nullptr, &_mpHandle);
     if (VK_FAILED(result))
     {
         AXE_ERROR("Could not create swap chain, {}", string_VkResult(result));
@@ -174,7 +174,7 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
     }
     if (oldSwapchain != VK_NULL_HANDLE)
     {
-        vkDestroySwapchainKHR(_mpDriver->mpVkDevice, oldSwapchain, nullptr);
+        vkDestroySwapchainKHR(_mpDevice->_mpHandle, oldSwapchain, nullptr);
     }
 #if AXE_(false, "editing code, not ready yet")
 #endif
@@ -185,18 +185,18 @@ bool VulkanSwapChain::_destroy() noexcept
 {
     // for (uint32_t i = 0; i < pSwapChain->mImageCount; ++i)
     // {
-    //     removeRenderTarget(pDriver, pSwapChain->ppRenderTargets[i]);
+    //     removeRenderTarget(pDevice, pSwapChain->ppRenderTargets[i]);
     // }
 
-    vkDestroySwapchainKHR(_mpDriver->mpVkDevice, _mpVkSwapChain, nullptr);
-    vkDestroySurfaceKHR(_mpDriver->mpVkInstance, _mpVkSurface, nullptr);
+    vkDestroySwapchainKHR(_mpDevice->_mpHandle, _mpHandle, nullptr);
+    vkDestroySurfaceKHR(_mpDevice->_mpAdapter->backendHandle(), _mpVkSurface, nullptr);
     return true;
 }
 
 void VulkanSwapChain::acquireNextImage(Semaphore* pSignalSemaphore, u32& outImageIndex) noexcept
 {
     auto* pVulkanSemaphore = (VulkanSemaphore*)pSignalSemaphore;
-    auto result            = vkAcquireNextImageKHR(_mpDriver->mpVkDevice, _mpVkSwapChain, U64_MAX, pVulkanSemaphore->_mpVkSemaphore, VK_NULL_HANDLE, &outImageIndex);
+    auto result            = vkAcquireNextImageKHR(_mpDevice->_mpHandle, _mpHandle, U64_MAX, pVulkanSemaphore->_mpVkSemaphore, VK_NULL_HANDLE, &outImageIndex);
 
     // Commonly returned immediately following swapchain resize.
     // Vulkan spec states that this return value constitutes a successful call to vkAcquireNextImageKHR
@@ -218,13 +218,13 @@ void VulkanSwapChain::acquireNextImage(Semaphore* pSignalSemaphore, u32& outImag
 void VulkanSwapChain::acquireNextImage(Fence* pFence, u32& outImageIndex) noexcept
 {
     auto* pVulkanFence = (VulkanFence*)pFence;
-    auto result        = vkAcquireNextImageKHR(_mpDriver->mpVkDevice, _mpVkSwapChain, U64_MAX, VK_NULL_HANDLE, pVulkanFence->_mpVkFence, &outImageIndex);
+    auto result        = vkAcquireNextImageKHR(_mpDevice->_mpHandle, _mpHandle, U64_MAX, VK_NULL_HANDLE, pVulkanFence->__mpHandle, &outImageIndex);
 
     // If swapchain is out of date, let caller know by setting image index to -1
     if (result == VK_ERROR_OUT_OF_DATE_KHR)
     {
         outImageIndex = -1;
-        vkResetFences(_mpDriver->mpVkDevice, 1, &pVulkanFence->_mpVkFence);
+        vkResetFences(_mpDevice->_mpHandle, 1, &pVulkanFence->__mpHandle);
         pVulkanFence->_mSubmitted = false;
         return;
     }
