@@ -19,7 +19,7 @@
 #error "No available render api, please check it"
 #endif
 
-#if _DEBUG
+#ifdef _DEBUG
 #define AXE_RHI_ENABLE_DEBUG 1
 #else
 #define AXE_RHI_ENABLE_DEBUG 0

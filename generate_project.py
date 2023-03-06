@@ -22,7 +22,7 @@ def check_exec(name, link):
         print(f"Failed to found {name} that's need to be added into PATH, download link {link}")
         return False
 
-PJ_ROOT = os.path.dirname(__file__)
+PJ_ROOT = os.path.split(os.path.realpath(__file__))[0]
 
 def print_then_run(cmd):
     print(cmd)
@@ -31,31 +31,28 @@ def print_then_run(cmd):
 def git_local_config():
     print_then_run("git config core.ignorecase false")
 
-def run_CMake(compiler, mode=""):
+def run_CMake(compiler):
     print(f"Selected compiler: {compiler}")
 
     build_flags = ""
     if compiler in ["clang", "gcc"] and sys.platform in ["win32", "linux"]:
-        if mode == "":
-            mode = "Release" if input("Debug(default) or Release? [d/r]").lower() == 'r' else "Debug"
         cxx_compiler = "g++" if compiler == "gcc" else "clang++"
-        build_flags += f" -B Build_{mode}_{compiler} -G \"Ninja\" -DCMAKE_C_COMPILER={compiler} -DCMAKE_CXX_COMPILER={cxx_compiler} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE={mode} "
+        build_flags += f" -G \"Ninja Multi-Config\" -DCMAKE_C_COMPILER={compiler} -DCMAKE_CXX_COMPILER={cxx_compiler} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON "
     elif compiler == "msvc" and sys.platform == "win32":
-        build_flags += f" -B Build_{compiler} -G \"Visual Studio 17 2022\" "
+        build_flags += f" -G \"Visual Studio 17 2022\" "
     else:
         print(f"Unsupported compiler {compiler} on {sys.platform}")
         exit(1)
 
-    cmd = f"cmake -S {PJ_ROOT} {build_flags}"
+    cmd = f"cmake -S {PJ_ROOT}  -B Build_{compiler} {build_flags}"
     return print_then_run(cmd)
 
-def run_Build(compiler, mode="Debug"):
+def run_Build(compiler):
     if compiler in ["clang", "gcc"] and sys.platform in ["win32", "linux"]:
         mode = "Release" if input("Debug(default) or Release? [d/r]").lower() == 'r' else "Debug"
-        build_folder = os.path.join(PJ_ROOT, f"Build_{mode}_{compiler}")
-        if run_CMake(compiler, mode):
-            print(f"Begin build with compiler {shutil.which(compiler)}")
-            result = subprocess.check_call("ninja", shell=True, cwd=build_folder)
+        build_folder = os.path.join(PJ_ROOT, f"Build_{compiler}")
+        if run_CMake(compiler):
+            print_then_run(f"cmake --build {build_folder} --config {mode} -- -j 32")
     else:
         print(f"Unsupported compiler {compiler} on {sys.platform}. Supported compilers: msvc, clang, gcc")
         exit(1)

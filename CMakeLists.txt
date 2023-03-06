@@ -7,14 +7,6 @@ include(CMakePrintHelpers) # cmake_print_variables(..) used for printing
 # Add property to allow making project folders in IDEs
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-if( CMAKE_BUILD_TYPE STREQUAL "" )
-	set( CMAKE_BUILD_TYPE "Debug" )
-endif()
-
-if( CMAKE_BUILD_TYPE STREQUAL "Debug" )
-	add_compile_definitions("_DEBUG")
-endif()
-
 # Lanuages
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

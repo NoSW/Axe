@@ -114,6 +114,19 @@ inline constexpr char AXE_ENGINE_NAME[] = "Axe";
 //////////////////////////////////////////////////////////////////////////////////////////////
 //                             debug marker
 //////////////////////////////////////////////////////////////////////////////////////////////
+#ifndef NDEBUG
+#ifndef _DEBUG
+#define _DEBUG
+#endif
+#endif
+
+#ifdef DEBUG
+#ifndef _DEBUG
+#define _DEBUG
+#endif
+#endif
+
+
 #ifdef _DEBUG
 #define AXE_CORE_ENABLE_DEBUG 1
 #else

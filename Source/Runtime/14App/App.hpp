@@ -29,11 +29,7 @@ public:
     // only Graphics API draw calls and command buffer generation
     virtual bool draw()                  = 0;
 
-    virtual const char* name()
-    {
-        const std::string_view typeName = typeid(*this).name();
-        return typeName.substr(typeName.find_last_of(' ') + 1).data();
-    }
+    virtual const char* name() { return typeid(*this).name(); }
 
     i32 run(i32 argc, char** argv) { return MainLoop(argc, argv, this); }
 

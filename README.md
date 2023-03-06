@@ -25,10 +25,19 @@ Axe is a cross multi-platform toy game engine.
 - (Optional) Windows 10 SDK containing [Direct3D 12](https://learn.microsoft.com/en-us/windows/win32/direct3d12/direct3d-12-graphics)
 
 ## How to build
+
+### Option 1 (recommended):
 run the python script that wraps cmake&build commands: (NOTE: `git`, `cmake` and `ninja` added to PATH are required)
 ```shell
 # Use --[msvc(default)|clang|gcc] to specify an available compiler
 python generate_project.py --clang
+```
+
+### Option 2:
+run cmake directly with any options supported by cmake. The simplest one, for example:
+```shell
+cmake -S. -B Build
+cmake --build Build
 ```
 
 ## Features
