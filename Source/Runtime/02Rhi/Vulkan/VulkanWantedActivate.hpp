@@ -1,10 +1,11 @@
 #pragma once
 
-#include <vector>
 #include <vulkan/vulkan.h>
 #if !VK_VERSION_1_3  // >=1.3
 #error "Please use Vulkan SDK 1.3 or higher"
 #endif
+
+#include <vector>
 
 namespace axe::rhi
 {

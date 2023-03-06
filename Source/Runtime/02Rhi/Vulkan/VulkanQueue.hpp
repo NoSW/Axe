@@ -1,6 +1,7 @@
 #pragma once
-#include "02Rhi/Vulkan/VulkanDevice.hpp"
-#include "02Rhi/Vulkan/VulkanSemaphore.hpp"
+
+#include "02Rhi/Rhi.hpp"
+#include "02Rhi/Vulkan/VulkanEnums.hpp"
 
 #include "00Core/Thread/Thread.hpp"
 
@@ -11,7 +12,7 @@ class Mutex;
 
 namespace axe::rhi
 {
-
+class VulkanDevice;
 class VulkanQueue final : public Queue
 {
     friend class VulkanDevice;

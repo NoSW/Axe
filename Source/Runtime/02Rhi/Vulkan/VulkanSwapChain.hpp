@@ -1,10 +1,13 @@
 #pragma once
-#include "02Rhi/Vulkan/VulkanDevice.hpp"
-#include "02Rhi/Vulkan/VulkanQueue.hpp"
-#include "02Rhi/Vulkan/VulkanRenderTarget.hpp"
+
+#include "02Rhi/Rhi.hpp"
+#include "02Rhi/Vulkan/VulkanEnums.hpp"
 
 namespace axe::rhi
 {
+class VulkanQueue;
+class VulkanDevice;
+class VulkanRenderTarget;
 
 class VulkanSwapChain final : public SwapChain
 {

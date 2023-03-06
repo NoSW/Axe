@@ -1,10 +1,11 @@
 #pragma once
-#include "02Rhi/Vulkan/VulkanDevice.hpp"
-#include "02Rhi/Vulkan/VulkanSemaphore.hpp"
+#include "02Rhi/Rhi.hpp"
+#include "02Rhi/Vulkan/VulkanEnums.hpp"
 
 namespace axe::rhi
 {
 
+class VulkanDevice;
 class VulkanTexture;
 
 class VulkanRenderTarget : public RenderTarget

@@ -1,10 +1,11 @@
 #pragma once
-#include "02Rhi/Vulkan/VulkanDevice.hpp"
+#include "02Rhi/Rhi.hpp"
+#include "02Rhi/Vulkan/VulkanEnums.hpp"
 
 namespace axe::rhi
 {
 class VmaAllocation_T;
-
+class VulkanDevice;
 class VulkanTexture : public Texture
 {
     friend class VulkanDevice;

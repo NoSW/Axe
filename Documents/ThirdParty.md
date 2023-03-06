@@ -18,7 +18,6 @@ Ready to be added:
 - [assimp](https://github.com/assimp/assimp)
 - [MaterialX](https://github.com/AcademySoftwareFoundation/MaterialX)
 - [USD](https://github.com/PixarAnimationStudios/USD)
-- [mINI](https://github.com/pulzed/mINI)
 - [LZ4](https://github.com/lz4/lz4)
 - [stb](https://github.com/nothings/stb)
 - [CImg](https://github.com/GreycLab/CImg)

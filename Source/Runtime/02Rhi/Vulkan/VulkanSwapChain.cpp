@@ -1,5 +1,6 @@
 #include "02Rhi/Vulkan/VulkanSwapChain.hpp"
 #include "02Rhi/Vulkan/VulkanFence.hpp"
+#include "02Rhi/Vulkan/VulkanDevice.hpp"
 
 #include "00Core/Window/Window.hpp"
 

@@ -1,12 +1,9 @@
 #pragma once
-
-#define VK_NO_PROTOTYPES  // used for volk
-#include <vulkan/vulkan.h>
-#include <vulkan/vk_enum_string_helper.h>
+#include "02Rhi/Rhi.hpp"
+#include "02Rhi/Vulkan/VulkanEnums.hpp"
 
 // #include <vma/vk_mem_alloc.h>
 
-#include "02Rhi/Rhi.hpp"
 #include <00Core/Thread/Thread.hpp>
 
 #include <string>

@@ -59,6 +59,10 @@ bool Forward::init(PipelineDesc& desc) noexcept
     _mpImageAcquiredSemaphore = _mpDevice->createSemaphore(semaphoreDesc);
     if (!_mpImageAcquiredSemaphore) { return false; }
 
+    rhi::SamplerDesc samplerDesc{};
+    auto* sampler = _mpDevice->createSampler(samplerDesc);
+    _mpDevice->destroySampler(sampler);
+    AXE_ASSERT(sampler == nullptr);
     // frameIndex
     _mFrameIndex = 0;
     return true;

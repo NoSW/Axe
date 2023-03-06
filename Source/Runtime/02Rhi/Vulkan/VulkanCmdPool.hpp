@@ -1,9 +1,7 @@
 #pragma once
 
 #include "02Rhi/Rhi.hpp"
-
-#define VK_NO_PROTOTYPES  // used for volk
-#include <vulkan/vulkan.h>
+#include "02Rhi/Vulkan/VulkanEnums.hpp"
 
 namespace axe::rhi
 {
