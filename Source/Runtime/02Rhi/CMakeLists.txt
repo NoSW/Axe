@@ -5,15 +5,16 @@ file(GLOB_RECURSE VULKAN_SRCLIST ./Vulkan/*)
 source_group("" FILES ${COMMON_SRCLIST})
 source_group("Vulkan" FILES ${VULKAN_SRCLIST})
 if(WIN32)
-file(GLOB_RECURSE D3D12_SRCLIST ./D3D12/*)
-source_group("D3D12" FILES ${D3D12_SRCLIST})
-add_library(${TARGET_NAME} STATIC ${COMMON_SRCLIST} ${VULKAN_SRCLIST} ${D3D12_SRCLIST})
+	file(GLOB_RECURSE D3D12_SRCLIST ./D3D12/*)
+	source_group("D3D12" FILES ${D3D12_SRCLIST})
+	add_library(${TARGET_NAME} STATIC ${COMMON_SRCLIST} ${VULKAN_SRCLIST} ${D3D12_SRCLIST})
 else()
-add_library(${TARGET_NAME} STATIC ${COMMON_SRCLIST} ${VULKAN_SRCLIST})
+	add_library(${TARGET_NAME} STATIC ${COMMON_SRCLIST} ${VULKAN_SRCLIST})
 endif()
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "Source/Runtime")
 target_link_libraries(${TARGET_NAME} PUBLIC 00Core)
+target_include_directories(${TARGET_NAME} PUBLIC ${TNIY_IMAGEFORMAT_INCLUDE_DIR})
 
 ############################################################################################
 ##                                         Vulkan
@@ -80,5 +81,5 @@ target_link_libraries(${TARGET_NAME} PRIVATE ${Vulkan_LIB_LIST})
 ##                                         D3D12
 ############################################################################################
 if(WIN32)
-target_link_libraries(${TARGET_NAME} PRIVATE d3d12.lib dxgi.lib)
+	target_link_libraries(${TARGET_NAME} PRIVATE d3d12.lib dxgi.lib)
 endif()

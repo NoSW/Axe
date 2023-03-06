@@ -231,7 +231,7 @@
  */
 
 #if __cplusplus > 201402L
-#define TIF_CONSTEXPR constexpr extern "C"
+#define TIF_CONSTEXPR constexpr /* extern "C" */
 #else
 #define TIF_CONSTEXPR
 #endif

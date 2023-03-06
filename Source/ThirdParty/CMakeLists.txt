@@ -52,3 +52,9 @@ set_target_properties(magic_enum PROPERTIES FOLDER "Source/ThirdParty")
 ##############################################################################
 add_subdirectory(glm)
 set_target_properties(glm PROPERTIES FOLDER "Source/ThirdParty")
+
+##############################################################################
+#                                 tiny_imageformat
+##############################################################################
+add_subdirectory(tiny_imageformat)
+set_target_properties(tiny_imageformat PROPERTIES FOLDER "Source/ThirdParty")
