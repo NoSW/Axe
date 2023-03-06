@@ -4,7 +4,6 @@
 
 namespace axe::rhi
 {
-
 class VulkanDevice;
 class VulkanQueue;
 class VulkanSwapChain;

@@ -10,84 +10,11 @@
 namespace axe::rhi
 {
 
-void VulkanQueue::_findQueueFamilyIndex(VulkanDevice* pDevice, u32 nodeIndex, QueueType quType,
-                                        u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) noexcept
-{
-    AXE_ASSERT(pDevice);
-    // AXE_ASSERT(pDevice->mGpuMode == GPU_MODE_LINKED || nodeIndex == 0);
-
-    bool found    = false;
-    u8 quFamIndex = U8_MAX, quIndex = U8_MAX;
-    auto requiredFlagBit = VK_QUEUE_FLAG_BITS_MAX_ENUM;
-    switch (quType)
-    {
-        case QUEUE_TYPE_GRAPHICS: requiredFlagBit = VK_QUEUE_GRAPHICS_BIT; break;
-        case QUEUE_TYPE_TRANSFER: requiredFlagBit = VK_QUEUE_TRANSFER_BIT; break;
-        case QUEUE_TYPE_COMPUTE: requiredFlagBit = VK_QUEUE_COMPUTE_BIT; break;
-        default: AXE_ERROR("Unsupported queue type {}", reflection::enum_name(quType)); break;
-    }
-
-    u32 minQueueFlag         = U32_MAX;
-
-    // Try to find a dedicated queue of this type
-    // AXE_ASSERT(nodeIndex < pDevice->mUsedQueueCounts.size());
-    // AXE_ASSERT(nodeIndex < pDevice->mAvailableQueueCounts.size());
-    auto& dedicatedQueueInfo = pDevice->_mQueueInfos[requiredFlagBit];
-    if (dedicatedQueueInfo.mUsedCount < dedicatedQueueInfo.mAvailableCount)
-    {
-        found      = true;
-        quFamIndex = dedicatedQueueInfo.mFamilyIndex;
-        outFlag    = requiredFlagBit;
-        found      = true;
-        if (requiredFlagBit & VK_QUEUE_GRAPHICS_BIT)
-        {
-            quIndex = 0;  // always return same one if graphics queue
-        }
-        else
-        {
-            quIndex = dedicatedQueueInfo.mUsedCount++;
-        }
-    }
-    else
-    {
-        // Try to find a non-dedicated queue of this type if NOT provide a dedicated one.
-        for (u32 flag = 0; flag < pDevice->_mQueueInfos.size(); ++flag)
-        {
-            auto& info = pDevice->_mQueueInfos[flag];
-            if (info.mFamilyIndex == 0) { outFlag = flag; }  // default flag
-            if ((requiredFlagBit & flag) == requiredFlagBit)
-            {
-                if (info.mUsedCount < info.mAvailableCount)
-                {
-                    quFamIndex = info.mFamilyIndex;
-                    quIndex    = dedicatedQueueInfo.mUsedCount++;
-                    outFlag    = flag;
-                    found      = true;
-                    AXE_DEBUG("Not found a dedicated queue of {}, using a no-dedicated one(Flags={})",
-                              reflection::enum_name(quType), flag)
-                    break;
-                }
-            }
-        }
-    }
-
-    // Choose default queue if all tries fail.
-    if (!found)
-    {
-        found      = true;
-        quFamIndex = 0;
-        quIndex    = 0;
-        AXE_DEBUG("Not found queue of {}, using default one(familyIndex=0.queueIndex=0)", reflection::enum_name(quType));
-    }
-    outQuFamIndex = quFamIndex;
-    outQuIndex    = quIndex;
-}
-
 bool VulkanQueue::_create(QueueDesc& desc) noexcept
 {
     u32 nodeIndex = 0;  //_mpDevice->mGpuMode == GPU_MODE_LINKED ? desc.mNodeIndex : 0;
     u8 quFamIndex = U8_MAX, quIndex = U8_MAX, quFlag = 0;
-    VulkanQueue::_findQueueFamilyIndex(_mpDevice, nodeIndex, desc.mType, quFamIndex, quIndex, quFlag);
+    _mpDevice->findQueueFamilyIndex(desc.mType, quFamIndex, quIndex, quFlag);
 
     _mpSubmitMutex       = /* TODO */ nullptr;
     _mTimestampPeriod    = _mpDevice->_mpAdapter->requestGPUSettings().mTimestampPeriod;
@@ -108,7 +35,7 @@ bool VulkanQueue::_destroy() noexcept
 {
     AXE_ASSERT(_mpDevice);
     AXE_ASSERT(_mpHandle);
-    //   AXE_ASSERT(_mpDevice->mGpuMode == GPU_MODE_LINKED || _mNodeIndex == 0); // TODO
+
     --_mpDevice->_mQueueInfos[_mFlags].mUsedCount;
     _mpHandle = VK_NULL_HANDLE;
     return true;
@@ -190,7 +117,7 @@ void VulkanQueue::submit(QueueSubmitDesc& desc) noexcept
 void VulkanQueue::present(QueuePresentDesc& desc) noexcept
 {
     AXE_ASSERT(desc.mpSwapChain);
-    auto* pSwapchain = (VulkanSwapChain*)desc.mpSwapChain;
+    auto* pSwapchain = static_cast<VulkanSwapChain*>(desc.mpSwapChain);
     std::pmr::vector<VkSemaphore> signaledVkSemaphores;
     for (const auto* item : desc.mWaitSemaphores)
     {
@@ -213,6 +140,7 @@ void VulkanQueue::present(QueuePresentDesc& desc) noexcept
         .pImageIndices      = &presentIndex,
         .pResults           = nullptr,
     };
+
     // add lock to make sure multiple threads dont use the same queue simultaneously
     auto qu     = (pSwapchain->_mpPresentQueue && pSwapchain->_mpPresentQueue->_mpHandle) ?
                       pSwapchain->_mpPresentQueue->_mpHandle :

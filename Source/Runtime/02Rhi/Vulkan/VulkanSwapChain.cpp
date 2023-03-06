@@ -74,7 +74,7 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
     auto desiredSwapchainExtent = surfaceCapabilities.currentExtent;
     if (surfaceCapabilities.currentExtent.width == -1)
     {
-        desiredSwapchainExtent        = {640, 800};
+        desiredSwapchainExtent        = {desc.mWidth, desc.mHeight};
         desiredSwapchainExtent.width  = std::clamp(desiredSwapchainExtent.width, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
         desiredSwapchainExtent.height = std::clamp(desiredSwapchainExtent.height, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
     }
@@ -176,8 +176,7 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
     {
         vkDestroySwapchainKHR(_mpDevice->_mpHandle, oldSwapchain, nullptr);
     }
-#if AXE_(false, "editing code, not ready yet")
-#endif
+
     return true;
 }
 

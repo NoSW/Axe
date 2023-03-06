@@ -26,7 +26,7 @@ bool Forward::init(PipelineDesc& desc) noexcept
     rhi::QueueDesc queueDesc{
         .mType = rhi::QUEUE_TYPE_GRAPHICS,
         .mFlag = rhi::QUEUE_FLAG_NONE};
-    queueDesc.mLabel = "Graphics Queue";
+
     _mpGraphicsQueue = _mpDevice->requestQueue(queueDesc);
     if (!_mpGraphicsQueue) { return false; }
 

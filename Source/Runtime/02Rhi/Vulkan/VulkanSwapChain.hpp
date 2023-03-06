@@ -22,8 +22,9 @@ public:
     void acquireNextImage(Fence* pFence, u32& outImageIndex) noexcept override;
 
 private:
-    std::vector<VulkanRenderTarget*> _mpRenderTargets;  // created from the swapchain back buffers
+    std::pmr::vector<VulkanRenderTarget*> _mpRenderTargets;  // created from the swapchain back buffers
     VulkanDevice* const _mpDevice = nullptr;
+
     /// Present queue if one exists (queuePresent will use this queue if the hardware has a dedicated present queue)
     VulkanQueue* _mpPresentQueue  = nullptr;
     VkSwapchainKHR _mpHandle      = VK_NULL_HANDLE;

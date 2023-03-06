@@ -6,18 +6,28 @@
 
 namespace axe::rhi
 {
-
+// see https://raw.githubusercontent.com/David-DiGioia/vulkan-diagrams/main/boiler_plate.png for overview of VkPhysicalDevice
 static const auto have_graphics_queue_family = [](const std::pmr::vector<VkQueueFamilyProperties2>& quFamProps2) -> std::tuple<int, int, int>
 {
     u32 graphicsID = U8_MAX, transferID = U8_MAX, computeID = U8_MAX;
     for (u32 i = 0; i < quFamProps2.size(); ++i)
+    {
         if (quFamProps2[i].queueFamilyProperties.queueCount)
         {
             const auto& flags = quFamProps2[i].queueFamilyProperties.queueFlags;
-            if (flags & VK_QUEUE_GRAPHICS_BIT) { graphicsID = i; }
-            if (flags & VK_QUEUE_TRANSFER_BIT) { transferID = i; }
-            if (flags & VK_QUEUE_COMPUTE_BIT) { computeID = i; }
+            bool isDedicated  = is_power_of_2(flags);
+            if (graphicsID == U8_MAX && (flags & VK_QUEUE_GRAPHICS_BIT)) { graphicsID = i; }
+            if (transferID == U8_MAX && isDedicated && (flags & VK_QUEUE_TRANSFER_BIT)) { transferID = i; }
+            if (computeID == U8_MAX && isDedicated && (flags & VK_QUEUE_COMPUTE_BIT)) { computeID = i; }
         }
+    }
+
+    for (u32 i = 0; i < quFamProps2.size(); ++i)
+    {
+        const auto& flags = quFamProps2[i].queueFamilyProperties.queueFlags;
+        if (transferID == U8_MAX && (flags & VK_QUEUE_TRANSFER_BIT)) { transferID = i; }
+        if (computeID == U8_MAX && (flags & VK_QUEUE_COMPUTE_BIT)) { computeID = i; }
+    }
 
     return {graphicsID, transferID, computeID};
 };
@@ -147,10 +157,12 @@ void VulkanAdapter::release() noexcept
 bool VulkanAdapter::isBetterGpu(const VulkanAdapter& a, const VulkanAdapter& b) noexcept
 {
     // prefer one has graphics queue
-    auto quTypeA = a._mQueueFamilyIndex[QUEUE_TYPE_GRAPHICS];
-    auto quTypeB = b._mQueueFamilyIndex[QUEUE_TYPE_GRAPHICS];
-    if (quTypeA != U8_MAX && quTypeB == U8_MAX) { return true; }
-    if (quTypeA == U8_MAX && quTypeB != U8_MAX) { return false; }
+    auto quGraA            = a._mQueueFamilyIndex[QUEUE_TYPE_GRAPHICS];
+    auto quGraB            = b._mQueueFamilyIndex[QUEUE_TYPE_GRAPHICS];
+    bool hasGraphicsQueueA = quGraA != U8_MAX;
+    bool hasGraphicsQueueB = quGraB != U8_MAX;
+    if (hasGraphicsQueueA && !hasGraphicsQueueB) { return true; }
+    if (!hasGraphicsQueueA && hasGraphicsQueueB) { return false; }
 
     // prefer discrete gpu
     auto& propA = a._mpProperties.properties;
@@ -161,7 +173,7 @@ bool VulkanAdapter::isBetterGpu(const VulkanAdapter& a, const VulkanAdapter& b) 
     if (propA.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
         propB.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) { return false; }
 
-    // prefer one has larger VRAM
+    // prefer one has larger VRAM(video random-access memory)
     if (propA.vendorID == propB.vendorID && propA.deviceID == propB.deviceID)
     {
         const auto getVram = [](const VkPhysicalDeviceMemoryProperties2& memProp)
@@ -178,6 +190,17 @@ bool VulkanAdapter::isBetterGpu(const VulkanAdapter& a, const VulkanAdapter& b) 
         auto& memPropB = b._mpMemoryProperties;
         return getVram(memPropA) > getVram(memPropB);
     }
+
+    // prefer one has dedicated compute queue for enabling asynchronous compute
+    auto quComA                    = a._mQueueFamilyIndex[QUEUE_TYPE_COMPUTE];
+    auto quComB                    = b._mQueueFamilyIndex[QUEUE_TYPE_COMPUTE];
+    auto quTransA                  = a._mQueueFamilyIndex[QUEUE_TYPE_TRANSFER];
+    auto quTransB                  = b._mQueueFamilyIndex[QUEUE_TYPE_TRANSFER];
+    bool hasDedicatedComputeQueueA = quComA != U8_MAX && quComA != quGraA && quComA != quTransA;
+    bool hasDedicatedComputeQueueB = quComB != U8_MAX && quComB != quGraB && quComB != quTransB;
+    if (hasDedicatedComputeQueueA && !hasDedicatedComputeQueueB) { return true; }
+    if (!hasDedicatedComputeQueueA && hasDedicatedComputeQueueB) { return false; }
+
     return true;
 };
 

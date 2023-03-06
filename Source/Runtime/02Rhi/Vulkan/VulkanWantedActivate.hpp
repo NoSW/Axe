@@ -24,16 +24,21 @@ static void filter_unsupported(const std::pmr::vector<const char*>& supported, s
 }
 // clang-format on
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+//                             Instance
+//////////////////////////////////////////////////////////////////////////////////////////////
 static std::pmr::vector<const char*> gsWantedInstanceLayers = {
 #if AXE_RHI_VULKAN_ENABLE_DEBUG
     "VK_LAYER_KHRONOS_validation",
 #endif
+    "VK_LAYER_KHRONOS_synchronization2",
     "VK_LAYER_RENDERDOC_Capture",
 };
 
 static std::pmr::vector<const char*> gsWantedInstanceExtensions = {
     // Surface
     VK_KHR_SURFACE_EXTENSION_NAME,
+    VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME,
 #if _WIN32
     VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #elif __linux__
@@ -67,6 +72,9 @@ static std::pmr::vector<const char*> gsWantedInstanceExtensions = {
 
 };
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+//                             Device
+//////////////////////////////////////////////////////////////////////////////////////////////
 static std::pmr::vector<const char*> gWantedDeviceLayers     = {};
 static std::pmr::vector<const char*> gWantedDeviceExtensions = {
 
@@ -77,6 +85,7 @@ static std::pmr::vector<const char*> gWantedDeviceExtensions = {
     VK_EXT_SHADER_SUBGROUP_VOTE_EXTENSION_NAME,
     VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME,
     VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME,
+    VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,
 
 #if VK_KHR_draw_indirect_count
     VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME,
@@ -111,13 +120,13 @@ static std::pmr::vector<const char*> gWantedDeviceExtensions = {
     VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME,
     VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME,
     VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME,
-
     VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME,
-    VK_KHR_SPIRV_1_4_EXTENSION_NAME,
     VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME,
-
     VK_KHR_RAY_QUERY_EXTENSION_NAME,
 #endif
+
+    // spirv
+    VK_KHR_SPIRV_1_4_EXTENSION_NAME,
 
 // YCbCr format support
 #if VK_KHR_bind_memory2

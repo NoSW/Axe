@@ -48,14 +48,10 @@ def run_CMake(compiler):
     return print_then_run(cmd)
 
 def run_Build(compiler):
-    if compiler in ["clang", "gcc"] and sys.platform in ["win32", "linux"]:
-        mode = "Release" if input("Debug(default) or Release? [d/r]").lower() == 'r' else "Debug"
-        build_folder = os.path.join(PJ_ROOT, f"Build_{compiler}")
-        if run_CMake(compiler):
-            print_then_run(f"cmake --build {build_folder} --config {mode} -- -j 32")
-    else:
-        print(f"Unsupported compiler {compiler} on {sys.platform}. Supported compilers: msvc, clang, gcc")
-        exit(1)
+    mode = "Release" if input("Debug(default) or Release? [d/r]").lower() == 'r' else "Debug"
+    build_folder = os.path.join(PJ_ROOT, f"Build_{compiler}")
+    if run_CMake(compiler) and compiler != "msvc":
+        print_then_run(f"cmake --build {build_folder} --config {mode} -- -j 32")
 
 if __name__ == "__main__":
     args = parser.parse_args()

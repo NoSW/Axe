@@ -1,5 +1,5 @@
 # Axe
-Axe is a cross multi-platform game engine, and an engineering practice about *[Game Engine Architecture, Third Edition](https://www.gameenginebook.com/)*.
+Axe is a cross multi-platform game engine(in round 1), also an engineering practice about *[Game Engine Architecture, Third Edition](https://www.gameenginebook.com/)*.
 
 ## Goal
 
@@ -10,13 +10,14 @@ Axe is a cross multi-platform game engine, and an engineering practice about *[G
 - dive into more underlying details about modern graphics apis (Vulkan, D3D12, Metal)
 - explore architecture of modern game engine (abstraction, layering, compile-time/edit-time/runtime/loop-time designs)
 - experiment some fundamental and interested graphics features(forward, deferred pipeline, shadow, GI,  etc)
+- provide templates and suggestions for round 2
 
 
 ## Platform
 
 |Platform|Compiler| Graphics API|
 |---|---|---|
-|Windows| MSVC>=19, Clang>=10, GCC>=11 | Vulkan>=1.3, Direct3D 12|
+|Windows| MSVC>=17, Clang>=10, GCC>=11 | Vulkan>=1.3, Direct3D 12|
 |Linux| Clang>=10, GCC>=11  | Vulkan>=1.3|
 |MacOS| Clang>=10, GCC>=11  | Metal 3 |
 

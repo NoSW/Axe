@@ -34,7 +34,7 @@ public:
 public:
     AXE_PUBLIC Adapter* requestAdapter(AdapterDesc&) noexcept override;
 
-    AXE_PUBLIC void releaseAdapter(Adapter*&) noexcept;
+    AXE_PUBLIC void releaseAdapter(Adapter*&) noexcept override;
 
     auto getSwapchain() noexcept
     {

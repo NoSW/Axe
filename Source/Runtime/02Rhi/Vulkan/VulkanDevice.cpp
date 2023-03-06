@@ -5,7 +5,8 @@
 namespace axe::rhi
 {
 
-VulkanDevice::VulkanDevice(VulkanAdapter* pAdapter, DeviceDesc& desc) noexcept : _mpAdapter(pAdapter)
+VulkanDevice::VulkanDevice(VulkanAdapter* pAdapter, DeviceDesc& desc) noexcept
+    : _mpAdapter(pAdapter), _mShaderModel(desc.mShaderModel)
 {
     u32 layerCount = 0;
     vkEnumerateDeviceLayerProperties(pAdapter->handle(), &layerCount, nullptr);
@@ -32,7 +33,7 @@ VulkanDevice::VulkanDevice(VulkanAdapter* pAdapter, DeviceDesc& desc) noexcept :
     vkGetPhysicalDeviceQueueFamilyProperties2(pAdapter->handle(), &quFamPropCount, quFamProp2.data());
 
     constexpr u32 MAX_QUEUE_FAMILIES = 16, MAX_QUEUE_COUNT = 64;
-    std::array<std::array<float, MAX_QUEUE_COUNT>, MAX_QUEUE_FAMILIES> quFamPriorities{};
+    std::array<std::array<float, MAX_QUEUE_COUNT>, MAX_QUEUE_FAMILIES> quFamPriorities{1.0f};
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     for (u32 i = 0; i < quFamProp2.size(); ++i)
     {
@@ -63,20 +64,14 @@ VulkanDevice::VulkanDevice(VulkanAdapter* pAdapter, DeviceDesc& desc) noexcept :
                 .mAvailableCount = quCount, .mUsedCount = 0, .mFamilyIndex = (u8)i};
         }
     }
-
-    // std::vector<float> queuePriorities      = {1.f};
-    // VkDeviceQueueCreateInfo queueCreateInfo = {
-    //     .sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-    //     .pNext            = nullptr,
-    //     .flags            = 0,
-    //     .queueFamilyIndex = mGraphicsQueueFamilyIndex,
-    //     .queueCount       = (u32)queuePriorities.size(),
-    //     .pQueuePriorities = queuePriorities.data(),
-    // };
+    VkPhysicalDeviceVulkan13Features deviceFeatures13 = {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
+        .pNext = nullptr};
+    deviceFeatures13.dynamicRendering   = VK_TRUE;
 
     VkDeviceCreateInfo deviceCreateInfo = {
         .sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-        .pNext                   = pAdapter->features(),
+        .pNext                   = &deviceFeatures13,
         .flags                   = 0,
         .queueCreateInfoCount    = (u32)queueCreateInfos.size(),
         .pQueueCreateInfos       = queueCreateInfos.data(),
@@ -84,7 +79,7 @@ VulkanDevice::VulkanDevice(VulkanAdapter* pAdapter, DeviceDesc& desc) noexcept :
         .ppEnabledLayerNames     = gWantedDeviceLayers.data(),
         .enabledExtensionCount   = (u32)gWantedDeviceExtensions.size(),
         .ppEnabledExtensionNames = gWantedDeviceExtensions.data(),
-        .pEnabledFeatures        = nullptr};
+        .pEnabledFeatures        = &pAdapter->features()->features};
 
     auto result = vkCreateDevice(pAdapter->handle(), &deviceCreateInfo, nullptr, &_mpHandle);
     AXE_ASSERT(VK_SUCCEEDED(result));
@@ -103,4 +98,72 @@ VulkanDevice::~VulkanDevice() noexcept
 
     vkDestroyDevice(_mpHandle, nullptr);  // all queues associated with it are destroyed automatically
 }
+
+void VulkanDevice::findQueueFamilyIndex(QueueType quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) noexcept
+{
+    bool found    = false;
+    u8 quFamIndex = U8_MAX, quIndex = U8_MAX;
+    auto requiredFlagBit = VK_QUEUE_FLAG_BITS_MAX_ENUM;
+    switch (quType)
+    {
+        case QUEUE_TYPE_GRAPHICS: requiredFlagBit = VK_QUEUE_GRAPHICS_BIT; break;
+        case QUEUE_TYPE_TRANSFER: requiredFlagBit = VK_QUEUE_TRANSFER_BIT; break;
+        case QUEUE_TYPE_COMPUTE: requiredFlagBit = VK_QUEUE_COMPUTE_BIT; break;
+        default: AXE_ERROR("Unsupported queue type {}", reflection::enum_name(quType)); break;
+    }
+
+    u32 minQueueFlag         = U32_MAX;
+
+    // Try to find a dedicated queue of this type
+    auto& dedicatedQueueInfo = _mQueueInfos[requiredFlagBit];
+    if (dedicatedQueueInfo.mUsedCount < dedicatedQueueInfo.mAvailableCount)
+    {
+        found      = true;
+        quFamIndex = dedicatedQueueInfo.mFamilyIndex;
+        outFlag    = requiredFlagBit;
+        found      = true;
+        if (requiredFlagBit & VK_QUEUE_GRAPHICS_BIT)
+        {
+            quIndex = 0;  // always return same one if graphics queue
+        }
+        else
+        {
+            quIndex = dedicatedQueueInfo.mUsedCount++;
+        }
+    }
+    else
+    {
+        // Try to find a non-dedicated queue of this type if NOT provide a dedicated one.
+        for (u32 flag = 0; flag < _mQueueInfos.size(); ++flag)
+        {
+            auto& info = _mQueueInfos[flag];
+            if (info.mFamilyIndex == 0) { outFlag = flag; }  // default flag
+            if ((requiredFlagBit & flag) == requiredFlagBit)
+            {
+                if (info.mUsedCount < info.mAvailableCount)
+                {
+                    quFamIndex = info.mFamilyIndex;
+                    quIndex    = dedicatedQueueInfo.mUsedCount++;
+                    outFlag    = flag;
+                    found      = true;
+                    AXE_DEBUG("Not found a dedicated queue of {}, using a no-dedicated one(Flags={})",
+                              reflection::enum_name(quType), flag)
+                    break;
+                }
+            }
+        }
+    }
+
+    // Choose default queue if all tries fail.
+    if (!found)
+    {
+        found      = true;
+        quFamIndex = 0;
+        quIndex    = 0;
+        AXE_DEBUG("Not found queue of {}, using default one(familyIndex=0.queueIndex=0)", reflection::enum_name(quType));
+    }
+    outQuFamIndex = quFamIndex;
+    outQuIndex    = quIndex;
+}
+
 }  // namespace axe::rhi

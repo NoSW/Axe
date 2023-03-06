@@ -10,6 +10,7 @@ namespace axe::rhi
 
 class VulkanQueue;
 class VulkanCmd;
+class VulkanDevice;
 
 class VulkanCmdPool final : public CmdPool
 {

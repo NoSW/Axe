@@ -9,6 +9,7 @@
 #include <02Rhi/Vulkan/VulkanCmd.hpp>
 #include <02Rhi/Vulkan/VulkanRenderTarget.hpp>
 #include <02Rhi/Vulkan/VulkanSwapChain.hpp>
+#include <02Rhi/Vulkan/VulkanShader.hpp>
 
 namespace axe::rhi
 {
@@ -23,6 +24,8 @@ public:
     friend class VulkanCmd;
     friend class VulkanRenderTarget;
     friend class VulkanSwapChain;
+    friend class VulkanShader;
+    friend class VulkanSampler;
 
 private:
     void _collectQueueInfo() noexcept;
@@ -30,6 +33,8 @@ private:
 public:
     VulkanDevice(VulkanAdapter*, DeviceDesc& desc) noexcept;
     ~VulkanDevice() noexcept;
+
+    void findQueueFamilyIndex(QueueType quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) noexcept;
 
 private:
     // clang-format off
@@ -49,6 +54,7 @@ public:
     AXE_PUBLIC [[nodiscard]] CmdPool* createCmdPool(CmdPoolDesc& desc) noexcept override { return (CmdPool*)_createHelper<VulkanCmdPool>(desc); }
     AXE_PUBLIC [[nodiscard]] Cmd* createCmd(CmdDesc& desc) noexcept override { return (Cmd*)_createHelper<VulkanCmd>(desc); }
     AXE_PUBLIC [[nodiscard]] RenderTarget* createRenderTarget(RenderTargetDesc& desc) noexcept override { return (RenderTarget*)_createHelper<VulkanRenderTarget>(desc); }
+    AXE_PUBLIC [[nodiscard]] Shader* createShader(ShaderDesc& desc) noexcept override { return (Shader*)_createHelper<VulkanShader>(desc); }
     AXE_PUBLIC bool destroySemaphore(Semaphore*& p) noexcept override { return _destroyHelper<VulkanSemaphore>(p); }
     AXE_PUBLIC bool destroyFence(Fence*& p) noexcept override { return _destroyHelper<VulkanFence>(p); }
     AXE_PUBLIC bool releaseQueue(Queue*& p) noexcept override { return _destroyHelper<VulkanQueue>(p); }
@@ -56,6 +62,7 @@ public:
     AXE_PUBLIC bool destroyCmdPool(CmdPool*& p) noexcept override { return _destroyHelper<VulkanCmdPool>(p); }
     AXE_PUBLIC bool destroyCmd(Cmd*& p) noexcept override { return _destroyHelper<VulkanCmd>(p); }
     AXE_PUBLIC bool destroyRenderTarget(RenderTarget*& p) noexcept override { return _destroyHelper<VulkanRenderTarget>(p); }
+    AXE_PUBLIC bool destroyShader(Shader*& p) noexcept override { return _destroyHelper<VulkanShader>(p); }
 
 private:
     static constexpr u32 MAX_QUEUE_FLAG = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT |
@@ -73,6 +80,8 @@ private:
     };
 
     std::array<QueueInfo, MAX_QUEUE_FLAG> _mQueueInfos;  // <familyIndex, count>
+
+    ShaderModel _mShaderModel = SHADER_MODEL_6_7;
 };
 
 }  // namespace axe::rhi

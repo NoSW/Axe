@@ -30,10 +30,6 @@ public:
     void waitIdle() noexcept override;
 
 private:
-    static void _findQueueFamilyIndex(VulkanDevice* pDevice, u32 nodeIndex, QueueType quType,
-                                      u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) noexcept;
-
-private:
     VkQueue _mpHandle             = VK_NULL_HANDLE;
     VulkanDevice* const _mpDevice = nullptr;
     thread::Mutex* _mpSubmitMutex = nullptr;

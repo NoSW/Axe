@@ -1,10 +1,13 @@
 /* All public interfaces of 02Rhi */
 #pragma once
 
-#include "02Rhi/Gpu.hpp"
 #include "02Rhi/Config.hpp"
+#include "02Rhi/Gpu.hpp"
+#include "02Rhi/ShaderReflection.hpp"
 #include <00Core/Log/Log.hpp>
 #include <00Core/Reflection/Reflection.hpp>
+
+#include <tiny_imageformat/tinyimageformat_query.h>
 
 namespace axe::window
 {
@@ -227,6 +230,95 @@ public:
     virtual void endDebugMarker() noexcept                                                                                            = 0;
 };
 ///////////////////////////////////////////////
+//                    RootSignature
+///////////////////////////////////////////////
+enum FilterType
+{
+    FILTER_TYPE_NEAREST = 0,
+    FILTER_TYPE_LINEAR  = 1,
+};
+
+enum MipMapMode
+{
+    MIPMAP_MODE_NEAREST = 0,
+    MIPMAP_MODE_LINEAR  = 1,
+};
+
+enum AddressMode
+{
+    ADDRESS_MODE_MIRROR          = 0,
+    ADDRESS_MODE_REPEAT          = 1,
+    ADDRESS_MODE_CLAMP_TO_EDGE   = 2,
+    ADDRESS_MODE_CLAMP_TO_BORDER = 3,
+};
+
+enum CompareMode
+{
+    CMP_MODE_NEVER    = 0,
+    CMP_MODE_LESS     = 1,
+    CMP_MODE_EQUAL    = 2,
+    CMP_MODE_LEQUAL   = 3,
+    CMP_MODE_GREATER  = 4,
+    CMP_MODE_NOTEQUAL = 5,
+    CMP_MODE_GEQUAL   = 6,
+    CMP_MODE_ALWAYS   = 7,
+    CMP_MODE_COUNT    = 8
+};
+
+enum SamplerRange
+{
+    SAMPLER_RANGE_FULL   = 0,
+    SAMPLER_RANGE_NARROW = 1,
+};
+
+enum SampleLocation
+{
+    SAMPLE_LOCATION_COSITED  = 0,
+    SAMPLE_LOCATION_MIDPOINT = 1,
+};
+
+enum SamplerModelConversion
+{
+    SAMPLER_MODEL_CONVERSION_RGB_IDENTITY   = 0,
+    SAMPLER_MODEL_CONVERSION_YCBCR_IDENTITY = 1,
+    SAMPLER_MODEL_CONVERSION_YCBCR_709      = 2,
+    SAMPLER_MODEL_CONVERSION_YCBCR_601      = 3,
+    SAMPLER_MODEL_CONVERSION_YCBCR_2020     = 4,
+};
+
+struct SamplerDesc : public DescBase
+{
+    FilterType mMinFilter;
+    FilterType mMagFilter;
+    MipMapMode mMipMapMode;
+    AddressMode mAddressU;
+    AddressMode mAddressV;
+    AddressMode mAddressW;
+    float mMipLodBias;
+    float mMinLod;
+    float mMaxLod;
+    float mMaxAnisotropy;
+    bool mSetLodRange;
+    CompareMode mCompareFunc;
+
+    struct
+    {
+        TinyImageFormat mFormat;
+        SamplerModelConversion mModel;
+        SamplerRange mRange;
+        SampleLocation mChromaOffsetX;
+        SampleLocation mChromaOffsetY;
+        FilterType mChromaFilter;
+        bool mForceExplicitReconstruction;
+    } mSamplerConversionDesc;
+};
+
+class Sampler : public RhiObjectBase
+{
+public:
+};
+
+///////////////////////////////////////////////
 //                    Texture
 ///////////////////////////////////////////////
 enum ResourceState
@@ -250,53 +342,6 @@ enum ResourceState
     RESOURCE_STATE_COMMON                            = 0x2000,
     RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE = 0x4000,
     RESOURCE_STATE_SHADING_RATE_SOURCE               = 0x8000,
-};
-
-enum DescriptorType
-{
-    DESCRIPTOR_TYPE_UNDEFINED                  = 0,
-    DESCRIPTOR_TYPE_SAMPLER                    = 0x01,
-    // SRV Read only texture
-    DESCRIPTOR_TYPE_TEXTURE                    = (DESCRIPTOR_TYPE_SAMPLER << 1),
-    /// UAV Texture
-    DESCRIPTOR_TYPE_RW_TEXTURE                 = (DESCRIPTOR_TYPE_TEXTURE << 1),
-    // SRV Read only buffer
-    DESCRIPTOR_TYPE_BUFFER                     = (DESCRIPTOR_TYPE_RW_TEXTURE << 1),
-    DESCRIPTOR_TYPE_BUFFER_RAW                 = (DESCRIPTOR_TYPE_BUFFER | (DESCRIPTOR_TYPE_BUFFER << 1)),
-    /// UAV Buffer
-    DESCRIPTOR_TYPE_RW_BUFFER                  = (DESCRIPTOR_TYPE_BUFFER << 2),
-    DESCRIPTOR_TYPE_RW_BUFFER_RAW              = (DESCRIPTOR_TYPE_RW_BUFFER | (DESCRIPTOR_TYPE_RW_BUFFER << 1)),
-    /// Uniform buffer
-    DESCRIPTOR_TYPE_UNIFORM_BUFFER             = (DESCRIPTOR_TYPE_RW_BUFFER << 2),
-    /// Push constant / Root constant
-    DESCRIPTOR_TYPE_ROOT_CONSTANT              = (DESCRIPTOR_TYPE_UNIFORM_BUFFER << 1),
-    /// IA
-    DESCRIPTOR_TYPE_VERTEX_BUFFER              = (DESCRIPTOR_TYPE_ROOT_CONSTANT << 1),
-    DESCRIPTOR_TYPE_INDEX_BUFFER               = (DESCRIPTOR_TYPE_VERTEX_BUFFER << 1),
-    DESCRIPTOR_TYPE_INDIRECT_BUFFER            = (DESCRIPTOR_TYPE_INDEX_BUFFER << 1),
-    /// Cubemap SRV
-    DESCRIPTOR_TYPE_TEXTURE_CUBE               = (DESCRIPTOR_TYPE_TEXTURE | (DESCRIPTOR_TYPE_INDIRECT_BUFFER << 1)),
-    /// RTV / DSV per mip slice
-    DESCRIPTOR_TYPE_RENDER_TARGET_MIP_SLICES   = (DESCRIPTOR_TYPE_INDIRECT_BUFFER << 2),
-    /// RTV / DSV per array slice
-    DESCRIPTOR_TYPE_RENDER_TARGET_ARRAY_SLICES = (DESCRIPTOR_TYPE_RENDER_TARGET_MIP_SLICES << 1),
-    /// RTV / DSV per depth slice
-    DESCRIPTOR_TYPE_RENDER_TARGET_DEPTH_SLICES = (DESCRIPTOR_TYPE_RENDER_TARGET_ARRAY_SLICES << 1),
-    DESCRIPTOR_TYPE_RAY_TRACING                = (DESCRIPTOR_TYPE_RENDER_TARGET_DEPTH_SLICES << 1),
-    DESCRIPTOR_TYPE_INDIRECT_COMMAND_BUFFER    = (DESCRIPTOR_TYPE_RAY_TRACING << 1),
-#if AXE_02RHI_API_USED_VULKAN
-    /// Subpass input (descriptor type only available in Vulkan)
-    DESCRIPTOR_TYPE_INPUT_ATTACHMENT                   = (DESCRIPTOR_TYPE_INDIRECT_COMMAND_BUFFER << 1),
-    DESCRIPTOR_TYPE_TEXEL_BUFFER                       = (DESCRIPTOR_TYPE_INPUT_ATTACHMENT << 1),
-    DESCRIPTOR_TYPE_RW_TEXEL_BUFFER                    = (DESCRIPTOR_TYPE_TEXEL_BUFFER << 1),
-    DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER             = (DESCRIPTOR_TYPE_RW_TEXEL_BUFFER << 1),
-
-    /// Khronos extension ray tracing
-    DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE             = (DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER << 1),
-    DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_BUILD_INPUT = (DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE << 1),
-    DESCRIPTOR_TYPE_SHADER_DEVICE_ADDRESS              = (DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_BUILD_INPUT << 1),
-    DESCRIPTOR_TYPE_SHADER_BINDING_TABLE               = (DESCRIPTOR_TYPE_SHADER_DEVICE_ADDRESS << 1),
-#endif
 };
 
 enum TextureCreationFlags
@@ -451,18 +496,91 @@ struct RenderTargetBarrier : public RhiObjectBase
     u32 mArrayLayer              = 0;  // ignored if mSubresourceBarrier is false
 };
 ///////////////////////////////////////////////
+//                    Shader
+///////////////////////////////////////////////
+enum ShaderModel
+{
+    // (From) 5.1 is supported on all DX12 hardware
+    SHADER_MODEL_5_1 = 0x51,
+    SHADER_MODEL_6_0 = 0x60,
+    SHADER_MODEL_6_1 = 0x61,
+    SHADER_MODEL_6_2 = 0x62,
+    SHADER_MODEL_6_3 = 0x63,
+    SHADER_MODEL_6_4 = 0x64,
+    SHADER_MODEL_6_5 = 0x65,
+    SHADER_MODEL_6_6 = 0x66,
+    SHADER_MODEL_6_7 = 0x67,
+    SHADER_MODEL_HIGHEST
+};
+
+enum ShaderStageLoadFlag
+{
+    SHADER_STAGE_LOAD_FLAG_NONE                  = 0x0,
+    SHADER_STAGE_LOAD_FLAG_ENABLE_PS_PRIMITIVEID = 0x1,
+    SHADER_STAGE_LOAD_FLAG_ENABLE_VR_MULTIVIEW   = 0x2,
+};
+
+struct ShaderStageDesc
+{
+    std::string_view mEntryPoint = "main";
+    std::string_view mFilePath;
+    ShaderStage mStage         = SHADER_STAGE_NONE;
+    ShaderStageLoadFlag mFlags = SHADER_STAGE_LOAD_FLAG_NONE;
+};
+
+struct ShaderConstants  // only supported by Vulkan and Metal APIs
+{
+    std::pmr::vector<u8> mBlob;
+    u32 mIndex;
+};
+
+struct ShaderDesc
+{
+    std::pmr::vector<ShaderStageDesc> mStages;
+    std::pmr::vector<ShaderConstants> mConstants;
+    ShaderModel mShaderMode = SHADER_MODEL_6_7;
+};
+
+class Shader : public RhiObjectBase
+{
+protected:
+    ShaderStage mStage  : 31   = SHADER_STAGE_NONE;
+    bool mIsMultiViewVR : 1    = false;
+    u32 mNumThreadsPerGroup[3] = {0, 0, 0};
+};
+
+///////////////////////////////////////////////
+//                    RootSignature
+///////////////////////////////////////////////
+
+enum RootSignatureFlags
+{
+    ROOT_SIGNATURE_FLAG_NONE,       // Default flag
+    ROOT_SIGNATURE_FLAG_LOCAL_BIT,  // used mainly in raytracing shaders
+};
+
+struct RootSignature
+{
+    std::pmr::vector<Shader*> mShaders;
+    std::pmr::vector<std::string_view> mStaticSamplerNames;
+    std::pmr::vector<Sampler*> mStaticSamplers;
+    u32 mMaxBindlessTextures = 0;
+    RootSignatureFlags mFlags;
+};
+///////////////////////////////////////////////
 //                    Device
 ///////////////////////////////////////////////
 struct DeviceDesc : public DescBase
 {
     bool mEnableRenderDocLayer      = false;
     bool mRequestAllAvailableQueues = true;
+    ShaderModel mShaderModel        = SHADER_MODEL_6_7;
 };
 
 class Device : public RhiObjectBase
 {
 public:
-    virtual ~Device() noexcept                                                         = 0 {}
+    virtual ~Device() noexcept                                                         = default;
     [[nodiscard]] virtual Semaphore* createSemaphore(SemaphoreDesc&) noexcept          = 0;
     [[nodiscard]] virtual Fence* createFence(FenceDesc&) noexcept                      = 0;
     [[nodiscard]] virtual Queue* requestQueue(QueueDesc&) noexcept                     = 0;
@@ -470,6 +588,7 @@ public:
     [[nodiscard]] virtual CmdPool* createCmdPool(CmdPoolDesc&) noexcept                = 0;
     [[nodiscard]] virtual Cmd* createCmd(CmdDesc&) noexcept                            = 0;
     [[nodiscard]] virtual RenderTarget* createRenderTarget(RenderTargetDesc&) noexcept = 0;
+    [[nodiscard]] virtual Shader* createShader(ShaderDesc&) noexcept                   = 0;
     virtual bool destroySemaphore(Semaphore*&) noexcept                                = 0;
     virtual bool destroyFence(Fence*&) noexcept                                        = 0;
     virtual bool releaseQueue(Queue*&) noexcept                                        = 0;
@@ -477,6 +596,7 @@ public:
     virtual bool destroyCmdPool(CmdPool*&) noexcept                                    = 0;  // will destroy all cmds allocated from it automatically
     virtual bool destroyCmd(Cmd*&) noexcept                                            = 0;  // destroy the cmd individually
     virtual bool destroyRenderTarget(RenderTarget*&) noexcept                          = 0;
+    virtual bool destroyShader(Shader*&) noexcept                                      = 0;
 };
 ///////////////////////////////////////////////
 //                    Adapter
@@ -507,7 +627,7 @@ struct AdapterDesc
 class Adapter : public RhiObjectBase
 {
 public:
-    virtual ~Adapter() noexcept                         = 0 {}
+    virtual ~Adapter() noexcept                         = default;
     virtual Device* requestDevice(DeviceDesc&) noexcept = 0;
     virtual void releaseDevice(Device*&) noexcept       = 0;
     virtual GPUSettings requestGPUSettings() noexcept   = 0;
@@ -537,7 +657,7 @@ class D3D12Backend;
 class Backend : public RhiObjectBase
 {
 public:
-    virtual ~Backend() noexcept                            = 0 {}
+    virtual ~Backend() noexcept                            = default;
     virtual Adapter* requestAdapter(AdapterDesc&) noexcept = 0;
     virtual void releaseAdapter(Adapter*&) noexcept        = 0;
 };
