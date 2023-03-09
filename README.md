@@ -45,9 +45,9 @@ cmake --build Build
 
 ## Features
 
-<img src="Documents/Images/Game_Engine_Architecture_3rd_Figure_1.16.png" alt="Game Engine Architecture" width=360 align="right"/>
+<img src="Documents/Images/Arch.png" alt="Game Engine Architecture" width=360 align="right"/>
 
-Axe is basically designed according to the architecture shown right(from Book [Game Engine Architecture, Third Edition](https://www.gameenginebook.com/)). Thanks to the powerful standard libraries, and lots of high-quality open source third-party libraries, it can be built directly from the core layer. Runtime of Axe has x well-designed layers:
+Axe is basically designed according to the architecture shown right. Thanks to the powerful standard libraries, and lots of high-quality open source third-party libraries, it can be built directly from the core layer. Runtime of Axe has x well-designed layers:
 
 - **00Core**
    - (WIP) High performance math library for graphics based on [glm](https://github.com/g-truc/glm)

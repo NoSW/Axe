@@ -52,6 +52,25 @@ private:
     public:
         int getValue();
         static int getDate();
+private:
+    // constant
+    const int MAX_NUM = 16;
+
+    // scalar
+    char _mChar;
+    struct Pair { int x, y; };
+    Pair _mPair;
+
+    // ref
+    Parent* _mpParent;
+
+    // resource handle(has ownership)
+    std::unique_ptr<Image> _mpImage;
+    typedef Allocator_T* Allocator;
+    Allocator _mpAllocatorHandle;
+
+    // resource will be release automatically
+    std::vector<u32> _mIndices;
 };
 
 static int gsCount;             // `g` refer to global
