@@ -13,7 +13,7 @@
 
 ### Strategy:
 
-![Leak_Freedom_Strategy](Images\Leak_Freedom_Strategy.png)
+![Leak_Freedom_Strategy](Images/Leak_Freedom_Strategy.png)
 
 ### Summary:
 
