@@ -42,7 +42,6 @@ run cmake directly with any options supported by cmake. The simplest one, for ex
 cmake -S. -B Build
 cmake --build Build
 ```
-
 ## Features
 
 <img src="Documents/Images/Arch.png" alt="Game Engine Architecture" width=360 align="right"/>
@@ -53,6 +52,7 @@ Axe is basically designed according to the architecture shown right. Thanks to t
    - (WIP) High performance math library for graphics based on [glm](https://github.com/g-truc/glm)
    - (WIP) High performance memory management base on [mimalloc](https://github.com/microsoft/mimalloc)
    - (WIP) Cross-platform logging system based on [spdlog](https://github.com/gabime/spdlog)
+   - (WIP) Cross-platform windows management based on [SDL](https://github.com/libsdl-org/SDL)
    - (WIP) Reflection of C++ based on ...
 - **01Resource**
   - (WIP) Multi-threaded and asynchronous resource loading
@@ -64,28 +64,28 @@ Axe is basically designed according to the architecture shown right. Thanks to t
   - (WIP) Dynamic Descriptor Management.
   - (WIP) Memory Management based on [VulkanMemoryAllocation](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator).
   - (WIP) Multi-threaded Command Buffer Generation
-- **04RenderGraph**
-- **06Pipeline**
+- **03RenderGraph**
+- **04Pipeline**
   - (WIP) Modern deferred rendering pipeline based on visibility buffer
   - (WIP) Global Illumination system with an unlimited number of light sources and minimal memory footprint
-- **08System**
+- **05System**
   - (WIP) Animation System based on ...
   - (WIP) Physics System based on ...
   - (WIP) ECS(Entity-Component-System) base on [entt](https://github.com/skypjack/entt)
   - (WIP) GUI system based on [Dear imgui](https://github.com/ocornut/imgui)
-- **10Scene**
+- **06Scene**
   - Partitioning, Culling ...
-- **12GamePlay**
+- **07GamePlay**
   - (WIP) Lua Scripting System based on ...
   - (WIP) Camera ...
-- **14App**
-  - (WIP) Cross-platform windows management based on [SDL](https://github.com/libsdl-org/SDL)
+- **08App**
+  - .
 
 See [Documents/Runtime.md](/Documents/Runtime.md) and [Documents/AssetSystem.md](/Documents/AssetSystem.md) for more details.
 
 ## Dependencies
 
-See [/Documents/ThirdParty.md](/Documents/ThirdParty.md) for more details.
+See [Documents/ThirdParty.md](/Documents/ThirdParty.md) for more details.
 
 ## License
 MIT License
