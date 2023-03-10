@@ -48,9 +48,10 @@ def run_CMake(compiler):
     return print_then_run(cmd)
 
 def run_Build(compiler):
-    mode = "Release" if input("Debug(default) or Release? [d/r]").lower() == 'r' else "Debug"
     build_folder = os.path.join(PJ_ROOT, f"Build_{compiler}")
-    if run_CMake(compiler) and compiler != "msvc":
+    fromScratch = input("\nBuild from scratch? [y/n]").lower() == 'y'
+    if compiler != "msvc" and ((not fromScratch) or run_CMake(compiler)):
+        mode = "Release" if input("\nStart build in Debug(default) or Release mode? [d/r]").lower() == 'r' else "Debug"
         print_then_run(f"cmake --build {build_folder} --config {mode} -- -j 32")
 
 if __name__ == "__main__":

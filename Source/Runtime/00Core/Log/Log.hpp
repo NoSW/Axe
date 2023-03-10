@@ -1,5 +1,6 @@
 #pragma once
 #include "00Core/Config.hpp"
+#include "00Core/OS/OS.hpp"
 
 // clang-format off
 #define SPDLOG_FUNCTION     __func__
