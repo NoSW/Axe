@@ -30,6 +30,7 @@ public:
     friend class VulkanRenderTarget;
     friend class VulkanSwapChain;
     friend class VulkanShader;
+    friend class VulkanRootSignature;
 
 private:
     void _collectQueueInfo() noexcept;
@@ -71,13 +72,23 @@ public:
     AXE_PUBLIC bool destroyShader(Shader*& p) noexcept override { return _destroyHelper<VulkanShader>(p); }
 
 private:
+    // constant
     static constexpr u32 MAX_QUEUE_FLAG = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT |
                                           VK_QUEUE_TRANSFER_BIT | VK_QUEUE_SPARSE_BINDING_BIT | VK_QUEUE_PROTECTED_BIT;
 
-    VulkanAdapter* const _mpAdapter = nullptr;
+    // scalar
+    ShaderModel _mShaderModel                         = SHADER_MODEL_6_7;
 
-    VkDevice _mpHandle              = VK_NULL_HANDLE;
+    // reference
+    VulkanAdapter* const _mpAdapter                   = nullptr;
 
+    // resource-handle
+    VkDevice _mpHandle                                = VK_NULL_HANDLE;
+    VkDescriptorPool _mpEmptyDescriptorPool           = VK_NULL_HANDLE;
+    VkDescriptorSetLayout _mpEmptyDescriptorSetLayout = VK_NULL_HANDLE;
+    VkDescriptorSet _mpEmptyDescriptorSet             = VK_NULL_HANDLE;
+
+    // resource-auto
     struct QueueInfo
     {
         u32 mAvailableCount = 0;
@@ -86,8 +97,6 @@ private:
     };
 
     std::array<QueueInfo, MAX_QUEUE_FLAG> _mQueueInfos;  // <familyIndex, count>
-
-    ShaderModel _mShaderModel = SHADER_MODEL_6_7;
 };
 
 }  // namespace axe::rhi

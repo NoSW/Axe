@@ -7,10 +7,15 @@ struct SDL_WindowEvent;
 
 namespace axe::window
 {
+struct WindowDesc
+{
+    std::string_view mTitle = "Untitled";
+};
+
 class Window final
 {
 public:
-    bool init(std::string_view title) noexcept;
+    bool init(WindowDesc&) noexcept;
     void exit() noexcept;
     bool load() noexcept { return true; }
     bool unload() noexcept { return true; }

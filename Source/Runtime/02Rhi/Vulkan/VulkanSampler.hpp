@@ -6,6 +6,7 @@
 namespace axe::rhi
 {
 class VulkanDevice;
+class VulkanRootSignature;
 class VulkanSampler : public Sampler
 {
 private:
@@ -15,6 +16,7 @@ private:
     bool _create(SamplerDesc&) noexcept;
     bool _destroy() noexcept;
     friend class VulkanDevice;
+    friend class VulkanRootSignature;
 
 private:
     VulkanDevice* const _mpDevice                        = nullptr;

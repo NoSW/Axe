@@ -13,6 +13,9 @@
 #include "02Rhi/Vulkan/VulkanAdapter.hpp"
 #include "02Rhi/Vulkan/VulkanDevice.hpp"
 
+#include "00Core/Memory/Memory.hpp"
+#include "00Core/OS/OS.hpp"
+
 namespace axe::rhi
 {
 
@@ -43,6 +46,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
 
 VulkanBackend::VulkanBackend(BackendDesc& desc) noexcept
 {
+    memory::MonoMemoryResource<4096> arena;
     // create instance
     _mGpuMode = desc.mGpuMode;
 #if AXE_02RHI_VULKAN_USE_DISPATCH_TABLE
@@ -54,16 +58,16 @@ VulkanBackend::VulkanBackend(BackendDesc& desc) noexcept
 
     u32 layerCount = 0;
     vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-    std::vector<VkLayerProperties> layers(layerCount);
+    std::pmr::vector<VkLayerProperties> layers(layerCount, &arena);
     vkEnumerateInstanceLayerProperties(&layerCount, layers.data());
-    std::pmr::vector<const char*> layerNames(layerCount, nullptr);
+    std::pmr::vector<const char*> layerNames(layerCount, nullptr, &arena);
     for (u32 i = 0; i < layers.size(); ++i) { layerNames[i] = layers[i].layerName; }
 
     u32 extensionCount = 0;
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-    std::vector<VkExtensionProperties> extensions(extensionCount);
+    std::pmr::vector<VkExtensionProperties> extensions(extensionCount, &arena);
     vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, extensions.data());
-    std::pmr::vector<const char*> extensionNames(extensionCount, nullptr);
+    std::pmr::vector<const char*> extensionNames(extensionCount, nullptr, &arena);
     for (u32 i = 0; i < extensions.size(); ++i) { extensionNames[i] = extensions[i].extensionName; }
 
     filter_unsupported(layerNames, gsWantedInstanceLayers);
@@ -112,7 +116,7 @@ VulkanBackend::VulkanBackend(BackendDesc& desc) noexcept
     result       = vkEnumeratePhysicalDevices(_mpHandle, &gpuCount, nullptr);
     AXE_ASSERT(VK_SUCCEEDED(result));
     AXE_ASSERT(gpuCount > 0, "No detected gpu");
-    std::pmr::vector<VkPhysicalDevice> gpus(gpuCount);
+    std::pmr::vector<VkPhysicalDevice> gpus(gpuCount, &arena);
     result = vkEnumeratePhysicalDevices(_mpHandle, &gpuCount, gpus.data());
     AXE_ASSERT(VK_SUCCEEDED(result));
 

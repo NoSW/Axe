@@ -238,7 +238,7 @@ struct RenderTargetDesc
     u32 mNodeIndex;             // GPU which will own this texture
 };
 
-struct RenderTargetBarrier
+struct RenderTargetBarrier : public RhiObjectBase
 {
     RenderTarget* mpRenderTarget = nullptr;
     ResourceFlag mCurrentFlag    = RESOURCE_FLAG_UNDEFINED;
@@ -257,7 +257,7 @@ struct ShaderStageDesc
 {
     std::string_view mEntryPoint = "main";
     std::string_view mFilePath;
-    ShaderStage mStage         = SHADER_STAGE_NONE;
+    ShaderStageFlag mStage     = SHADER_STAGE_FLAG_NONE;
     ShaderStageLoadFlag mFlags = SHADER_STAGE_LOAD_FLAG_NONE;
 };
 
@@ -289,12 +289,12 @@ struct DescriptorInfo
     u32 mType;
     u32 mSize;
     u32 mHandleIndex;
-    u32 mDim             : 4;
-    u32 mRootDescriptor  : 1;
-    u32 mStaticSampler   : 1;
-    u32 mUpdateFrequency : 3;
+    u32 mDim              : 4;
+    u32 mIsRootDescriptor : 1;
+    u32 mStaticSampler    : 1;
+    u32 mUpdateFrequency  : 3;
 
-    u32 mVkStages        : 8;
+    u32 mVkStages         : 8;
     u32 mVkType;
     u32 mReg;
 };

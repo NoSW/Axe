@@ -22,16 +22,16 @@ enum GpuMode
 
 enum WaveOpsSupportFlag
 {
-    WAVE_OPS_SUPPORT_FLAG_NONE                 = 0x0,
-    WAVE_OPS_SUPPORT_FLAG_BASIC_BIT            = 0x00000001,
-    WAVE_OPS_SUPPORT_FLAG_VOTE_BIT             = 0x00000002,
-    WAVE_OPS_SUPPORT_FLAG_ARITHMETIC_BIT       = 0x00000004,
-    WAVE_OPS_SUPPORT_FLAG_BALLOT_BIT           = 0x00000008,
-    WAVE_OPS_SUPPORT_FLAG_SHUFFLE_BIT          = 0x00000010,
-    WAVE_OPS_SUPPORT_FLAG_SHUFFLE_RELATIVE_BIT = 0x00000020,
-    WAVE_OPS_SUPPORT_FLAG_CLUSTERED_BIT        = 0x00000040,
-    WAVE_OPS_SUPPORT_FLAG_QUAD_BIT             = 0x00000080,
-    WAVE_OPS_SUPPORT_FLAG_PARTITIONED_BIT_NV   = 0x00000100,
+    WAVE_OPS_SUPPORT_FLAG_NONE                 = 0,
+    WAVE_OPS_SUPPORT_FLAG_BASIC_BIT            = 1 << 0,
+    WAVE_OPS_SUPPORT_FLAG_VOTE_BIT             = 1 << 1,
+    WAVE_OPS_SUPPORT_FLAG_ARITHMETIC_BIT       = 1 << 2,
+    WAVE_OPS_SUPPORT_FLAG_BALLOT_BIT           = 1 << 3,
+    WAVE_OPS_SUPPORT_FLAG_SHUFFLE_BIT          = 1 << 4,
+    WAVE_OPS_SUPPORT_FLAG_SHUFFLE_RELATIVE_BIT = 1 << 5,
+    WAVE_OPS_SUPPORT_FLAG_CLUSTERED_BIT        = 1 << 6,
+    WAVE_OPS_SUPPORT_FLAG_QUAD_BIT             = 1 << 7,
+    WAVE_OPS_SUPPORT_FLAG_PARTITIONED_BIT_NV   = 1 << 8,
     WAVE_OPS_SUPPORT_FLAG_ALL                  = 0x7FFFFFFF
 };
 
@@ -152,24 +152,25 @@ enum SamplerModelConversion
 enum ResourceState
 {
     RESOURCE_STATE_UNDEFINED                         = 0,
-    RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER        = 0x1,
-    RESOURCE_STATE_INDEX_BUFFER                      = 0x2,
-    RESOURCE_STATE_RENDER_TARGET                     = 0x4,
-    RESOURCE_STATE_UNORDERED_ACCESS                  = 0x8,
-    RESOURCE_STATE_DEPTH_WRITE                       = 0x10,
-    RESOURCE_STATE_DEPTH_READ                        = 0x20,
-    RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE         = 0x40,
-    RESOURCE_STATE_PIXEL_SHADER_RESOURCE             = 0x80,
-    RESOURCE_STATE_SHADER_RESOURCE                   = 0x40 | 0x80,
-    RESOURCE_STATE_STREAM_OUT                        = 0x100,
-    RESOURCE_STATE_INDIRECT_ARGUMENT                 = 0x200,
-    RESOURCE_STATE_COPY_DEST                         = 0x400,
-    RESOURCE_STATE_COPY_SOURCE                       = 0x800,
-    RESOURCE_STATE_GENERIC_READ                      = (((((0x1 | 0x2) | 0x40) | 0x80) | 0x200) | 0x800),
-    RESOURCE_STATE_PRESENT                           = 0x1000,
-    RESOURCE_STATE_COMMON                            = 0x2000,
-    RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE = 0x4000,
-    RESOURCE_STATE_SHADING_RATE_SOURCE               = 0x8000,
+    RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER        = 1 << 0,
+    RESOURCE_STATE_INDEX_BUFFER                      = 1 << 1,
+    RESOURCE_STATE_RENDER_TARGET                     = 1 << 2,
+    RESOURCE_STATE_UNORDERED_ACCESS                  = 1 << 3,
+    RESOURCE_STATE_DEPTH_WRITE                       = 1 << 4,
+    RESOURCE_STATE_DEPTH_READ                        = 1 << 5,
+    RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE         = 1 << 6,
+    RESOURCE_STATE_PIXEL_SHADER_RESOURCE             = 1 << 7,
+    RESOURCE_STATE_STREAM_OUT                        = 1 << 8,
+    RESOURCE_STATE_INDIRECT_ARGUMENT                 = 1 << 9,
+    RESOURCE_STATE_COPY_DEST                         = 1 << 10,
+    RESOURCE_STATE_COPY_SOURCE                       = 1 << 11,
+    RESOURCE_STATE_PRESENT                           = 1 << 12,
+    RESOURCE_STATE_COMMON                            = 1 << 13,
+    RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE = 1 << 14,
+    RESOURCE_STATE_SHADING_RATE_SOURCE               = 1 << 15,
+    RESOURCE_STATE_SHADER_RESOURCE                   = RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+    RESOURCE_STATE_GENERIC_READ                      = RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER | RESOURCE_STATE_INDEX_BUFFER | RESOURCE_STATE_RENDER_TARGET |
+                                  RESOURCE_STATE_PIXEL_SHADER_RESOURCE | RESOURCE_STATE_INDIRECT_ARGUMENT | RESOURCE_STATE_COPY_SOURCE,
 };
 
 enum TextureCreationFlags
@@ -177,39 +178,39 @@ enum TextureCreationFlags
     // Default flag (Texture will use default allocation strategy decided by the api specific allocator)
     TEXTURE_CREATION_FLAG_NONE                      = 0,
     // Texture will allocate its own memory (COMMITTED resource)
-    TEXTURE_CREATION_FLAG_OWN_MEMORY_BIT            = 0x01,
+    TEXTURE_CREATION_FLAG_OWN_MEMORY_BIT            = 1 << 0,
     // Texture will be allocated in memory which can be shared among multiple processes
-    TEXTURE_CREATION_FLAG_EXPORT_BIT                = 0x02,
+    TEXTURE_CREATION_FLAG_EXPORT_BIT                = 1 << 1,
     // Texture will be allocated in memory which can be shared among multiple gpus
-    TEXTURE_CREATION_FLAG_EXPORT_ADAPTER_BIT        = 0x04,
+    TEXTURE_CREATION_FLAG_EXPORT_ADAPTER_BIT        = 1 << 2,
     // Texture will be imported from a handle created in another process
-    TEXTURE_CREATION_FLAG_IMPORT_BIT                = 0x08,
+    TEXTURE_CREATION_FLAG_IMPORT_BIT                = 1 << 3,
     // Use ESRAM to store this texture
-    TEXTURE_CREATION_FLAG_ESRAM                     = 0x10,
+    TEXTURE_CREATION_FLAG_ESRAM                     = 1 << 4,
     // Use on-tile memory to store this texture
-    TEXTURE_CREATION_FLAG_ON_TILE                   = 0x20,
+    TEXTURE_CREATION_FLAG_ON_TILE                   = 1 << 5,
     // Prevent compression meta data from generating (XBox)
-    TEXTURE_CREATION_FLAG_NO_COMPRESSION            = 0x40,
+    TEXTURE_CREATION_FLAG_NO_COMPRESSION            = 1 << 6,
     // Force 2D instead of automatically determining dimension based on width, height, depth
-    TEXTURE_CREATION_FLAG_FORCE_2D                  = 0x80,
+    TEXTURE_CREATION_FLAG_FORCE_2D                  = 1 << 7,
     // Force 3D instead of automatically determining dimension based on width, height, depth
-    TEXTURE_CREATION_FLAG_FORCE_3D                  = 0x100,
+    TEXTURE_CREATION_FLAG_FORCE_3D                  = 1 << 8,
     // Display target
-    TEXTURE_CREATION_FLAG_ALLOW_DISPLAY_TARGET      = 0x200,
+    TEXTURE_CREATION_FLAG_ALLOW_DISPLAY_TARGET      = 1 << 9,
     // Create an sRGB texture.
-    TEXTURE_CREATION_FLAG_SRGB                      = 0x400,
+    TEXTURE_CREATION_FLAG_SRGB                      = 1 << 10,
     // Create a normal map texture
-    TEXTURE_CREATION_FLAG_NORMAL_MAP                = 0x800,
+    TEXTURE_CREATION_FLAG_NORMAL_MAP                = 1 << 11,
     // Fast clear
-    TEXTURE_CREATION_FLAG_FAST_CLEAR                = 0x1000,
+    TEXTURE_CREATION_FLAG_FAST_CLEAR                = 1 << 12,
     // Fragment mask
-    TEXTURE_CREATION_FLAG_FRAG_MASK                 = 0x2000,
+    TEXTURE_CREATION_FLAG_FRAG_MASK                 = 1 << 13,
     // Doubles the amount of array layers of the texture when rendering VR. Also forces the texture to be a 2D Array texture.
-    TEXTURE_CREATION_FLAG_VR_MULTIVIEW              = 0x4000,
+    TEXTURE_CREATION_FLAG_VR_MULTIVIEW              = 1 << 14,
     // Binds the FFR fragment density if this texture is used as a render target.
-    TEXTURE_CREATION_FLAG_VR_FOVEATED_RENDERING     = 0x8000,
+    TEXTURE_CREATION_FLAG_VR_FOVEATED_RENDERING     = 1 << 15,
     // Creates resolve attachment for auto resolve (MSAA on tiled architecture - Resolve can be done on tile through render pass)
-    TEXTURE_CREATION_FLAG_CREATE_RESOLVE_ATTACHMENT = 0x10000,
+    TEXTURE_CREATION_FLAG_CREATE_RESOLVE_ATTACHMENT = 1 << 16,
 };
 
 enum MSAASampleCount
@@ -225,22 +226,22 @@ enum MSAASampleCount
 enum ResourceFlag
 {
     RESOURCE_FLAG_UNDEFINED                         = 0,
-    RESOURCE_FLAG_VERTEX_AND_CONSTANT_BUFFER        = (1 << 0),
-    RESOURCE_FLAG_INDEX_BUFFER                      = (1 << 1),
-    RESOURCE_FLAG_RENDER_TARGET                     = (1 << 2),
-    RESOURCE_FLAG_UNORDERED_ACCESS                  = (1 << 3),
-    RESOURCE_FLAG_DEPTH_WRITE                       = (1 << 4),
-    RESOURCE_FLAG_DEPTH_READ                        = (1 << 5),
-    RESOURCE_FLAG_NON_PIXEL_SHADER_RESOURCE         = (1 << 6),
-    RESOURCE_FLAG_PIXEL_SHADER_RESOURCE             = (1 << 7),
-    RESOURCE_FLAG_STREAM_OUT                        = (1 << 8),
-    RESOURCE_FLAG_INDIRECT_ARGUMENT                 = (1 << 9),
-    RESOURCE_FLAG_COPY_DEST                         = (1 << 10),
-    RESOURCE_FLAG_COPY_SOURCE                       = (1 << 11),
-    RESOURCE_FLAG_PRESENT                           = (1 << 12),
-    RESOURCE_FLAG_COMMON                            = (1 << 13),
-    RESOURCE_FLAG_RAYTRACING_ACCELERATION_STRUCTURE = (1 << 14),
-    RESOURCE_FLAG_SHADING_RATE_SOURCE               = (1 << 15),
+    RESOURCE_FLAG_VERTEX_AND_CONSTANT_BUFFER        = 1 << 0,
+    RESOURCE_FLAG_INDEX_BUFFER                      = 1 << 1,
+    RESOURCE_FLAG_RENDER_TARGET                     = 1 << 2,
+    RESOURCE_FLAG_UNORDERED_ACCESS                  = 1 << 3,
+    RESOURCE_FLAG_DEPTH_WRITE                       = 1 << 4,
+    RESOURCE_FLAG_DEPTH_READ                        = 1 << 5,
+    RESOURCE_FLAG_NON_PIXEL_SHADER_RESOURCE         = 1 << 6,
+    RESOURCE_FLAG_PIXEL_SHADER_RESOURCE             = 1 << 7,
+    RESOURCE_FLAG_STREAM_OUT                        = 1 << 8,
+    RESOURCE_FLAG_INDIRECT_ARGUMENT                 = 1 << 9,
+    RESOURCE_FLAG_COPY_DEST                         = 1 << 10,
+    RESOURCE_FLAG_COPY_SOURCE                       = 1 << 11,
+    RESOURCE_FLAG_PRESENT                           = 1 << 12,
+    RESOURCE_FLAG_COMMON                            = 1 << 13,
+    RESOURCE_FLAG_RAYTRACING_ACCELERATION_STRUCTURE = 1 << 14,
+    RESOURCE_FLAG_SHADING_RATE_SOURCE               = 1 << 15,
     RESOURCE_FLAG_SHADER_RESOURCE                   = RESOURCE_FLAG_NON_PIXEL_SHADER_RESOURCE | RESOURCE_FLAG_PIXEL_SHADER_RESOURCE,
     RESOURCE_FLAG_GENERIC_READ                      = RESOURCE_FLAG_VERTEX_AND_CONSTANT_BUFFER | RESOURCE_FLAG_INDEX_BUFFER |
                                  RESOURCE_FLAG_NON_PIXEL_SHADER_RESOURCE | RESOURCE_FLAG_PIXEL_SHADER_RESOURCE |
@@ -265,75 +266,61 @@ enum TextureDimension
 
 enum DescriptorType
 {
-    DESCRIPTOR_TYPE_UNDEFINED                          = 0,
-    DESCRIPTOR_TYPE_SAMPLER                            = 0x01,
-
-    // SRV Read only texture
-    DESCRIPTOR_TYPE_TEXTURE                            = (DESCRIPTOR_TYPE_SAMPLER << 1),
-
-    /// UAV Texture
-    DESCRIPTOR_TYPE_RW_TEXTURE                         = (DESCRIPTOR_TYPE_TEXTURE << 1),
-
-    // SRV Read only buffer
-    DESCRIPTOR_TYPE_BUFFER                             = (DESCRIPTOR_TYPE_RW_TEXTURE << 1),
-    DESCRIPTOR_TYPE_BUFFER_RAW                         = (DESCRIPTOR_TYPE_BUFFER | (DESCRIPTOR_TYPE_BUFFER << 1)),
-
-    /// UAV Buffer
-    DESCRIPTOR_TYPE_RW_BUFFER                          = (DESCRIPTOR_TYPE_BUFFER << 2),
-    DESCRIPTOR_TYPE_RW_BUFFER_RAW                      = (DESCRIPTOR_TYPE_RW_BUFFER | (DESCRIPTOR_TYPE_RW_BUFFER << 1)),
-
-    /// Uniform buffer
-    DESCRIPTOR_TYPE_UNIFORM_BUFFER                     = (DESCRIPTOR_TYPE_RW_BUFFER << 2),
-
-    /// Push constant / Root constant
-    DESCRIPTOR_TYPE_ROOT_CONSTANT                      = (DESCRIPTOR_TYPE_UNIFORM_BUFFER << 1),
+    DESCRIPTOR_TYPE_UNDEFINED                                 = 0,
+    DESCRIPTOR_TYPE_SAMPLER                                   = 1 << 0,
+    DESCRIPTOR_TYPE_TEXTURE                                   = 1 << 1,                                // SRV Read only texture
+    DESCRIPTOR_TYPE_RW_TEXTURE                                = 1 << 2,                                /// UAV Texture
+    DESCRIPTOR_TYPE_BUFFER                                    = 1 << 3,                                // SRV Read only buffer
+    DESCRIPTOR_TYPE_BUFFER_RAW                                = (1 << 4) | DESCRIPTOR_TYPE_BUFFER,     // SRV Read only buffer
+    DESCRIPTOR_TYPE_RW_BUFFER                                 = 1 << 5,                                /// UAV Buffer
+    DESCRIPTOR_TYPE_RW_BUFFER_RAW                             = (1 << 6) | DESCRIPTOR_TYPE_RW_BUFFER,  /// UAV Buffer
+    DESCRIPTOR_TYPE_UNIFORM_BUFFER                            = 1 << 7,                                /// Uniform buffer
+    DESCRIPTOR_TYPE_ROOT_CONSTANT                             = 1 << 8,                                /// Push constant / Root constant
 
     /// IA
-    DESCRIPTOR_TYPE_VERTEX_BUFFER                      = (DESCRIPTOR_TYPE_ROOT_CONSTANT << 1),
-    DESCRIPTOR_TYPE_INDEX_BUFFER                       = (DESCRIPTOR_TYPE_VERTEX_BUFFER << 1),
-    DESCRIPTOR_TYPE_INDIRECT_BUFFER                    = (DESCRIPTOR_TYPE_INDEX_BUFFER << 1),
+    DESCRIPTOR_TYPE_VERTEX_BUFFER                             = 1 << 9,
+    DESCRIPTOR_TYPE_INDEX_BUFFER                              = 1 << 10,
+    DESCRIPTOR_TYPE_INDIRECT_BUFFER                           = 1 << 11,
 
-    /// Cubemap SRV
-    DESCRIPTOR_TYPE_TEXTURE_CUBE                       = (DESCRIPTOR_TYPE_TEXTURE | (DESCRIPTOR_TYPE_INDIRECT_BUFFER << 1)),
-
-    /// RTV / DSV per mip slice
-    DESCRIPTOR_TYPE_RENDER_TARGET_MIP_SLICES           = (DESCRIPTOR_TYPE_INDIRECT_BUFFER << 2),
-
-    /// RTV / DSV per array slice
-    DESCRIPTOR_TYPE_RENDER_TARGET_ARRAY_SLICES         = (DESCRIPTOR_TYPE_RENDER_TARGET_MIP_SLICES << 1),
+    DESCRIPTOR_TYPE_TEXTURE_CUBE                              = 1 << 12 | DESCRIPTOR_TYPE_TEXTURE,  /// Cubemap SRV
+    DESCRIPTOR_TYPE_RENDER_TARGET_MIP_SLICES                  = 1 << 13,                            /// RTV / DSV per mip slice
+    DESCRIPTOR_TYPE_RENDER_TARGET_ARRAY_SLICES                = 1 << 14,                            /// RTV / DSV per array slice
 
     /// RTV / DSV per depth slice
-    DESCRIPTOR_TYPE_RENDER_TARGET_DEPTH_SLICES         = (DESCRIPTOR_TYPE_RENDER_TARGET_ARRAY_SLICES << 1),
-    DESCRIPTOR_TYPE_RAY_TRACING                        = (DESCRIPTOR_TYPE_RENDER_TARGET_DEPTH_SLICES << 1),
-    DESCRIPTOR_TYPE_INDIRECT_COMMAND_BUFFER            = (DESCRIPTOR_TYPE_RAY_TRACING << 1),
+    DESCRIPTOR_TYPE_RENDER_TARGET_DEPTH_SLICES                = 1 << 15,
+    DESCRIPTOR_TYPE_RAY_TRACING                               = 1 << 16,
+    DESCRIPTOR_TYPE_INDIRECT_COMMAND_BUFFER                   = 1 << 17,
 
     /// Subpass input (only available in Vulkan)
-    DESCRIPTOR_TYPE_INPUT_ATTACHMENT                   = (DESCRIPTOR_TYPE_INDIRECT_COMMAND_BUFFER << 1),
-    DESCRIPTOR_TYPE_TEXEL_BUFFER                       = (DESCRIPTOR_TYPE_INPUT_ATTACHMENT << 1),
-    DESCRIPTOR_TYPE_RW_TEXEL_BUFFER                    = (DESCRIPTOR_TYPE_TEXEL_BUFFER << 1),
-    DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER             = (DESCRIPTOR_TYPE_RW_TEXEL_BUFFER << 1),
+    DESCRIPTOR_TYPE_INPUT_ATTACHMENT_VKONLY                   = 1 << 18,
+    DESCRIPTOR_TYPE_TEXEL_BUFFER_VKONLY                       = 1 << 19,
+    DESCRIPTOR_TYPE_RW_TEXEL_BUFFER_VKONLY                    = 1 << 20,
+    DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER_VKONLY             = 1 << 21,
 
     /// Khronos extension ray tracing (only available in Vulkan))
-    DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE             = (DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER << 1),
-    DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_BUILD_INPUT = (DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE << 1),
-    DESCRIPTOR_TYPE_SHADER_DEVICE_ADDRESS              = (DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_BUILD_INPUT << 1),
-    DESCRIPTOR_TYPE_SHADER_BINDING_TABLE               = (DESCRIPTOR_TYPE_SHADER_DEVICE_ADDRESS << 1),
+    DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_VKONLY             = 1 << 22,
+    DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_BUILD_INPUT_VKONLY = 1 << 23,
+    DESCRIPTOR_TYPE_SHADER_DEVICE_ADDRESS_VKONLY              = 1 << 24,
+    DESCRIPTOR_TYPE_SHADER_BINDING_TABLE_VKONLY               = 1 << 25,
 };
 
-enum ShaderStage
+enum ShaderStageFlag
 {
-    SHADER_STAGE_NONE = 0,
-    SHADER_STAGE_VERT,
-    SHADER_STAGE_TESC,
-    SHADER_STAGE_TESE,
-    SHADER_STAGE_GEOM,
-    SHADER_STAGE_FRAG,
-    SHADER_STAGE_COMP,
-    SHADER_STAGE_RAYTRACING,
-    SHADER_STAGE_COUNT  = 7,
+    SHADER_STAGE_FLAG_NONE       = 0,
+    SHADER_STAGE_FLAG_VERT       = 1 << 0,
+    SHADER_STAGE_FLAG_TESC       = 1 << 1,
+    SHADER_STAGE_FLAG_TESE       = 1 << 2,
+    SHADER_STAGE_FLAG_GEOM       = 1 << 3,
+    SHADER_STAGE_FLAG_FRAG       = 1 << 4,
+    SHADER_STAGE_FLAG_COMP       = 1 << 5,
+    SHADER_STAGE_FLAG_RAYTRACING = 1 << 6,
+    SHADER_STAGE_FLAG_MAX        = SHADER_STAGE_FLAG_RAYTRACING + 1,
+    SHADER_STAGE_FLAG_COUNT      = 7,
 
-    SHADER_STAGE_HULL   = SHADER_STAGE_TESC,
-    SHADER_STAGE_DOMAIN = SHADER_STAGE_TESE
+    SHADER_STAGE_FLAG_HULL       = SHADER_STAGE_FLAG_TESC,
+    SHADER_STAGE_FLAG_DOMAIN     = SHADER_STAGE_FLAG_TESE,
+
+    SHADER_STAGE_FLAG_GRAPHICS   = SHADER_STAGE_FLAG_VERT | SHADER_STAGE_FLAG_TESC | SHADER_STAGE_FLAG_TESE | SHADER_STAGE_FLAG_GEOM | SHADER_STAGE_FLAG_FRAG,
 };
 
 enum ShaderModel
@@ -353,9 +340,8 @@ enum ShaderModel
 
 enum ShaderStageLoadFlag
 {
-    SHADER_STAGE_LOAD_FLAG_NONE                  = 0x0,
-    SHADER_STAGE_LOAD_FLAG_ENABLE_PS_PRIMITIVEID = 0x1,
-    SHADER_STAGE_LOAD_FLAG_ENABLE_VR_MULTIVIEW   = 0x2,
+    SHADER_STAGE_LOAD_FLAG_NONE,
+    SHADER_STAGE_LOAD_FLAG_ENABLE_PS_PRIMITIVEID,
 };
 
 enum PipelineType
@@ -401,17 +387,17 @@ enum GraphicsApi
     GRAPHICS_API_AVAILABLE = AXE_02RHI_API_FLAG_AVAILABLE,
 };
 
-inline constexpr ShaderStage get_shader_stage(std::string_view ext)
+inline constexpr ShaderStageFlag get_shader_stage(std::string_view ext)
 {
-    if (ext == ".vert") { return SHADER_STAGE_VERT; }
-    else if (ext == ".tesc") { return SHADER_STAGE_TESC; }
-    else if (ext == ".tese") { return SHADER_STAGE_TESE; }
-    else if (ext == ".geom") { return SHADER_STAGE_GEOM; }
-    else if (ext == ".frag") { return SHADER_STAGE_FRAG; }
-    else if (ext == ".comp") { return SHADER_STAGE_COMP; }
+    if (ext == ".vert") { return SHADER_STAGE_FLAG_VERT; }
+    else if (ext == ".tesc") { return SHADER_STAGE_FLAG_TESC; }
+    else if (ext == ".tese") { return SHADER_STAGE_FLAG_TESE; }
+    else if (ext == ".geom") { return SHADER_STAGE_FLAG_GEOM; }
+    else if (ext == ".frag") { return SHADER_STAGE_FLAG_FRAG; }
+    else if (ext == ".comp") { return SHADER_STAGE_FLAG_COMP; }
     else if (ext == ".rgen" || ext == ".rmiss" || ext == ".rchit" ||
-             ext == ".rint" || ext == ".rahit" || ext == "rcall") { return SHADER_STAGE_RAYTRACING; }
-    else { return SHADER_STAGE_NONE; }
+             ext == ".rint" || ext == ".rahit" || ext == "rcall") { return SHADER_STAGE_FLAG_RAYTRACING; }
+    else { return SHADER_STAGE_FLAG_NONE; }
 };
 
 struct VertexInput
@@ -426,12 +412,19 @@ struct VertexInput
 struct ShaderResource
 {
     std::string_view mName;
-    ShaderStage mShaderStage;
+    ShaderStageFlag mUsedShaderStage;
     TextureDimension mDim;
     DescriptorType mType;
     u32 mSet;
-    u32 mLBindingLocation;
+    u32 mBindingLocation;
     u32 mSize;
+
+    bool operator==(const ShaderResource& b) const
+    {
+        return mType == b.mType && mSet == b.mSet && mBindingLocation == b.mBindingLocation && mName == b.mName;
+    }
+
+    bool operator!=(const ShaderResource& b) const { return !(*this == b); }
 };
 
 struct ShaderVariable
@@ -440,6 +433,12 @@ struct ShaderVariable
     u32 mParentIndex;
     u32 mOffset;
     u32 mSize;
+    bool operator==(const ShaderVariable& b) const
+    {
+        return mOffset == b.mOffset && mSize == b.mSize && mName == b.mName;
+    }
+
+    bool operator!=(const ShaderVariable& b) const { return !(*this == b); }
 };
 
 struct ShaderReflection
@@ -447,23 +446,18 @@ struct ShaderReflection
     std::pmr::vector<VertexInput> mVertexInputs;
     std::pmr::vector<ShaderResource> mShaderResources;
     std::pmr::vector<ShaderVariable> mShaderVariables;
-    std::string_view mEntryPoint;
-    ShaderStage mShaderStage;
+    std::string_view mEntryPoint_VkOnly;
+    ShaderStageFlag mShaderStage;
     u32 mNumThreadsPerGroup[3];  // for compute shader
-    u32 mNumControlPoint[3];     // for tessellation
+    u32 mNumControlPoint;        // for tessellation
 };
 
 struct PipelineReflection
 {
-    ShaderStage mShaderStages;
-    std::pmr::vector<ShaderReflection> mShaderReflections;
+    ShaderStageFlag mShaderStages;
+    std::array<std::unique_ptr<ShaderReflection>, SHADER_STAGE_FLAG_COUNT> mShaderReflections{};
     std::pmr::vector<ShaderResource> mShaderResources;
     std::pmr::vector<ShaderVariable> mShaderVariables;
-    u32 mVertexStageIndex;
-    u32 mHullStageIndex;
-    u32 mDomainStageIndex;
-    u32 mGeometryStageIndex;
-    u32 mPixelStageIndex;
 };
 
 }  // namespace axe::rhi

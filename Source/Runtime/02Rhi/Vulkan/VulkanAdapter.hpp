@@ -36,18 +36,24 @@ public:
     AXE_PUBLIC GPUSettings requestGPUSettings() noexcept override { return _mpGPUSettings; };
 
 private:
+    // ref
     VulkanBackend* _mpBackend  = nullptr;
+
+    // resource-handle
     VkPhysicalDevice _mpHandle = VK_NULL_HANDLE;
+
+    // scalar
     VkPhysicalDeviceProperties2 _mpProperties{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2};
     VkPhysicalDeviceMemoryProperties2 _mpMemoryProperties{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2};
     VkPhysicalDeviceFeatures2 _mpFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
     GPUSettings _mpGPUSettings;
 
-    std::array<std::unique_ptr<VulkanDevice>, MAX_NUM_DEVICE_PER_ADAPTER> _mDevices;
-
     u8 _mNodeIndex = U8_MAX;
     u8 _mIdle : 1  = 1;
+
+    // auto
     std::array<u8, QueueType::MAX_QUEUE_TYPE> _mQueueFamilyIndex{U8_MAX, U8_MAX, U8_MAX};
+    std::array<std::unique_ptr<VulkanDevice>, MAX_NUM_DEVICE_PER_ADAPTER> _mDevices;
 };
 
 }  // namespace axe::rhi

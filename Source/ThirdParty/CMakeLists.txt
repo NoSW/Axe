@@ -4,14 +4,15 @@ set(THIRD_PARTY_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 ##############################################################################
 #                                 mimalloc
 ##############################################################################
-set(MI_OVERRIDE OFF CACHE BOOL "")
+set(MI_OVERRIDE OFF CACHE BOOL "" "")
 set(MI_OSX_INTERPOSE OFF CACHE BOOL "")
 set(MI_OSX_ZONE OFF CACHE BOOL "")
 set(MI_BUILD_SHARED OFF CACHE BOOL "")
+set(MI_BUILD_STATIC ON CACHE BOOL "")
 set(MI_BUILD_OBJECT OFF CACHE BOOL "")
 set(MI_BUILD_TESTS OFF CACHE BOOL "")
 add_subdirectory(mimalloc)
-set_target_properties(mimalloc-static PROPERTIES FOLDER "Source/ThirdParty")
+set_target_properties(mimalloc-static PROPERTIES FOLDER "ThirdParty")
 
 ##############################################################################
 #                                 SDL
@@ -32,29 +33,29 @@ set(SDL2_DISABLE_SDL2MAIN ON CACHE BOOL "")
 set(SDL2_DISABLE_INSTALL ON CACHE BOOL "")
 set(SDL2_DISABLE_UNINSTALL ON CACHE BOOL "")
 add_subdirectory(SDL)
-set_target_properties(SDL2-static PROPERTIES FOLDER "Source/ThirdParty")
-set_target_properties(sdl_headers_copy PROPERTIES FOLDER "Source/ThirdParty")
+set_target_properties(SDL2-static PROPERTIES FOLDER "ThirdParty")
+set_target_properties(sdl_headers_copy PROPERTIES FOLDER "ThirdParty")
 
 ##############################################################################
 #                                 spdlog (header-only)
 ##############################################################################
 add_subdirectory(spdlog)
-set_target_properties(spdlog PROPERTIES FOLDER "Source/ThirdParty")
+set_target_properties(spdlog PROPERTIES FOLDER "ThirdParty")
 
 ##############################################################################
 #                                 magic_enum (header-only)
 ##############################################################################
 add_subdirectory(magic_enum)
-set_target_properties(magic_enum PROPERTIES FOLDER "Source/ThirdParty")
+set_target_properties(magic_enum PROPERTIES FOLDER "ThirdParty")
 
 ##############################################################################
 #                                 glm (header-only)
 ##############################################################################
 add_subdirectory(glm)
-set_target_properties(glm PROPERTIES FOLDER "Source/ThirdParty")
+set_target_properties(glm PROPERTIES FOLDER "ThirdParty")
 
 ##############################################################################
 #                                 tiny_imageformat
 ##############################################################################
 add_subdirectory(tiny_imageformat)
-set_target_properties(tiny_imageformat PROPERTIES FOLDER "Source/ThirdParty")
+set_target_properties(tiny_imageformat PROPERTIES FOLDER "ThirdParty")

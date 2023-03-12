@@ -12,7 +12,7 @@ else()
 	add_library(${TARGET_NAME} STATIC ${COMMON_SRCLIST} ${VULKAN_SRCLIST})
 endif()
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "Source/Runtime")
+set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "Runtime")
 target_link_libraries(${TARGET_NAME} PUBLIC 00Core)
 target_include_directories(${TARGET_NAME} PUBLIC ${TNIY_IMAGEFORMAT_INCLUDE_DIR})
 

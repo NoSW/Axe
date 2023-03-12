@@ -1,26 +1,34 @@
 #pragma once
+
 #include "00Core/Config.hpp"
 
 #include <memory_resource>
+#include <memory>
 #include <array>
+#include <atomic>
+
 namespace axe::memory
 {
 
-template <u32 BYTES = 4096>
-class StackMemoryResource : public std::pmr::monotonic_buffer_resource
+class DefaultMemoryResource;
+
+DefaultMemoryResource* get_default_allocator() noexcept;
+
+template <uint32_t BYTES = 4096>
+class MonoMemoryResource : public std::pmr::monotonic_buffer_resource
 {
-    static constexpr u32 _MAX_BUF_SIZE = 256 * 1024;  // 256 KB
-    static constexpr u32 _MIN_BUF_SIZE = 256;         // 256 B
-    static constexpr auto _round(u32 n) { return n > _MAX_BUF_SIZE ? _MAX_BUF_SIZE : (n < _MIN_BUF_SIZE ? _MIN_BUF_SIZE : n); }
+    static constexpr uint32_t _MAX_BUF_SIZE = 256 * 1024;  // 256 KB
+    static constexpr uint32_t _MIN_BUF_SIZE = 256;         // 256 B
+    static constexpr auto _round(uint32_t n) { return n > _MAX_BUF_SIZE ? _MAX_BUF_SIZE : (n < _MIN_BUF_SIZE ? _MIN_BUF_SIZE : n); }
 
 public:
-    StackMemoryResource(std::pmr::memory_resource* const upstream = std::pmr::get_default_resource()) noexcept
+    MonoMemoryResource(std::pmr::memory_resource* const upstream = std::pmr::get_default_resource()) noexcept
         : std::pmr::monotonic_buffer_resource(_mData, _round(BYTES), upstream)
     {
     }
 
 private:
-    u8 _mData[_round(BYTES)];
+    uint8_t _mData[_round(BYTES)];
 };
 
 template <typename>

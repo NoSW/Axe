@@ -4,9 +4,17 @@
 #include "00Core/IO/IO.hpp"
 
 #include <volk/volk.h>
+#include <bit>
 
 namespace axe::rhi
 {
+
+static bool create_shader_reflection(const std::vector<u8>& byteCode, ShaderStageFlag shaderStage, ShaderReflection& outReflection) noexcept
+{
+    // TODO: using SPIRV-Cross
+    return false;
+}
+
 bool VulkanShader::_create(ShaderDesc& desc) noexcept
 {
     // check model version
@@ -19,11 +27,17 @@ bool VulkanShader::_create(ShaderDesc& desc) noexcept
     }
 
     // create module
-    for (const auto& stage : desc.mStages)
+    std::pmr::vector<ShaderReflection> shaderReflections;
+    shaderReflections.reserve(desc.mStages.size());
+    for (const auto& stageDesc : desc.mStages)
     {
+        AXE_ASSERT(is_power_of_2((u32)stageDesc.mStage));
+        u8 index = std::countr_zero((u32)stageDesc.mStage);
         std::vector<u8> byteCode;
-        if (io::read_file_binary(stage.mFilePath, byteCode))
+        if (io::read_file_binary(stageDesc.mFilePath, byteCode))
         {
+            shaderReflections.push_back({});
+            AXE_CHECK(create_shader_reflection(byteCode, stageDesc.mStage, shaderReflections.back()));
             VkShaderModuleCreateInfo createInfo = {
                 .sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
                 .pNext    = nullptr,
@@ -32,14 +46,12 @@ bool VulkanShader::_create(ShaderDesc& desc) noexcept
                 .pCode    = (u32*)byteCode.data()};
 
             VkShaderModule shaderModule = VK_NULL_HANDLE;
-            if (VK_FAILED(vkCreateShaderModule(_mpDevice->_mpHandle, &createInfo, nullptr, &shaderModule)))
+            if (VK_FAILED(vkCreateShaderModule(_mpDevice->_mpHandle, &createInfo, nullptr, &_mpHandles[index])))
             {
-                AXE_ERROR("Failed to create shader module for shader stage: {}", stage.mFilePath);
+                AXE_ERROR("Failed to create shader module for shader stage: {}", stageDesc.mFilePath);
                 return false;
             }
-
-            _mpHandles[stage.mStage]    = shaderModule;
-            _mpEntryNames[stage.mStage] = stage.mEntryPoint;
+            _mpEntryNames[index] = stageDesc.mEntryPoint;
         }
         else
         {
@@ -51,7 +63,7 @@ bool VulkanShader::_create(ShaderDesc& desc) noexcept
     if (desc.mConstants.size())
     {
         u32 totalSize = 0;
-        for (u32 i = 0; i < desc.mConstants.size(); ++i) { totalSize += desc.mConstants[i].mBlob.size(); }
+        for (const auto& constant : desc.mConstants) { totalSize += constant.mBlob.size(); }
         auto* mainEntries = new VkSpecializationMapEntry[desc.mConstants.size()];
         auto* data        = new u8[totalSize];
 
@@ -73,6 +85,8 @@ bool VulkanShader::_create(ShaderDesc& desc) noexcept
         _mpSpecializationInfo->pData         = data;
     }
 
+    create_pipeline_reflection(shaderReflections, _mReflection);
+
     return true;
 }
 
@@ -83,11 +97,10 @@ bool VulkanShader::_destroy() noexcept
         if (handle != VK_NULL_HANDLE)
         {
             vkDestroyShaderModule(_mpDevice->_mpHandle, handle, nullptr);
-            handle = VK_NULL_HANDLE;
         }
     }
 
-    if (_mpSpecializationInfo != VK_NULL_HANDLE)
+    if (_mpSpecializationInfo != nullptr)
     {
         delete[] _mpSpecializationInfo->pMapEntries;
         delete[](u8*)(_mpSpecializationInfo->pData);

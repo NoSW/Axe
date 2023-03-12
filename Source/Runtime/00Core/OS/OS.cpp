@@ -1,47 +1,17 @@
 #include "00Core/OS/OS.hpp"
 
-#ifdef _WIN32
-#include "processthreadsapi.h"
-#include <codecvt>
-#include <locale>
-#elif defined(__APPLE__)
-#if defined(__x86_64__) || defined(__i386__)
-#include <cpuid.h>
-#endif
-#elif defined(__wasm__)
-#include <emscripten/threading.h>
-#else
-#include <sched.h>
-#endif
+#include <thread>
 
-namespace axe::os {
+namespace axe::os
+{
 
-i32 get_core_id () noexcept{
-    i32 core_ = -1;
-#ifdef _WIN32
-  core_ = GetCurrentProcessorNumber();
-#elif defined(__APPLE__)
-#if defined(__x86_64__) || defined(__i386__)
-  uint32_t CPUInfo[4];
-  __cpuid_count(1, 0, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
-  if ((CPUInfo[3] & (1 << 9)) != 0) {
-    core_ = (unsigned)CPUInfo[1] >> 24;
-  }
-#endif
-#elif defined(__wasm__)
-  core_ = emscripten_num_logical_cores();
-#elif defined(WITH_UE)
-  // This is the simplest way to do it without writing platform dependent
-  // code.
-  const int32 ProcessorCoreCount = FGenericPlatformMisc::NumberOfCoresIncludingHyperthreads();
-  if (ProcessorCoreCount == 0) {
-   ORT_THROW("Fatal error: 0 count processors from GetLogicalProcessorInformation");
-  }
-  core_ = ProcessorCoreCount;
-#else
-  core_ = sched_getcpu();
-#endif
-    return core_;
-}
+/*
+ * Considering Hyper-Threading(or Simultaneous Multi-Threading, SMT) -- two or more hardware threads on one core --,
+ * the safest assumption is to have no more than one CPU-intensive thread per CPU core. Having more CPU-intensive threads
+ * than CPU cores gives little or no benefits, and brings the extra overhead and complexity of additional threads.
+ * refer to: https://github.com/MicrosoftDocs/win32/blob/docs/desktop-src/DxTechArts/coding-for-multiple-cores.md
+ */
 
-}
+u32 get_core_count() noexcept { return std::thread::hardware_concurrency(); }
+
+}  // namespace axe::os

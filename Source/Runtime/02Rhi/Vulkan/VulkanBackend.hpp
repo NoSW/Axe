@@ -2,7 +2,7 @@
 #include "02Rhi/Rhi.hpp"
 #include "02Rhi/Vulkan/VulkanEnums.hpp"
 
-// #include <vma/vk_mem_alloc.h>
+#include <vma/vk_mem_alloc.h>
 
 #include <00Core/Thread/Thread.hpp>
 
@@ -42,8 +42,8 @@ private:
     bool _initVulkanMemoryAllocator() noexcept;
 
 public:
-    VkInstance _mpHandle = VK_NULL_HANDLE;
-    std::array<std::unique_ptr<VulkanAdapter>, MAX_NUM_ADAPTER_PER_BACKEND> _mAdapters;
+    // handle
+    VkInstance _mpHandle         = VK_NULL_HANDLE;
 
     VkSurfaceKHR mpVkSurface     = VK_NULL_HANDLE;
     VkSwapchainKHR mpVkSwapChain = VK_NULL_HANDLE;
@@ -52,8 +52,12 @@ public:
     VkDebugUtilsMessengerEXT mpVkDebugUtilsMessenger = VK_NULL_HANDLE;
 #endif
 
-    // VmaAllocator mpVmaAllocator                      = VK_NULL_HANDLE;
+    VmaAllocator mpVmaAllocator = VK_NULL_HANDLE;
 
+    // auto
+    std::array<std::unique_ptr<VulkanAdapter>, MAX_NUM_ADAPTER_PER_BACKEND> _mAdapters;
+
+    // scalar
     u32 _mRenderDocLayerEnabled        : 1 = 0;
     u32 _mDedicatedAllocationExtension : 1 = 0;
     u32 _mBufferDeviceAddressExtension : 1 = 0;

@@ -1,16 +1,26 @@
 #include "00Core/Window/Window.hpp"
 #include <SDL.h>
+#include "00Core/Memory/Memory.hpp"
 
 namespace axe::window
 {
-bool Window::init(std::string_view title) noexcept
+bool Window::init(WindowDesc& desc) noexcept
 {
+    // auto* pmr = axe::memory::get_default_allocator();
+
     bool succ = SDL_Init(SDL_INIT_EVERYTHING) == 0;
     AXE_ASSERT(succ);
     u32 sdlWindowFlag = SDL_WINDOW_SHOWN;
     sdlWindowFlag |= _mResizable ? SDL_WINDOW_RESIZABLE : 0;
-    sdlWindowFlag |= /* TODO */ SDL_WINDOW_VULKAN;
-    _mpSDLWindow = SDL_CreateWindow(title.data(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _mWidth, _mHeight, sdlWindowFlag);
+
+#define AXE_USE_MOLTEN_VK 0
+#if __APPLE__ && !AXE_USE_MOLTEN_VK
+    sdlWindowFlag |= SDL_WINDOW_METAL;
+#else
+    sdlWindowFlag |= SDL_WINDOW_VULKAN;
+#endif
+
+    _mpSDLWindow = SDL_CreateWindow(desc.mTitle.data(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _mWidth, _mHeight, sdlWindowFlag);
 
     if (_mMaximized) { SDL_MaximizeWindow(_mpSDLWindow); }
     SDL_GL_GetDrawableSize(_mpSDLWindow, (i32*)(&_mWidth), (i32*)(&_mHeight));

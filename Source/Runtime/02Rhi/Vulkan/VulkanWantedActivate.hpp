@@ -45,7 +45,7 @@ static std::pmr::vector<const char*> gsWantedInstanceExtensions = {
 #elif __linux__
     VK_KHR_XLIB_SURFACE_EXTENSION_NAME,
 #elif __APPLE__
-#error "Unsupported platform"
+#error "Unsupported platform yet"
 #endif
 
 // For debug

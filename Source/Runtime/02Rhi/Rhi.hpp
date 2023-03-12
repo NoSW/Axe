@@ -1,7 +1,7 @@
 /* All public interfaces of 02Rhi */
 #pragma once
 
-#include "02Rhi/RhiDescs.hpp"
+#include "02Rhi/RhiStructs.hpp"
 
 namespace axe::rhi
 {
@@ -208,10 +208,6 @@ public:
 ///////////////////////////////////////////////
 class Shader : public RhiObjectBase
 {
-protected:
-    ShaderStage mStage  : 31   = SHADER_STAGE_NONE;
-    bool mIsMultiViewVR : 1    = false;
-    u32 mNumThreadsPerGroup[3] = {0, 0, 0};
 };
 
 ///////////////////////////////////////////////
@@ -221,5 +217,7 @@ protected:
 class RootSignature : public RhiObjectBase
 {
 };
+
+bool create_pipeline_reflection(std::pmr::vector<ShaderReflection>& shaderRefls, PipelineReflection& outPipelineRefl) noexcept;
 
 }  // namespace axe::rhi

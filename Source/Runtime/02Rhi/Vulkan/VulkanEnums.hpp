@@ -9,12 +9,20 @@
 
 namespace axe::rhi
 {
-inline constexpr u32 VULKAN_MAX_DESCRIPTOR_POOL_SIZE_ARRAY_COUNT = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT + 1;
-inline constexpr u32 VULKAN_MAX_PLANE_COUNT                      = 3;
 
-VkFilter to_vk(FilterType) noexcept;
-VkSamplerMipmapMode to_vk(MipMapMode) noexcept;
-VkSamplerAddressMode to_vk(AddressMode) noexcept;
-VkCompareOp to_vk(CompareMode) noexcept;
+enum
+{
+    MAX_DESCRIPTOR_POOL_SIZE_ARRAY_COUNT = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT + 1,
+    MAX_PLANE_COUNT                      = 3
+};
+
+// clang-format off
+VkFilter             to_vk_enum(FilterType) noexcept;
+VkSamplerMipmapMode  to_vk_enum(MipMapMode) noexcept;
+VkSamplerAddressMode to_vk_enum(AddressMode) noexcept;
+VkCompareOp          to_vk_enum(CompareMode) noexcept;
+VkDescriptorType     to_vk_enum(DescriptorType) noexcept;
+VkShaderStageFlags   to_vk_enum(ShaderStageFlag stages) noexcept;
+// clang-format on
 
 }  // namespace axe::rhi

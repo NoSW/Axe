@@ -22,12 +22,6 @@
 - circular reference, use make_weak, (but this should be avoided when design)
 - no ownership, use raw ptr
 
-### For more clear, Axe will
-
-- use `unique_ptr` if it has ownership, otherwise use raw ptr, to avoid memory leaks (Goal 3)
-- use assertion to check unacceptable nullptr in Debug mode and if-else for acceptable nullptr, to avoid null ref (Goal 2)
-- use `owner_ptr`&`observer_ptr` (just a warper of `shared_ptr`&`weak_ptr`, which is not allowed to be used), to avoid dangling pinter (Goal 1)
-
 ## Naming Convention
 
 ```c++

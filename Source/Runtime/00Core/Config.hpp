@@ -133,7 +133,6 @@ inline constexpr char AXE_ENGINE_NAME[] = "Axe";
 #endif
 #endif
 
-
 #ifdef _DEBUG
 #define AXE_CORE_ENABLE_DEBUG 1
 #else

@@ -8,7 +8,6 @@ add_subdirectory(14App)
 
 add_library(${TARGET_NAME} INTERFACE)
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "Source")
 target_link_libraries(${TARGET_NAME} INTERFACE 00Core)
 target_link_libraries(${TARGET_NAME} INTERFACE 02Rhi)
 target_link_libraries(${TARGET_NAME} INTERFACE 06Pipeline)

@@ -1,17 +1,13 @@
 # Axe
-Axe is a cross multi-platform game engine(in round 1), also an engineering practice about *[Game Engine Architecture, Third Edition](https://www.gameenginebook.com/)*.
+Axe is a cross multi-platform game engine(round 1), also an engineering practice about *[Game Engine Architecture, Third Edition](https://www.gameenginebook.com/)*.
 
 ## Goal
 
-- summarize the main points of each chapter, in the form of project documentation
-- practice modern c++ programming skills (C++20, OOP, STL, template, multi-threading, reflection, etc)
-- look up rich c++ open source libraries (entt, mimalloc, filament, The-Forge, godot, etc)
-- learn cross platform build and develop skills (Windows, Linux, MacOS)
+- practice modern c++ programming skills: C++20, OOP, STL, template, multi-threading, reflection, cross-platform(Windows, Linux, MacOS, ...) etc
 - dive into more underlying details about modern graphics apis (Vulkan, D3D12, Metal)
 - explore architecture of modern game engine (abstraction, layering, compile-time/edit-time/runtime/loop-time designs)
 - experiment some fundamental and interested graphics features(forward, deferred pipeline, shadow, GI,  etc)
-- provide templates and suggestions for round 2
-
+- try to build source code as my personal technical wiki, instead of a traditional blog website
 
 ## Platform
 
@@ -33,14 +29,25 @@ Axe is a cross multi-platform game engine(in round 1), also an engineering pract
 run the python script that wraps cmake&build commands: (NOTE: `git`, `cmake` and `ninja` added to PATH are required)
 ```shell
 # Use --[msvc(default)|clang|gcc] to specify an available compiler
-python generate_project.py --clang
+> python3 generate_project.py --clang
 ```
 
 ### Option 2:
-run cmake directly with any options supported by cmake. The simplest one, for example:
+run cmake directly with any options supported by cmake. For example:
 ```shell
-cmake -S. -B Build
-cmake --build Build
+# Windows
+> cmake -S. -B Build -G "Visual Studio 17 2022"
+```
+```shell
+# Linux or MacOS with ninja
+> ninja --version
+> cmake -S. -B Build -G "Ninja Multi-Config" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+> cmake --build Build --config Debug -- -j 16
+```
+```shell
+# Linux or MacOS
+> cmake -S. -B Build -G "Unix Makefiles" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug
+> cmake --build Build -j 16
 ```
 ## Features
 

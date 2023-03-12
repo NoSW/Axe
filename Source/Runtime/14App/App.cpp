@@ -12,7 +12,12 @@ i32 MainLoop(i32 argc, char** argv, app::App* app)
     /* init Window */
     {
         app->mpWindow = std::make_unique<window::Window>();
-        bool succ     = app->mpWindow->init(app->name());
+        struct window::WindowDesc windowDesc
+        {
+            .mTitle = app->name()
+        };
+        bool succ = app->mpWindow->init(windowDesc);
+
         AXE_ASSERT(succ);
     }
     /* init Backend */
