@@ -78,7 +78,7 @@ VulkanBackend::VulkanBackend(BackendDesc& desc) noexcept
         .pNext              = nullptr,
         .pApplicationName   = desc.mAppName.data(),
         .applicationVersion = VK_MAKE_VERSION(0, 1, 0),
-        .pEngineName        = AXE_ENGINE_NAME,
+        .pEngineName        = "Axe",
         .engineVersion      = VK_MAKE_VERSION(0, 1, 0),
         .apiVersion         = AXE_02RHI_TARGET_VULKAN_VERSION};
 

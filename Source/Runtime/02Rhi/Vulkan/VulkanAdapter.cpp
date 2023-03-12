@@ -15,7 +15,7 @@ static const auto have_graphics_queue_family = [](const std::pmr::vector<VkQueue
         if (quFamProps2[i].queueFamilyProperties.queueCount)
         {
             const auto& flags = quFamProps2[i].queueFamilyProperties.queueFlags;
-            bool isDedicated  = is_power_of_2(flags);
+            bool isDedicated  = std::has_single_bit((u32)flags);
             if (graphicsID == U8_MAX && (flags & VK_QUEUE_GRAPHICS_BIT)) { graphicsID = i; }
             if (transferID == U8_MAX && isDedicated && (flags & VK_QUEUE_TRANSFER_BIT)) { transferID = i; }
             if (computeID == U8_MAX && isDedicated && (flags & VK_QUEUE_COMPUTE_BIT)) { computeID = i; }

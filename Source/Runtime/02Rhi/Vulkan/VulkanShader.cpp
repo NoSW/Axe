@@ -31,7 +31,7 @@ bool VulkanShader::_create(ShaderDesc& desc) noexcept
     shaderReflections.reserve(desc.mStages.size());
     for (const auto& stageDesc : desc.mStages)
     {
-        AXE_ASSERT(is_power_of_2((u32)stageDesc.mStage));
+        AXE_ASSERT(std::has_single_bit((u32)stageDesc.mStage));
         u8 index = std::countr_zero((u32)stageDesc.mStage);
         std::vector<u8> byteCode;
         if (io::read_file_binary(stageDesc.mFilePath, byteCode))

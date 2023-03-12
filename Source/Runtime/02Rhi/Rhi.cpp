@@ -50,7 +50,7 @@ bool create_pipeline_reflection(std::pmr::vector<ShaderReflection>& shaderRefls,
     auto shaderAllFlags = SHADER_STAGE_FLAG_NONE;
     for (const auto& refl : shaderRefls)
     {
-        AXE_ASSERT(is_power_of_2(refl.mShaderStage));
+        AXE_ASSERT(std::has_single_bit((u32)refl.mShaderStage));
         if (shaderAllFlags & refl.mShaderStage)
         {
             AXE_ERROR("Duplicate shader stage ({}) was detected in shader reflection array.", reflection::enum_name(refl.mShaderStage));

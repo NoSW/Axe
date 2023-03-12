@@ -53,33 +53,6 @@ inline constexpr u16 U16_MAX = 0xffffu;
 inline constexpr u32 U32_MAX = 0xffffffffu;
 inline constexpr u64 U64_MAX = 0xffffffffffffffffull;
 
-template <typename T>
-inline constexpr u32 element_num(T *p)
-{
-    return sizeof(*p) / sizeof(p[0]);
-}
-
-template <typename T>
-inline constexpr u32 bits_count(T n)
-{
-    auto t = reinterpret_cast<u64>(n);
-    u8 ret = 0;
-    while (t)
-    {
-        t &= (t - 1);
-        ret++;
-    }
-    return ret;
-}
-
-template <typename T>
-inline constexpr bool is_power_of_2(T n)
-{
-    return n && !(n & (n - 1));
-}
-
-inline constexpr char AXE_ENGINE_NAME[] = "Axe";
-
 }  // namespace axe
 
 //////////////////////////////////////////////////////////////////////////////////////////////
