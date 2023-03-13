@@ -1,5 +1,6 @@
 #if _WIN32
 #include "00Core/OS/OS.hpp"
+
 #include <Windows.h>
 #include <codecvt>
 #include <locale>

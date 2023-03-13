@@ -6,34 +6,16 @@
 // and https://github.com/mtrebi/memory-allocators
 // ---------------------------------------------------------------------------
 #include "00Core/Memory/Memory.hpp"
+#include "00Core/OS/OS.hpp"
 #include <mimalloc.h>
 
 #include <atomic>
 #include <memory_resource>
-#include <set>
 #include <new>
 #include <assert.h>
 
 namespace axe::memory
 {
-
-#define AXE_MEM_DEBUG_SINGLE_THREAD (AXE_CORE_MEM_DEBUG_ENABLE & 1)
-
-#if AXE_MEM_DEBUG_SINGLE_THREAD
-struct DebugPointerPool
-{
-    static constexpr size_t POOL_SIZE = 1024 * 1024;  // 1MB, support count: ~10k active pointers
-    DebugPointerPool() : data(mi_new_aligned(POOL_SIZE, 16)) {}
-    ~DebugPointerPool() { mi_free_aligned(data, 16); }
-    void* const data;
-};
-
-static DebugPointerPool gs_DebugPool;
-
-// set upstream=nullptr to detect the case, in which max active pointer > supported count
-static std::pmr::monotonic_buffer_resource gs_DebugMemoryResource(gs_DebugPool.data, DebugPointerPool::POOL_SIZE, nullptr);
-static std::pmr::set<u64> gs_ActivePointers(&gs_DebugMemoryResource);
-#endif
 
 // ----------------------------------------------------------------------------
 // We can manage default, namely global alloc in class DefaultMemoryResource
@@ -77,18 +59,8 @@ class DefaultMemoryResource final : public std::pmr::memory_resource
         printf("pmr: alloc/free count %u/%u, accum bytes %u\n", pmrAllocCount, pmrFreeCount, pmrBytes);
         printf("new: alloc/free count %u/%u, accum bytes %u\n", totalAllocCount - pmrAllocCount, totalFreeCount - pmrFreeCount, totalBytes - pmrBytes);
 
-        if (totalAllocCount != totalFreeCount || pmrAllocCount != pmrFreeCount || pmrBytes != _mFreeByPmrBytes.load()) { printf("\033[41mERROR: memory leak!\033[0m\n"); }
-#if AXE_MEM_DEBUG_SINGLE_THREAD
-        for (const u64& p : gs_ActivePointers)
-        {
-            assert((u64)&p > (u64)gs_DebugPool.data && (u64)&p <= (u64)gs_DebugPool.data + DebugPointerPool::POOL_SIZE);
-            printf("0x%llx -> ", p);
-            printf("0x%04x", (u16)((p >> 48) & 0xffff));
-            printf("'%04x", (u16)((p >> 32) & 0xffff));
-            printf("'%04x", (u16)((p >> 16) & 0xffff));
-            printf("'%04x\n", (u16)((p >> 0) & 0xffff));
-        }
-#endif
+        if (totalAllocCount != totalFreeCount || pmrAllocCount != pmrFreeCount || pmrBytes != _mFreeByPmrBytes.load()) { printf("\033[41mERROR: memory leak! %u pointer(s) \033[0m\n", totalAllocCount - totalFreeCount); }
+
 #endif
         std::pmr::set_default_resource(nullptr);
     }
@@ -133,96 +105,63 @@ public:
     // used for user-allocate
     [[nodiscard]] inline void* new_n(size_t bytes)
     {
-        void* p = mi_new(bytes);
 #if AXE_CORE_MEM_DEBUG_ENABLE
         _mAllocBytes += bytes;
         _mAllocCount++;
-#if AXE_MEM_DEBUG_SINGLE_THREAD
-        gs_ActivePointers.emplace((u64)p);
 #endif
-#endif
-        return p;
+        return mi_new(bytes);
     }
     inline void free(void* p) noexcept
     {
 #if AXE_CORE_MEM_DEBUG_ENABLE
         _mFreeCount++;
-#if AXE_MEM_DEBUG_SINGLE_THREAD
-        gs_ActivePointers.erase((u64)p);
 #endif
-#endif
-        /* Add some tracking code here */
         mi_free(p);
     }
     [[nodiscard]] inline void* new_nothrow(size_t bytes) noexcept
     {
-        void* p = mi_new_nothrow(bytes);
 #if AXE_CORE_MEM_DEBUG_ENABLE
         _mAllocBytes += bytes;
         _mAllocCount++;
-#if AXE_MEM_DEBUG_SINGLE_THREAD
-        gs_ActivePointers.emplace((u64)p);
 #endif
-#endif
-        return p;
+        return mi_new_nothrow(bytes);
     }
     inline void free_size(void* p, size_t bytes) noexcept
     {
 #if AXE_CORE_MEM_DEBUG_ENABLE
         _mFreeCount++;
-#if AXE_MEM_DEBUG_SINGLE_THREAD
-        gs_ActivePointers.erase((u64)p);
 #endif
-#endif
-        /* Add some tracking code here */
         mi_free_size(p, bytes);
     }
     inline void free_aligned(void* p, size_t align) noexcept
     {
 #if AXE_CORE_MEM_DEBUG_ENABLE
         _mFreeCount++;
-#if AXE_MEM_DEBUG_SINGLE_THREAD
-        gs_ActivePointers.erase((u64)p);
 #endif
-#endif
-        /* Add some tracking code here */
         mi_free_aligned(p, align);
     }
     inline void free_size_aligned(void* p, size_t bytes, size_t align) noexcept
     {
 #if AXE_CORE_MEM_DEBUG_ENABLE
         _mFreeCount++;
-#if AXE_MEM_DEBUG_SINGLE_THREAD
-        gs_ActivePointers.erase((u64)p);
 #endif
-#endif
-        /* Add some tracking code here */
         mi_free_size_aligned(p, bytes, align);
     }
     [[nodiscard]] inline void* new_aligned(size_t bytes, size_t align)
     {
-        auto* p = mi_new_aligned(bytes, align);
 #if AXE_CORE_MEM_DEBUG_ENABLE
         _mAllocBytes += bytes;
         _mAllocCount++;
-#if AXE_MEM_DEBUG_SINGLE_THREAD
-        gs_ActivePointers.emplace((u64)p);
 #endif
-#endif
-        return p;
+        return mi_new_aligned(bytes, align);
     }
     [[nodiscard]] inline void* new_aligned_nothrow(size_t bytes, size_t align) noexcept
     {
-        auto* p = mi_new_aligned_nothrow(bytes, align);
 #if AXE_CORE_MEM_DEBUG_ENABLE
         _mAllocBytes += bytes;
         _mAllocCount++;
-#if AXE_MEM_DEBUG_SINGLE_THREAD
-        gs_ActivePointers.emplace((u64)p);
 #endif
-#endif
-        /* Add some tracking code here */
-        return p;
+        return mi_new_aligned_nothrow(bytes, align);
     }
 };
 

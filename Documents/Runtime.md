@@ -80,9 +80,8 @@ Goal:
   4. Free to set begin_detection/end_detection point at runtime
 
 For achieving Goal 1 and Goal 3, we can: 
- 1. make sure all memory alloc/free will passed to a set of specified interface
- 2. add stat code in these func to record alloc/free count, bytes, all pointers and related stack trace info
- 3. print info above(only in MEMORY_DEBUG_ENABLE mode) when program exits
+ 1. make sure all memory alloc/free will passed to a set of specified interface(internal counter for `new`/`delete` + VLD for `malloc()`/`free()`) (Goal 1)
+ 2. print info above(only in MEMORY_DEBUG_ENABLE mode) when program exits (Goal 3)
 
 NOTE: For third party libraries that use syscalls (e.g., malloc()/free(), etc), tracker above cannot work, using external executable tools instead: (using dynamic library injection to hook malloc/free, can also stat these syscall, but it's not the intention to detect memory of third party
     - Visual C++, [WinDbg](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/debugger-download-tools), [UMDH](https://learn.microsoft.com/en-us/windows-hardware/drivers/debugger/using-umdh-to-find-a-user-mode-memory-leak?redirectedfrom=MSDN)

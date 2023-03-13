@@ -20,6 +20,7 @@ i32 MainLoop(i32 argc, char** argv, app::App* app)
 
         AXE_ASSERT(succ);
     }
+
     /* init Backend */
     {
         pipeline::PipelineDesc pipelineDesc;
