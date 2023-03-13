@@ -17,7 +17,9 @@
 namespace axe::memory
 {
 
-#if AXE_CORE_MEM_DEBUG_ENABLE
+#define AXE_MEM_DEBUG_SINGLE_THREAD (AXE_CORE_MEM_DEBUG_ENABLE & 1)
+
+#if AXE_MEM_DEBUG_SINGLE_THREAD
 struct DebugPointerPool
 {
     static constexpr size_t POOL_SIZE = 1024 * 1024;  // 1MB, support count: ~10k active pointers
@@ -30,8 +32,7 @@ static DebugPointerPool gs_DebugPool;
 
 // set upstream=nullptr to detect the case, in which max active pointer > supported count
 static std::pmr::monotonic_buffer_resource gs_DebugMemoryResource(gs_DebugPool.data, DebugPointerPool::POOL_SIZE, nullptr);
-static std::pmr::synchronized_pool_resource gs_DebugSyncResource(&gs_DebugMemoryResource);
-static std::pmr::set<u64> gs_ActivePointers(&gs_DebugSyncResource);
+static std::pmr::set<u64> gs_ActivePointers(&gs_DebugMemoryResource);
 #endif
 
 // ----------------------------------------------------------------------------
@@ -77,7 +78,7 @@ class DefaultMemoryResource final : public std::pmr::memory_resource
         printf("new: alloc/free count %u/%u, accum bytes %u\n", totalAllocCount - pmrAllocCount, totalFreeCount - pmrFreeCount, totalBytes - pmrBytes);
 
         if (totalAllocCount != totalFreeCount || pmrAllocCount != pmrFreeCount || pmrBytes != _mFreeByPmrBytes.load()) { printf("\033[41mERROR: memory leak!\033[0m\n"); }
-
+#if AXE_MEM_DEBUG_SINGLE_THREAD
         for (const u64& p : gs_ActivePointers)
         {
             assert((u64)&p > (u64)gs_DebugPool.data && (u64)&p <= (u64)gs_DebugPool.data + DebugPointerPool::POOL_SIZE);
@@ -87,6 +88,7 @@ class DefaultMemoryResource final : public std::pmr::memory_resource
             printf("'%04x", (u16)((p >> 16) & 0xffff));
             printf("'%04x\n", (u16)((p >> 0) & 0xffff));
         }
+#endif
 #endif
         std::pmr::set_default_resource(nullptr);
     }
@@ -135,7 +137,9 @@ public:
 #if AXE_CORE_MEM_DEBUG_ENABLE
         _mAllocBytes += bytes;
         _mAllocCount++;
+#if AXE_MEM_DEBUG_SINGLE_THREAD
         gs_ActivePointers.emplace((u64)p);
+#endif
 #endif
         return p;
     }
@@ -143,7 +147,9 @@ public:
     {
 #if AXE_CORE_MEM_DEBUG_ENABLE
         _mFreeCount++;
+#if AXE_MEM_DEBUG_SINGLE_THREAD
         gs_ActivePointers.erase((u64)p);
+#endif
 #endif
         /* Add some tracking code here */
         mi_free(p);
@@ -154,7 +160,9 @@ public:
 #if AXE_CORE_MEM_DEBUG_ENABLE
         _mAllocBytes += bytes;
         _mAllocCount++;
+#if AXE_MEM_DEBUG_SINGLE_THREAD
         gs_ActivePointers.emplace((u64)p);
+#endif
 #endif
         return p;
     }
@@ -162,7 +170,9 @@ public:
     {
 #if AXE_CORE_MEM_DEBUG_ENABLE
         _mFreeCount++;
+#if AXE_MEM_DEBUG_SINGLE_THREAD
         gs_ActivePointers.erase((u64)p);
+#endif
 #endif
         /* Add some tracking code here */
         mi_free_size(p, bytes);
@@ -171,7 +181,9 @@ public:
     {
 #if AXE_CORE_MEM_DEBUG_ENABLE
         _mFreeCount++;
+#if AXE_MEM_DEBUG_SINGLE_THREAD
         gs_ActivePointers.erase((u64)p);
+#endif
 #endif
         /* Add some tracking code here */
         mi_free_aligned(p, align);
@@ -180,7 +192,9 @@ public:
     {
 #if AXE_CORE_MEM_DEBUG_ENABLE
         _mFreeCount++;
+#if AXE_MEM_DEBUG_SINGLE_THREAD
         gs_ActivePointers.erase((u64)p);
+#endif
 #endif
         /* Add some tracking code here */
         mi_free_size_aligned(p, bytes, align);
@@ -191,7 +205,9 @@ public:
 #if AXE_CORE_MEM_DEBUG_ENABLE
         _mAllocBytes += bytes;
         _mAllocCount++;
+#if AXE_MEM_DEBUG_SINGLE_THREAD
         gs_ActivePointers.emplace((u64)p);
+#endif
 #endif
         return p;
     }
@@ -201,7 +217,9 @@ public:
 #if AXE_CORE_MEM_DEBUG_ENABLE
         _mAllocBytes += bytes;
         _mAllocCount++;
+#if AXE_MEM_DEBUG_SINGLE_THREAD
         gs_ActivePointers.emplace((u64)p);
+#endif
 #endif
         /* Add some tracking code here */
         return p;
