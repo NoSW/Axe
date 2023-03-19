@@ -65,6 +65,11 @@ bool Forward::init(PipelineDesc& desc) noexcept
     AXE_ASSERT(sampler == nullptr);
     // frameIndex
     _mFrameIndex = 0;
+
+    // set textures
+
+    // set vertex buffers
+
     return true;
 }
 
@@ -100,11 +105,13 @@ bool Forward::load(LoadFlag loadFlag) noexcept
     {
         rhi::SwapChainDesc swapchainDesc{
             .mpWindow         = _mpWindow,
+            .mpPresentQueue   = _mpGraphicsQueue,
             .mImageCount      = _IMAGE_COUNT,
             .mWidth           = _mWidth,
             .mHeight          = _mHeight,
-            .mColorClearValue = rhi::ClearValue{.rgba{1.0f, 0.8f, 0.4f, 0.0f}},
-        };
+            .mColorClearValue = rhi::ClearValue{
+                .rgba{1.0f, 0.8f, 0.4f, 0.0f},
+            }};
         _mpSwapChain = _mpDevice->createSwapChain(swapchainDesc);
         if (!_mpSwapChain) { return false; }
 
@@ -135,9 +142,9 @@ bool Forward::unload(LoadFlag loadFlag) noexcept
 
     if (loadFlag & (LOAD_FLAG_RESIZE | LOAD_FLAG_RENDER_TARGET))
     {
-        succ = !_mpDevice->destroySwapChain(_mpSwapChain) ? succ : false;
+        succ = _mpDevice->destroySwapChain(_mpSwapChain) ? succ : false;
 
-        // succ = !_mpBackend->removeRenderTarget(depthBuffer) ? succ : false;
+        // succ = _mpBackend->removeRenderTarget(depthBuffer) ? succ : false;
     }
 
     if (loadFlag & LOAD_FLAG_SHADER)
@@ -146,8 +153,6 @@ bool Forward::unload(LoadFlag loadFlag) noexcept
         // removeRootSignatures();
         // removeShaders();
     }
-
-    _mpDevice->destroySwapChain(_mpSwapChain);
 
     return true;
 }
@@ -183,9 +188,13 @@ void Forward::draw() noexcept
 
     // record the screen cleaning command
     std::vector<rhi::RenderTargetBarrier> renderTargetBarriers = {rhi::RenderTargetBarrier{
+        .mImageBarrier{
+            .mBarrierInfo{
+                .mCurrentState = rhi::RESOURCE_STATE_PRESENT,
+                .mNewState     = rhi::RESOURCE_STATE_RENDER_TARGET,
+            },
+        },
         .mpRenderTarget = nullptr,
-        .mCurrentFlag   = rhi::RESOURCE_FLAG_PRESENT,
-        .mNewFlag       = rhi::RESOURCE_FLAG_RENDER_TARGET,
     }};
     cmd->setViewport(0, 0, _mWidth, _mHeight, 0.0, 1.0);  // TODO: width & height
     cmd->setScissor(0, 0, _mWidth, _mHeight);             // TODO: width & height

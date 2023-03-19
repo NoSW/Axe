@@ -20,16 +20,6 @@ struct UpdateFrequencyLayoutInfo
 
 bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
 {
-    // Collect all unique static samplers in the given static samplers
-    std::pmr::unordered_map<std::string_view, VulkanSampler*> staticSamplerMap;  // <name, sampler>
-    AXE_ASSERT(desc.mStaticSamplerNames.size() == desc.mStaticSamplers.size(), "Static sampler name count must match static sampler count");
-    for (u32 i = 0; i < desc.mStaticSamplers.size(); ++i)
-    {
-        auto foundIter = staticSamplerMap.find(desc.mStaticSamplerNames[i]);
-        if (foundIter == staticSamplerMap.end()) { staticSamplerMap[desc.mStaticSamplerNames[i]] = static_cast<VulkanSampler*>(desc.mStaticSamplers[i]); }
-        else { AXE_ERROR("Name conflicts among static samplers, {}", desc.mStaticSamplerNames[i].data()); }
-    }
-
     // Collect all unique shader resources in the given shader reflection
     // Resources are parsed by name (two resources named "XYZ" in two shaders will be considered the same resource)
     PipelineType pipelineType = PIPELINE_TYPE_UNDEFINED;
@@ -84,6 +74,16 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
                 addedShaderResources[foundIndexByName].mUsedShaderStage |= currRes.mUsedShaderStage;
             }
         }
+    }
+
+    // Collect all unique static samplers in the given static samplers
+    std::pmr::unordered_map<std::string_view, VulkanSampler*> staticSamplerMap;  // <name, sampler>
+    AXE_ASSERT(desc.mStaticSamplerNames.size() == desc.mStaticSamplers.size(), "Static sampler name count must match static sampler count");
+    for (u32 i = 0; i < desc.mStaticSamplers.size(); ++i)
+    {
+        auto foundIter = staticSamplerMap.find(desc.mStaticSamplerNames[i]);
+        if (foundIter == staticSamplerMap.end()) { staticSamplerMap[desc.mStaticSamplerNames[i]] = static_cast<VulkanSampler*>(desc.mStaticSamplers[i]); }
+        else { AXE_ERROR("Name conflicts among static samplers, {}", desc.mStaticSamplerNames[i].data()); }
     }
 
     // Using data parsed from reflection to init this object
@@ -226,7 +226,7 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
                     .bindingCount = (u32)layout.mBindings.size(),
                     .pBindings    = layout.mBindings.data()};
 
-                AXE_CHECK(VK_SUCCEEDED(vkCreateDescriptorSetLayout(_mpDevice->_mpHandle, &layoutInfo, nullptr, &_mpDescriptorSetLayouts[layoutIndex])));
+                AXE_CHECK(VK_SUCCEEDED(vkCreateDescriptorSetLayout(_mpDevice->handle(), &layoutInfo, nullptr, &_mpDescriptorSetLayouts[layoutIndex])));
             }
             else
             {
@@ -280,7 +280,7 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
         .pushConstantRangeCount = (u32)pushConstants.size(),
         .pPushConstantRanges    = pushConstants.data()};
 
-    AXE_CHECK(VK_SUCCEEDED(vkCreatePipelineLayout(_mpDevice->_mpHandle, &pipelineLayoutInfo, nullptr, &_mpPipelineLayout)));
+    AXE_CHECK(VK_SUCCEEDED(vkCreatePipelineLayout(_mpDevice->handle(), &pipelineLayoutInfo, nullptr, &_mpPipelineLayout)));
 
     // Update template
     for (u32 setIndex = 0; setIndex < DESCRIPTOR_UPDATE_FREQ_COUNT; ++setIndex)
@@ -298,7 +298,7 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
                     .maxSets       = 1,
                     .poolSizeCount = _mPoolSizeCount[setIndex],
                     .pPoolSizes    = _mPoolSizes[setIndex]};
-                AXE_CHECK(VK_SUCCEEDED(vkCreateDescriptorPool(_mpDevice->_mpHandle, &poolCreateInfo, nullptr, &_mpEmptyDescriptorPool[setIndex])));
+                AXE_CHECK(VK_SUCCEEDED(vkCreateDescriptorPool(_mpDevice->handle(), &poolCreateInfo, nullptr, &_mpEmptyDescriptorPool[setIndex])));
 
                 VkDescriptorSetAllocateInfo allocInfo{
                     .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
@@ -307,7 +307,7 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
                     .descriptorSetCount = 1,
                     .pSetLayouts        = &_mpDescriptorSetLayouts[setIndex]};
 
-                AXE_CHECK(VK_SUCCEEDED(vkAllocateDescriptorSets(_mpDevice->_mpHandle, &allocInfo, &_mpEmptyDescriptorSet[setIndex])));
+                AXE_CHECK(VK_SUCCEEDED(vkAllocateDescriptorSets(_mpDevice->handle(), &allocInfo, &_mpEmptyDescriptorSet[setIndex])));
             }
         }
     }
@@ -323,15 +323,16 @@ bool VulkanRootSignature::_destroy() noexcept
     {
         if (_mpDescriptorSetLayouts[i] != _mpDevice->_mpEmptyDescriptorSetLayout)
         {
-            vkDestroyDescriptorSetLayout(_mpDevice->_mpHandle, _mpDescriptorSetLayouts[i], nullptr);
+            vkDestroyDescriptorSetLayout(_mpDevice->handle(), _mpDescriptorSetLayouts[i], nullptr);
         }
         if (_mpEmptyDescriptorPool[i] != VK_NULL_HANDLE)
         {
-            vkDestroyDescriptorPool(_mpDevice->_mpHandle, _mpEmptyDescriptorPool[i], nullptr);
+            vkDestroyDescriptorPool(_mpDevice->handle(), _mpEmptyDescriptorPool[i], nullptr);
         }
     }
 
-    vkDestroyPipelineLayout(_mpDevice->_mpHandle, _mpPipelineLayout, nullptr);
+    vkDestroyPipelineLayout(_mpDevice->handle(), _mpPipelineLayout, nullptr);
+    _mpPipelineLayout = VK_NULL_HANDLE;
     return true;
 }
 }  // namespace axe::rhi

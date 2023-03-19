@@ -11,19 +11,6 @@
 namespace axe::rhi
 {
 
-template <typename T>
-static Backend* createBackend(BackendDesc& desc) noexcept
-{
-    return new T(desc);
-}
-
-template <typename T>
-static void destroyBackend(Backend*& backend) noexcept
-{
-    delete static_cast<T*>(backend);
-    backend = nullptr;
-}
-
 Backend* createBackend(GraphicsApi api, BackendDesc& desc) noexcept
 {
     switch (api)

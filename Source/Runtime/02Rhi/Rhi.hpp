@@ -8,22 +8,12 @@ namespace axe::rhi
 
 class RhiObjectBase
 {
-#ifdef _DEBUG
-public:
-    std::string_view getDebugLabel() const noexcept { return _mLabel; }
-    void setDebugLabel(std::string_view label) noexcept { _mLabel = label; }
-
-private:
     // developer-provided label which is used in an implementation-defined way.
     // It can be used by high layers, or other tools to help identify the underlying internal object to the developer.
     // Examples include displaying the label in GPUError messages, console warnings, and platform debugging utilities.
-    std::pmr::string _mLabel = "Untitled";
-#else
-    constexpr std::string_view getDebugLabel() const noexcept
-    {
-        return "Untitled";
-    }
-    constexpr void setDebugLabel(std::string_view label) noexcept {}
+#if _DEBUG
+protected:
+    std::pmr::string _mLabel;
 #endif
 };
 
@@ -51,10 +41,10 @@ inline constexpr u8 MAX_NUM_DEVICE_PER_ADAPTER  = 4;
 class Adapter : public RhiObjectBase
 {
 public:
-    virtual ~Adapter() noexcept                         = default;
-    virtual Device* requestDevice(DeviceDesc&) noexcept = 0;
-    virtual void releaseDevice(Device*&) noexcept       = 0;
-    virtual GPUSettings requestGPUSettings() noexcept   = 0;
+    virtual ~Adapter() noexcept                                    = default;
+    virtual Device* requestDevice(DeviceDesc&) noexcept            = 0;
+    virtual void releaseDevice(Device*&) noexcept                  = 0;
+    virtual const GPUSettings& requestGPUSettings() const noexcept = 0;
 };
 
 ///////////////////////////////////////////////
@@ -72,6 +62,8 @@ public:
     [[nodiscard]] virtual CmdPool* createCmdPool(CmdPoolDesc&) noexcept                = 0;
     [[nodiscard]] virtual Cmd* createCmd(CmdDesc&) noexcept                            = 0;
     [[nodiscard]] virtual Sampler* createSampler(SamplerDesc&) noexcept                = 0;
+    [[nodiscard]] virtual Texture* createTexture(TextureDesc&) noexcept                = 0;
+    [[nodiscard]] virtual Buffer* createBuffer(BufferDesc&) noexcept                   = 0;
     [[nodiscard]] virtual RenderTarget* createRenderTarget(RenderTargetDesc&) noexcept = 0;
     [[nodiscard]] virtual Shader* createShader(ShaderDesc&) noexcept                   = 0;
     virtual bool destroySemaphore(Semaphore*&) noexcept                                = 0;
@@ -81,6 +73,8 @@ public:
     virtual bool destroyCmdPool(CmdPool*&) noexcept                                    = 0;  // will destroy all cmds allocated from it automatically
     virtual bool destroyCmd(Cmd*&) noexcept                                            = 0;  // destroy the cmd individually
     virtual bool destroySampler(Sampler*&) noexcept                                    = 0;
+    virtual bool destroyTexture(Texture*&) noexcept                                    = 0;
+    virtual bool destroyBuffer(Buffer*&) noexcept                                      = 0;
     virtual bool destroyRenderTarget(RenderTarget*&) noexcept                          = 0;
     virtual bool destroyShader(Shader*&) noexcept                                      = 0;
 };
@@ -144,35 +138,35 @@ public:
 class Cmd : public RhiObjectBase
 {
 public:
-    virtual ~Cmd() noexcept                                                                                                           = default;
-    virtual void begin() noexcept                                                                                                     = 0;
-    virtual void end() noexcept                                                                                                       = 0;
-    virtual void setViewport(float x, float y, float width, float height, float minDepth, float maxDepth) noexcept                    = 0;
-    virtual void setScissor(u32 x, u32 y, u32 width, u32 height) noexcept                                                             = 0;
-    virtual void setStencilReferenceValue(u32 val) noexcept                                                                           = 0;
-    virtual void bindRenderTargets() noexcept                                                                                         = 0;
-    virtual void bindDescriptorSet() noexcept                                                                                         = 0;
-    virtual void bindPushConstants() noexcept                                                                                         = 0;
-    virtual void bindPipeline() noexcept                                                                                              = 0;
-    virtual void bindIndexBuffer() noexcept                                                                                           = 0;
-    virtual void bindVertexBuffer() noexcept                                                                                          = 0;
-    virtual void draw(u32 vertexCount, u32 firstIndex) noexcept                                                                       = 0;
-    virtual void drawInstanced(u32 vertexCount, u32 firstIndex, u32 instanceCount, u32 firstInstance) noexcept                        = 0;
-    virtual void drawIndexed(u32 indexCount, u32 firstIndex, u32 firstVertex) noexcept                                                = 0;
-    virtual void drawIndexedInstanced(u32 indexCount, u32 firstIndex, u32 instanceCount, u32 firstInstance, u32 firstVertex) noexcept = 0;
-    virtual void dispatch(u32 groupCountX, u32 groupCountY, u32 groupCountZ) noexcept                                                 = 0;
-    virtual void resourceBarrier()                                                                                                    = 0;
-    virtual void updateBuffer() noexcept                                                                                              = 0;
-    virtual void updateSubresource() noexcept                                                                                         = 0;
-    virtual void copySubresource() noexcept                                                                                           = 0;
-    virtual void resetQueryPool() noexcept                                                                                            = 0;
-    virtual void beginQuery() noexcept                                                                                                = 0;
-    virtual void endQuery() noexcept                                                                                                  = 0;
-    virtual void resolveQuery() noexcept                                                                                              = 0;
-    virtual void addDebugMarker() noexcept                                                                                            = 0;
-    virtual void beginDebugMarker() noexcept                                                                                          = 0;
-    virtual void writeDebugMarker() noexcept                                                                                          = 0;
-    virtual void endDebugMarker() noexcept                                                                                            = 0;
+    virtual ~Cmd() noexcept                                                                                                                   = default;
+    virtual void begin() noexcept                                                                                                             = 0;
+    virtual void end() noexcept                                                                                                               = 0;
+    virtual void setViewport(float x, float y, float width, float height, float minDepth, float maxDepth) noexcept                            = 0;
+    virtual void setScissor(u32 x, u32 y, u32 width, u32 height) noexcept                                                                     = 0;
+    virtual void setStencilReferenceValue(u32 val) noexcept                                                                                   = 0;
+    virtual void bindRenderTargets() noexcept                                                                                                 = 0;
+    virtual void bindDescriptorSet() noexcept                                                                                                 = 0;
+    virtual void bindPushConstants() noexcept                                                                                                 = 0;
+    virtual void bindPipeline() noexcept                                                                                                      = 0;
+    virtual void bindIndexBuffer() noexcept                                                                                                   = 0;
+    virtual void bindVertexBuffer() noexcept                                                                                                  = 0;
+    virtual void draw(u32 vertexCount, u32 firstIndex) noexcept                                                                               = 0;
+    virtual void drawInstanced(u32 vertexCount, u32 firstIndex, u32 instanceCount, u32 firstInstance) noexcept                                = 0;
+    virtual void drawIndexed(u32 indexCount, u32 firstIndex, u32 firstVertex) noexcept                                                        = 0;
+    virtual void drawIndexedInstanced(u32 indexCount, u32 firstIndex, u32 instanceCount, u32 firstInstance, u32 firstVertex) noexcept         = 0;
+    virtual void dispatch(u32 groupCountX, u32 groupCountY, u32 groupCountZ) noexcept                                                         = 0;
+    virtual void resourceBarrier(std::pmr::vector<TextureBarrier>*, std::pmr::vector<BufferBarrier>*, std::pmr::vector<RenderTargetBarrier>*) = 0;
+    virtual void updateBuffer() noexcept                                                                                                      = 0;
+    virtual void updateSubresource() noexcept                                                                                                 = 0;
+    virtual void copySubresource() noexcept                                                                                                   = 0;
+    virtual void resetQueryPool() noexcept                                                                                                    = 0;
+    virtual void beginQuery() noexcept                                                                                                        = 0;
+    virtual void endQuery() noexcept                                                                                                          = 0;
+    virtual void resolveQuery() noexcept                                                                                                      = 0;
+    virtual void addDebugMarker() noexcept                                                                                                    = 0;
+    virtual void beginDebugMarker() noexcept                                                                                                  = 0;
+    virtual void writeDebugMarker() noexcept                                                                                                  = 0;
+    virtual void endDebugMarker() noexcept                                                                                                    = 0;
 };
 ///////////////////////////////////////////////
 //                    Sampler
@@ -192,6 +186,14 @@ class Texture : public RhiObjectBase
 public:
     virtual ~Texture() noexcept = default;
 };
+///////////////////////////////////////////////
+//                    Buffer
+///////////////////////////////////////////////
+class Buffer : public RhiObjectBase
+{
+public:
+    virtual ~Buffer() noexcept = default;
+};
 
 ///////////////////////////////////////////////
 //                    RenderTarget
@@ -208,6 +210,8 @@ public:
 ///////////////////////////////////////////////
 class Shader : public RhiObjectBase
 {
+public:
+    virtual ~Shader() noexcept = default;
 };
 
 ///////////////////////////////////////////////
@@ -216,6 +220,8 @@ class Shader : public RhiObjectBase
 
 class RootSignature : public RhiObjectBase
 {
+public:
+    virtual ~RootSignature() noexcept = default;
 };
 
 bool create_pipeline_reflection(std::pmr::vector<ShaderReflection>& shaderRefls, PipelineReflection& outPipelineRefl) noexcept;

@@ -4,8 +4,9 @@
 
 #include "00Core/Math/Math.hpp"
 #include "00Core/Memory/Memory.hpp"
+#if _MSC_VER && !__clang__  // visual studio only
 #include <vld.h>
-
+#endif
 using namespace axe;
 
 class HelloTriangle final : public app::App

@@ -96,31 +96,27 @@ inline constexpr u64 U64_MAX = 0xffffffffffffffffull;
 //////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef NDEBUG
 #ifndef _DEBUG
-#define _DEBUG
+#define _DEBUG 1
 #endif
 #endif
 
 #ifdef DEBUG
 #ifndef _DEBUG
-#define _DEBUG
+#define _DEBUG 1
 #endif
 #endif
 
-#ifdef _DEBUG
-#define AXE_CORE_ENABLE_DEBUG 1
-#else
-#define AXE_CORE_ENABLE_DEBUG 0
+#if _DEBUG
+#define AXE_CORE_IO_DEBUG_ENABLE      1
+#define AXE_CORE_LOG_DEBUG_ENABLE     1
+#define AXE_CORE_MATH_DEBUG_ENABLE    1
+#define AXE_CORE_MEM_DEBUG_ENABLE     1
+#define AXE_CORE_NET_DEBUG_ENABLE     1
+#define AXE_CORE_PROF_DEBUG_ENABLE    1
+#define AXE_CORE_REFLECT_DEBUG_ENABLE 1
+#define AXE_CORE_THREAD_DEBUG_ENABLE  1
+#define AXE_CORE_WINDOW_DEBUG_ENABLE  1
 #endif
-
-#define AXE_CORE_IO_DEBUG_ENABLE      AXE_CORE_ENABLE_DEBUG
-#define AXE_CORE_LOG_DEBUG_ENABLE     AXE_CORE_ENABLE_DEBUG
-#define AXE_CORE_MATH_DEBUG_ENABLE    AXE_CORE_ENABLE_DEBUG
-#define AXE_CORE_MEM_DEBUG_ENABLE     AXE_CORE_ENABLE_DEBUG
-#define AXE_CORE_NET_DEBUG_ENABLE     AXE_CORE_ENABLE_DEBUG
-#define AXE_CORE_PROF_DEBUG_ENABLE    AXE_CORE_ENABLE_DEBUG
-#define AXE_CORE_REFLECT_DEBUG_ENABLE AXE_CORE_ENABLE_DEBUG
-#define AXE_CORE_THREAD_DEBUG_ENABLE  AXE_CORE_ENABLE_DEBUG
-#define AXE_CORE_WINDOW_DEBUG_ENABLE  AXE_CORE_ENABLE_DEBUG
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 //                            layer visibility marker

@@ -19,7 +19,6 @@ public:
         //
     };
     void release() noexcept;
-    u8 queueFamilyIndex(QueueType type) const noexcept { return type < _mQueueFamilyIndex.size() ? _mQueueFamilyIndex[type] : U8_MAX; }
     u8 nodeIndex() const noexcept { return _mNodeIndex; }
     bool idle() const noexcept { return (bool)_mIdle; }
     bool take() noexcept { return _mIdle ? !(_mIdle = 0) : false; }
@@ -28,12 +27,20 @@ public:
     AdapterType type() const noexcept { return (AdapterType)_mpProperties.properties.deviceType; }
     auto backendHandle() const noexcept { return _mpBackend->handle(); }
 
+    bool isSupportRead(TinyImageFormat format) const noexcept { return _mGPUCapBits.mCanShaderReadFrom[format]; }
+    bool isSupportWrite(TinyImageFormat format) const noexcept { return _mGPUCapBits.mCanShaderWriteTo[format]; }
+    bool isSupportRenderTargetWrite(TinyImageFormat format) const noexcept { return _mGPUCapBits.mCanRenderTargetWriteTo[format]; }
+    bool isSupportQueue(QueueType) noexcept;
+
     static bool isBetterGpu(const VulkanAdapter& a, const VulkanAdapter& b) noexcept;
 
 public:
     AXE_PUBLIC Device* requestDevice(DeviceDesc&) noexcept override;
     AXE_PUBLIC void releaseDevice(Device*&) noexcept override;
-    AXE_PUBLIC GPUSettings requestGPUSettings() noexcept override { return _mpGPUSettings; };
+    AXE_PUBLIC const GPUSettings& requestGPUSettings() const noexcept override { return _mpGPUSettings; };
+
+public:
+    constexpr static VkObjectType TYPE_ID = VK_OBJECT_TYPE_PHYSICAL_DEVICE;
 
 private:
     // ref
@@ -47,12 +54,17 @@ private:
     VkPhysicalDeviceMemoryProperties2 _mpMemoryProperties{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2};
     VkPhysicalDeviceFeatures2 _mpFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
     GPUSettings _mpGPUSettings;
+    GPUCapBits _mGPUCapBits;
 
-    u8 _mNodeIndex = U8_MAX;
-    u8 _mIdle : 1  = 1;
+    u8 _mNodeIndex                     = U8_MAX;
+    u8 _mIdle                      : 1 = 1;
+    u8 _mSupportGraphicsQueue      : 1 = 0;
+    u8 _mSupportComputeQueue       : 1 = 0;
+    u8 _mSupportTransferQueue      : 1 = 0;
+    u8 _mHasDedicatedComputeQueue  : 1 = 0;
+    u8 _mHasDedicatedTransferQueue : 1 = 0;
 
     // auto
-    std::array<u8, QueueType::MAX_QUEUE_TYPE> _mQueueFamilyIndex{U8_MAX, U8_MAX, U8_MAX};
     std::array<std::unique_ptr<VulkanDevice>, MAX_NUM_DEVICE_PER_ADAPTER> _mDevices;
 };
 

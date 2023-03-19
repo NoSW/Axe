@@ -28,23 +28,23 @@ bool VulkanCmdPool::_create(CmdPoolDesc& desc) noexcept
     // more optimally.
     if (desc.mShortLived) { createInfo.flags |= VK_COMMAND_POOL_CREATE_TRANSIENT_BIT; }
 
-    auto result = vkCreateCommandPool(_mpDevice->_mpHandle, &createInfo, nullptr, &_mpHandle);
+    auto result = vkCreateCommandPool(_mpDevice->handle(), &createInfo, nullptr, &_mpHandle);
     if (VK_FAILED(result)) { AXE_ERROR("Failed to create VulkanCmdPool due to {}", string_VkResult(result)); }
     return _mpHandle != VK_NULL_HANDLE;
 }
 
 bool VulkanCmdPool::_destroy() noexcept
 {
-    AXE_ASSERT(_mpDevice && _mpDevice->_mpHandle && _mpHandle);
-    vkDestroyCommandPool(_mpDevice->_mpHandle, _mpHandle, nullptr);
+    AXE_ASSERT(_mpDevice && _mpDevice->handle() && _mpHandle);
+    vkDestroyCommandPool(_mpDevice->handle(), _mpHandle, nullptr);
     _mpHandle = VK_NULL_HANDLE;
     return true;
 }
 
 void VulkanCmdPool::reset() noexcept
 {
-    AXE_ASSERT(_mpDevice && _mpDevice->_mpHandle && _mpHandle);
-    auto result = vkResetCommandPool(_mpDevice->_mpHandle, _mpHandle, 0);
+    AXE_ASSERT(_mpDevice && _mpDevice->handle() && _mpHandle);
+    auto result = vkResetCommandPool(_mpDevice->handle(), _mpHandle, 0);
     if (VK_FAILED(result)) { AXE_ERROR("Failed to reset VulkanCmdPool due to   {}", string_VkResult(result)); }
 }
 

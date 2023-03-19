@@ -2,30 +2,41 @@
 #include "02Rhi/Rhi.hpp"
 #include "02Rhi/Vulkan/VulkanEnums.hpp"
 
+class VmaAllocation_T;
+using VmaAllocation = VmaAllocation_T*;
 namespace axe::rhi
 {
-class VmaAllocation_T;
 class VulkanDevice;
-class VulkanTexture : public Texture
+class VulkanRenderTarget;
+class VulkanCmd;
+class VulkanTexture final : public Texture
 {
     friend class VulkanDevice;
+    friend class VulkanRenderTarget;
+    friend class VulkanCmd;
     AXE_NON_COPYABLE(VulkanTexture);
     VulkanTexture(VulkanDevice* device) noexcept : _mpDevice(device) {}
-    bool _create(TextureDesc&) noexcept { return true; }
-    bool _destroy() noexcept { return true; }
+    bool _create(TextureDesc&) noexcept;
+    bool _destroy() noexcept;
 
 public:
-    ~VulkanTexture() noexcept override = default;
+    AXE_PUBLIC ~VulkanTexture() noexcept override = default;
+
+public:
+    auto handle() noexcept { return _mpHandle; }
+
+public:
+    constexpr static VkObjectType TYPE_ID = VK_OBJECT_TYPE_IMAGE;
 
 private:
-    VulkanDevice* const _mpDevice = nullptr;
-    VkImageView _mpVkSRVDescriptor;
-    VkImageView _mpVkSRVStencilDescriptor;
-    std::vector<VkImageView> _mpVkUAVDescriptors;
-    VkImage _mpVkImage;
+    VulkanDevice* const _mpDevice         = nullptr;
+    VkImage _mpHandle                     = VK_NULL_HANDLE;
+    VkImageView _mpVkSRVDescriptor        = VK_NULL_HANDLE;
+    VkImageView _mpVkSRVStencilDescriptor = VK_NULL_HANDLE;
+    std::pmr::vector<VkImageView> _mpVkUAVDescriptors;
     union
     {
-        VmaAllocation_T* _mpVkAllocation;
+        VmaAllocation _mpVkAllocation;
         VkDeviceMemory _mpVkDeviceMemory;
     };
     // VirtualTexture* pSvt;

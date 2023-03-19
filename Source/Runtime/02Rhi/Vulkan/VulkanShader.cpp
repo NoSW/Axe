@@ -46,7 +46,7 @@ bool VulkanShader::_create(ShaderDesc& desc) noexcept
                 .pCode    = (u32*)byteCode.data()};
 
             VkShaderModule shaderModule = VK_NULL_HANDLE;
-            if (VK_FAILED(vkCreateShaderModule(_mpDevice->_mpHandle, &createInfo, nullptr, &_mpHandles[index])))
+            if (VK_FAILED(vkCreateShaderModule(_mpDevice->handle(), &createInfo, nullptr, &_mpHandles[index])))
             {
                 AXE_ERROR("Failed to create shader module for shader stage: {}", stageDesc.mFilePath);
                 return false;
@@ -96,7 +96,7 @@ bool VulkanShader::_destroy() noexcept
     {
         if (handle != VK_NULL_HANDLE)
         {
-            vkDestroyShaderModule(_mpDevice->_mpHandle, handle, nullptr);
+            vkDestroyShaderModule(_mpDevice->handle(), handle, nullptr);
         }
     }
 

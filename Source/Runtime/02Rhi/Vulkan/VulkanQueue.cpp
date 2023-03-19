@@ -14,7 +14,7 @@ bool VulkanQueue::_create(QueueDesc& desc) noexcept
 {
     u32 nodeIndex = 0;  //_mpDevice->mGpuMode == GPU_MODE_LINKED ? desc.mNodeIndex : 0;
     u8 quFamIndex = U8_MAX, quIndex = U8_MAX, quFlag = 0;
-    _mpDevice->findQueueFamilyIndex(desc.mType, quFamIndex, quIndex, quFlag);
+    _mpDevice->requestQueueIndex(desc.mType, quFamIndex, quIndex, quFlag);
 
     _mpSubmitMutex       = /* TODO */ nullptr;
     _mTimestampPeriod    = _mpDevice->_mpAdapter->requestGPUSettings().mTimestampPeriod;
@@ -27,7 +27,7 @@ bool VulkanQueue::_create(QueueDesc& desc) noexcept
 
     // if (_mpDevice->mGpuMode == GPU_MODE_UNLINKED) { _mNodeIndex = _mpDevice->mUnlinkedDeviceIndex; }
 
-    vkGetDeviceQueue(_mpDevice->_mpHandle, _mVkQueueFamilyIndex, _mVkQueueIndex, &_mpHandle);
+    vkGetDeviceQueue(_mpDevice->handle(), _mVkQueueFamilyIndex, _mVkQueueIndex, &_mpHandle);
     return _mpHandle != VK_NULL_HANDLE;
 }
 
@@ -53,7 +53,7 @@ void VulkanQueue::submit(QueueSubmitDesc& desc) noexcept
         if (p->_mSignaled)
         {
             p->_mSignaled = false;
-            waitVkSemaphores.push_back(p->_mpVkSemaphore);
+            waitVkSemaphores.push_back(p->handle());
             waitIndices.push_back(p->_mCurrentNodeIndex);
         }
     }
@@ -68,7 +68,7 @@ void VulkanQueue::submit(QueueSubmitDesc& desc) noexcept
         {
             p->_mSignaled         = true;
             p->_mCurrentNodeIndex = _mNodeIndex;
-            signalVkSemaphores.push_back(p->_mpVkSemaphore);
+            signalVkSemaphores.push_back(p->handle());
             signalIndices.push_back(p->_mCurrentNodeIndex);
         }
     }
@@ -78,7 +78,7 @@ void VulkanQueue::submit(QueueSubmitDesc& desc) noexcept
     for (const auto* item : desc.mCmds)
     {
         auto* p = (VulkanCmd*)item;
-        cmdBufs.push_back(p->_mpHandle);
+        cmdBufs.push_back(p->handle());
         deviceMasks.push_back(1 << p->_mNodeIndex);
     }
 
@@ -108,7 +108,7 @@ void VulkanQueue::submit(QueueSubmitDesc& desc) noexcept
     //  TODO: add lock to make sure multiple threads dont use the same queue simultaneously
     // Many setups have just one queue family and one queue. In this case, async compute, async transfer doesn't exist and we end up using
     // the same queue for all three operations
-    auto* pVkFence = desc.mpSignalFence ? ((VulkanFence*)desc.mpSignalFence)->__mpHandle : VK_NULL_HANDLE;
+    auto* pVkFence = desc.mpSignalFence ? ((VulkanFence*)desc.mpSignalFence)->handle() : VK_NULL_HANDLE;
     auto result    = vkQueueSubmit(_mpHandle, 1, &submitInfo, pVkFence);
     if (VK_FAILED(result)) { AXE_ERROR("Failed to submit queue due to {}", string_VkResult(result)); }
     if (pVkFence != VK_NULL_HANDLE) { ((VulkanFence*)desc.mpSignalFence)->_mSubmitted = true; }
@@ -125,7 +125,7 @@ void VulkanQueue::present(QueuePresentDesc& desc) noexcept
         if (p->_mSignaled)
         {
             p->_mSignaled = false;
-            signaledVkSemaphores.push_back(p->_mpVkSemaphore);
+            signaledVkSemaphores.push_back(p->handle());
         }
     }
 
@@ -142,10 +142,7 @@ void VulkanQueue::present(QueuePresentDesc& desc) noexcept
     };
 
     // add lock to make sure multiple threads dont use the same queue simultaneously
-    auto qu     = (pSwapchain->_mpPresentQueue && pSwapchain->_mpPresentQueue->_mpHandle) ?
-                      pSwapchain->_mpPresentQueue->_mpHandle :
-                      _mpHandle;
-    auto result = vkQueuePresentKHR(_mpHandle, &presentInfo);
+    auto result = vkQueuePresentKHR((pSwapchain->_mpPresentQueueHandle != VK_NULL_HANDLE ? pSwapchain->_mpPresentQueueHandle : _mpHandle), &presentInfo);
     switch (result)
     {
         case VK_SUCCESS:

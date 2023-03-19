@@ -1,6 +1,6 @@
 #pragma once
 #include "02Rhi/RhiEnums.hpp"
-#include <tiny_imageformat/tinyimageformat_query.h>
+#include <bitset>
 
 namespace axe::window
 {
@@ -15,9 +15,9 @@ namespace axe::rhi
 //////////////////////////////////////////////////////////////////////////////////////////////
 struct GPUCapBits
 {
-    bool m_canShaderReadFrom[239];
-    bool m_canShaderWriteTo[239];
-    bool m_canRenderTargetWriteTo[239];
+    std::bitset<TinyImageFormat_Count> mCanShaderReadFrom;
+    std::bitset<TinyImageFormat_Count> mCanShaderWriteTo;
+    std::bitset<TinyImageFormat_Count> mCanRenderTargetWriteTo;
 };
 
 struct GPUVendorPreset
@@ -68,38 +68,46 @@ class CmdPool;
 class Cmd;
 class Sampler;
 class Texture;
+class Buffer;
 class RenderTarget;
 class Shader;
 class RootSignature;
 
-struct BackendDesc
+struct DescBase
 {
-    std::string_view mAppName;
-    GpuMode mGpuMode = GPU_MODE_UNLINKED;
+#if _DEBUG
+    std::pmr::string mLabel;
+#endif
 };
 
-struct AdapterDesc
+struct BackendDesc : public DescBase
+{
+    std::string_view mAppName = "Untitled";
+    GpuMode mGpuMode          = GPU_MODE_SINGLE;
+};
+
+struct AdapterDesc : public DescBase
 {
     bool mSelectedBest = true;
 };
 
-struct DeviceDesc
+struct DeviceDesc : public DescBase
 {
     bool mEnableRenderDocLayer      = false;
     bool mRequestAllAvailableQueues = true;
     ShaderModel mShaderModel        = SHADER_MODEL_6_7;
 };
 
-struct SemaphoreDesc
+struct SemaphoreDesc : public DescBase
 {
 };
 
-struct FenceDesc
+struct FenceDesc : public DescBase
 {
     u8 mIsSignaled : 1 = 0;
 };
 
-struct QueueDesc
+struct QueueDesc : public DescBase
 {
     u32 mNodeIndex          = 0;
     QueueType mType         = QUEUE_TYPE_GRAPHICS;
@@ -107,7 +115,7 @@ struct QueueDesc
     QueuePriority mPriority = QUEUE_PRIORITY_NORMAL;
 };
 
-struct QueueSubmitDesc
+struct QueueSubmitDesc : public DescBase
 {
     std::pmr::vector<Cmd*> mCmds;
     std::pmr::vector<Semaphore*> mWaitSemaphores;
@@ -116,7 +124,7 @@ struct QueueSubmitDesc
     bool mSubmitDone     = false;
 };
 
-struct QueuePresentDesc
+struct QueuePresentDesc : public DescBase
 {
     std::pmr::vector<Semaphore*> mWaitSemaphores;
     /* TODO: SwapChain */
@@ -138,34 +146,34 @@ union ClearValue
     } depthStencil;
 };
 
-struct SwapChainDesc
+struct SwapChainDesc : public DescBase
 {
     window::Window* mpWindow = nullptr;
-    std::pmr::vector<Queue*> mpPresentQueues;  /// Queues which should be allowed to present
-    u32 mImageCount = 0;                       /// Number of back buffers in this swapchain
+    Queue* mpPresentQueue;  /// Queues which should be allowed to present
+    u32 mImageCount = 0;    /// Number of back buffers in this swapchain
     u32 mWidth      = 0;
     u32 mHeight     = 0;
     ClearValue mColorClearValue;
+    bool mUseHDR            = false;  /// Set whether swap chain will be presented using HDR
     bool mEnableVsync       = false;  /// Set whether swap chain will be presented using vsync
     bool mUseFlipSwapEffect = false;  /// We can toggle to using FLIP model if app desires.
-    // TinyImageFormat mColorFormat;    /// Color format of the swapchain
 };
 
-struct CmdPoolDesc
+struct CmdPoolDesc : public DescBase
 {
     Queue* mpUsedForQueue        = nullptr;
     u8 mShortLived           : 1 = 1;
     u8 mAllowIndividualReset : 1 = 1;
 };
 
-struct CmdDesc
+struct CmdDesc : public DescBase
 {
     CmdPool* mpCmdPool = nullptr;
     u32 mCmdCount      = 1;
     bool mSecondary    = false;
 };
 
-struct SamplerDesc
+struct SamplerDesc : public DescBase
 {
     FilterType mMinFilter    = FILTER_TYPE_LINEAR;
     FilterType mMagFilter    = FILTER_TYPE_LINEAR;
@@ -192,12 +200,11 @@ struct SamplerDesc
     } mSamplerConversionDesc;
 };
 
-struct TextureDesc
+struct TextureDesc : public DescBase
 {
-    ClearValue mClearValue;     // Optimized clear value (recommended to use this same value when clearing the render target)
     const void* pNativeHandle;  // Pointer to native texture handle if the texture does not own underlying resource
     const char* pName;          // Debug name used in gpu profile
-    u32* pSharedNodeIndices;    // GPU indices to share this texture
+    ClearValue mClearValue;     // Optimized clear value (recommended to use this same value when clearing the render target)
     // #if defined(VULKAN)
     //     VkSamplerYcbcrConversionInfo* pVkSamplerYcbcrConversionInfo;
     // #endif
@@ -210,47 +217,68 @@ struct TextureDesc
     u32 mMipLevels;  // number of mipmap levels
     MSAASampleCount mSampleCount;
     u32 mSampleQuality;  // The valid range is between zero and the value appropriate for mSampleCount
-    // TinyImageFormat mFormat;
-    ResourceState mStartState;    // What state will the texture get created in
-    DescriptorType mDescriptors;  // Descriptor creation
-    u32 mSharedNodeIndexCount;    // Number of GPUs to share this texture
-    u32 mNodeIndex;               // GPU which will own this texture
+    TinyImageFormat mFormat;
+    ResourceState mStartState;                 // What state will the texture get created in
+    DescriptorType mDescriptors;               // Descriptor creation
+    std::pmr::vector<u32> mSharedNodeIndices;  // GPU indices to share this texture
+    u32 mNodeIndex;                            // GPU which will own this texture
 };
 
-struct RenderTargetDesc
+struct BufferDesc : public DescBase
 {
-    // TextureCreationFlags mFlags; // decides memory allocation strategy, sharing access,...
-    u32 mWidth;
-    u32 mHeight;
-    u32 mDepth;      // (Should be 1 if not a mType is not TEXTURE_TYPE_3D)
-    u32 mArraySize;  // Texture array size (Should be 1 if texture is not a texture array or cubemap)
-    u32 mMipLevels;  // Number of mip levels
-    MSAASampleCount mMSAASampleCount;
-    // TinyImageFormat mFormat;  // Internal image format
-    ResourceFlag mStartState;  // What flag will the texture get created in
-    ClearValue mClearValue;    // Optimized clear value (recommended to use this same value when clearing the RenderTarget)
-    u32 mSampleQuality;        // The image quality level. The higher the quality, the lower the performance. The valid range is between zero and the value appropriate for mSampleCount
-    // DescriptorType mDescriptors; // Descriptor creation
-    const void* pNativeHandle;
-    const char* pName;          // Debug name used in gpu profile
-    u32* pSharedNodeIndices;    // GPU indices to share this texture
-    u32 mSharedNodeIndexCount;  // Number of GPUs to share this texture
-    u32 mNodeIndex;             // GPU which will own this texture
+    /// Size of the buffer (in bytes)
+    u64 mSize;
+    /// Set this to specify a counter buffer for this buffer (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
+    Buffer* mpCounterBuffer;
+    /// Index of the first element accessible by the SRV/UAV (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
+    u64 mFirstElement;
+    /// Number of elements in the buffer (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
+    u64 mElementCount;
+    /// Size of each element (in bytes) in the buffer (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
+    u64 mStructStride;
+    /// Debug name used in gpu profile
+    std::string_view mName;
+    /// Alignment
+    u32 mAlignment;
+    /// Decides which memory heap buffer will use (default, upload, readback)
+    ResourceMemoryUsage mMemoryUsage;
+    /// Creation flags of the buffer
+    BufferCreationFlags mFlags;
+    /// What type of queue the buffer is owned by
+    QueueType mQueueType;
+    /// What state will the buffer get created in
+    ResourceState mStartState;
+    /// ICB draw type
+    IndirectArgumentType mICBDrawType;
+    /// ICB max vertex buffers slots count
+    u32 mICBMaxCommandCount;
+    /// Format of the buffer (applicable to typed storage buffers (Buffer<T>)
+    TinyImageFormat mFormat;
+    /// Flags specifying the suitable usage of this buffer (Uniform buffer, Vertex Buffer, Index Buffer,...)
+    DescriptorType mDescriptors;
+    /// The index of the GPU in SLI/Cross-Fire that owns this buffer, or the Renderer index in unlinked mode.
+    u32 mNodeIndex;
+    std::pmr::vector<u32> mSharedNodeIndices;
 };
 
-struct RenderTargetBarrier
+struct RenderTargetDesc : public DescBase
 {
-    RenderTarget* mpRenderTarget = nullptr;
-    ResourceFlag mCurrentFlag    = RESOURCE_FLAG_UNDEFINED;
-    ResourceFlag mNewFlag        = RESOURCE_FLAG_UNDEFINED;
-    u32 mBeginOnly          : 1  = 0;
-    u32 mEndOnly            : 1  = 0;
-    u32 mAcquire            : 1  = 0;
-    u32 mRelease            : 1  = 0;
-    u32 mQueueType          : 5  = 0;
-    u32 mSubresourceBarrier : 1  = 0;  // Specifics whether following barrier targets particular subresource
-    u32 mMipLevel           : 7  = 0;  // ignored if mSubresourceBarrier is false
-    u32 mArrayLayer              = 0;  // ignored if mSubresourceBarrier is false
+    TextureCreationFlags mFlags      = TEXTURE_CREATION_FLAG_NONE;  // decides memory allocation strategy, sharing access,...
+    u32 mWidth                       = 0;
+    u32 mHeight                      = 0;
+    u32 mDepth                       = 1;  // (Should be 1 if not a mType is not TEXTURE_TYPE_3D)
+    u32 mArraySize                   = 1;  // Texture array size (Should be 1 if texture is not a texture array or cubemap)
+    u32 mMipLevels                   = 0;  // Number of mip levels
+    MSAASampleCount mMSAASampleCount = MSAA_SAMPLE_COUNT_1;
+    TinyImageFormat mFormat          = TinyImageFormat_UNDEFINED;  // Internal image format
+    ResourceState mStartState        = RESOURCE_STATE_UNDEFINED;   // What flag will the texture get created in
+    ClearValue mClearValue{.rgba = {0, 0, 0, 0}};                  // Optimized clear value (recommended to use this same value when clearing the RenderTarget)
+    u32 mSampleQuality          = 1;                               // The image quality level. The higher the quality, the lower the performance. The valid range is between zero and the value appropriate for mSampleCount
+    DescriptorType mDescriptors = DESCRIPTOR_TYPE_UNDEFINED;       // Descriptor creation
+    const void* mpNativeHandle  = nullptr;
+    const char* mpName          = "Untitled";  // Debug name used in gpu profile
+    std::pmr::vector<u32> mSharedNodeIndices;  // GPU indices to share this texture
+    u32 mNodeIndex = 0;                        // GPU which will own this texture
 };
 
 struct ShaderStageDesc
@@ -267,14 +295,14 @@ struct ShaderConstants  // only supported by Vulkan and Metal APIs
     u32 mIndex;
 };
 
-struct ShaderDesc
+struct ShaderDesc : public DescBase
 {
     std::pmr::vector<ShaderStageDesc> mStages;
     std::pmr::vector<ShaderConstants> mConstants;
     ShaderModel mShaderMode = SHADER_MODEL_6_7;
 };
 
-struct RootSignatureDesc
+struct RootSignatureDesc : public DescBase
 {
     std::pmr::vector<Shader*> mShaders;
     std::pmr::vector<std::string_view> mStaticSamplerNames;
@@ -297,6 +325,63 @@ struct DescriptorInfo
     u32 mVkStages         : 8;
     u32 mVkType;
     u32 mReg;
+};
+
+struct NullDescriptors
+{
+    std::array<std::array<Texture*, TEXTURE_DIM_COUNT>, MAX_LINKED_GPUS> mpDefaultTextureSRV{};
+    std::array<Buffer*, MAX_LINKED_GPUS> mpDefaultBufferSRV{};
+    std::array<Buffer*, MAX_LINKED_GPUS> mpDefaultBufferUAV{};
+    Sampler* mpDefaultSampler           = nullptr;
+    // Mutex mSubmitMutex;
+
+    // #TODO - Remove after we have a better way to specify initial resource state
+    // Unlike DX12, Vulkan textures start in undefined layout.
+    // With this, we transition them to the specified layout so app code doesn't have to worry about this
+    // Mutex mInitialTransitionMutex;
+    Queue* mpInitialTransitionQueue     = nullptr;
+    CmdPool* mpInitialTransitionCmdPool = nullptr;
+    Cmd* mpInitialTransitionCmd         = nullptr;
+    Fence* mpInitialTransitionFence     = nullptr;
+};
+
+// Barrier
+
+struct BarrierInfo
+{
+    ResourceState mCurrentState = RESOURCE_STATE_UNDEFINED;
+    ResourceState mNewState     = RESOURCE_STATE_UNDEFINED;
+    u8 mBeginOnly : 1           = 0;
+    u8 mEndOnly   : 1           = 0;
+    u8 mAcquire   : 1           = 0;
+    u8 mRelease   : 1           = 0;
+    u8 mQueueType : 5           = 0;
+};
+
+struct ImageBarrier
+{
+    BarrierInfo mBarrierInfo{};
+    u8 mSubresourceBarrier : 1 = 0;  // Specify whether following barrier targets particular subresource
+    u8 mMipLevel           : 7 = 0;  // ignored if mSubresourceBarrier is false
+    u16 mArrayLayer            = 0;  // ignored if mSubresourceBarrier is false
+};
+
+struct TextureBarrier
+{
+    ImageBarrier mImageBarrier{};
+    Texture* mpTexture = nullptr;
+};
+
+struct RenderTargetBarrier
+{
+    ImageBarrier mImageBarrier{};
+    RenderTarget* mpRenderTarget = nullptr;
+};
+
+struct BufferBarrier
+{
+    BarrierInfo mBarrierInfo{};
+    Buffer* pBuffer = nullptr;
 };
 
 }  // namespace axe::rhi

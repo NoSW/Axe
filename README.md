@@ -1,5 +1,5 @@
 # Axe
-Axe is a cross multi-platform game engine(round 1), also an engineering practice about *[Game Engine Architecture, Third Edition](https://www.gameenginebook.com/)*.
+Axe is a cross multi-platform ai-driven game engine(round 1, also an engineering practice about *[Game Engine Architecture, Third Edition](https://www.gameenginebook.com/)*).
 
 ## Goal
 
@@ -7,7 +7,7 @@ Axe is a cross multi-platform game engine(round 1), also an engineering practice
 - dive into more underlying details about modern graphics apis (Vulkan, D3D12, Metal)
 - explore architecture of modern game engine (abstraction, layering, compile-time/edit-time/runtime/loop-time designs)
 - experiment some fundamental and interested graphics features(forward, deferred pipeline, shadow, GI,  etc)
-- try to build source code as my personal technical wiki, instead of a traditional blog website
+- try to integrate various AIGC techniques (e.g., AIG shaders/models/textures/audio/animation ...)
 
 ## Platform
 
@@ -21,34 +21,25 @@ Axe is a cross multi-platform game engine(round 1), also an engineering practice
 - [CMake>=3.20](https://cmake.org/download/)
 - [Python>=3.10](https://www.python.org/downloads/)
 - [VulkanSDK>=1.3](https://vulkan.lunarg.com/) ([start on linux](https://vulkan.lunarg.com/doc/view/latest/linux/getting_started.html), [start on windows](https://vulkan.lunarg.com/doc/view/latest/windows/getting_started.html))
-- (Optional) Windows 10 SDK containing [Direct3D 12](https://learn.microsoft.com/en-us/windows/win32/direct3d12/direct3d-12-graphics)
+- Windows 10 SDK containing [Direct3D 12](https://learn.microsoft.com/en-us/windows/win32/direct3d12/direct3d-12-graphics) if on Windows
 
 ## How to build
 
-### Option 1 (recommended):
-run the python script that wraps cmake&build commands: (NOTE: `git`, `cmake` and `ninja` added to PATH are required)
+run the python script that wraps cmake&build commands: (NOTE: `cmake` added to PATH is required)
+
 ```shell
-# Use --[msvc(default)|clang|gcc] to specify an available compiler
+# Use --[msvc(default)|clang|gcc] to specify an available compiler, e.g.,
 > python3 generate_project.py --clang
 ```
 
-### Option 2:
-run cmake directly with any options supported by cmake. For example:
 ```shell
-# Windows
-> cmake -S. -B Build -G "Visual Studio 17 2022"
+> python3 generate_project.py --gcc
 ```
+
 ```shell
-# Linux or MacOS with ninja
-> ninja --version
-> cmake -S. -B Build -G "Ninja Multi-Config" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-> cmake --build Build --config Debug -- -j 16
+> python3 generate_project.py --msvc # VS2022 is required 
 ```
-```shell
-# Linux or MacOS
-> cmake -S. -B Build -G "Unix Makefiles" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug
-> cmake --build Build -j 16
-```
+
 ## Features
 
 <img src="Documents/Images/Arch.png" alt="Game Engine Architecture" width=360 align="right"/>

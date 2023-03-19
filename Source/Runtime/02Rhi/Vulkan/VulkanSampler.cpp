@@ -4,6 +4,7 @@
 #include <volk/volk.h>
 
 #include <tiny_imageformat/tinyimageformat_apis.h>
+#include <tiny_imageformat/tinyimageformat_query.h>
 
 namespace axe::rhi
 {
@@ -45,7 +46,7 @@ bool VulkanSampler::_create(SamplerDesc& desc) noexcept
     if (TinyImageFormat_IsPlanar(desc.mSamplerConversionDesc.mFormat))
     {
         auto& conversionDesc = desc.mSamplerConversionDesc;
-        auto format          = (VkFormat)TinyImageFormat_ToVkFormat(conversionDesc.mFormat);
+        auto format          = to_vk_enum(conversionDesc.mFormat);
 
         // check format props
         {
@@ -75,7 +76,7 @@ bool VulkanSampler::_create(SamplerDesc& desc) noexcept
             .yChromaOffset               = (VkChromaLocation)conversionDesc.mChromaOffsetY,
             .chromaFilter                = to_vk_enum(conversionDesc.mChromaFilter),
             .forceExplicitReconstruction = conversionDesc.mForceExplicitReconstruction ? VK_TRUE : VK_FALSE};
-        vkCreateSamplerYcbcrConversion(_mpDevice->_mpHandle, &conversionInfo, nullptr, &_mpVkSamplerYcbcrConversion);
+        vkCreateSamplerYcbcrConversion(_mpDevice->handle(), &conversionInfo, nullptr, &_mpVkSamplerYcbcrConversion);
         _mVkSamplerYcbcrConversionInfo = {
             .sType      = VK_STRUCTURE_TYPE_SAMPLER_YCBCR_CONVERSION_INFO,
             .pNext      = nullptr,
@@ -83,15 +84,17 @@ bool VulkanSampler::_create(SamplerDesc& desc) noexcept
         createInfo.pNext = &_mVkSamplerYcbcrConversionInfo;
     }
 
-    return VK_SUCCEEDED(vkCreateSampler(_mpDevice->_mpHandle, &createInfo, nullptr, &_mpHandle));
+    return VK_SUCCEEDED(vkCreateSampler(_mpDevice->handle(), &createInfo, nullptr, &_mpHandle));
 }
 
 bool VulkanSampler::_destroy() noexcept
 {
-    vkDestroySampler(_mpDevice->_mpHandle, _mpHandle, nullptr);
+    vkDestroySampler(_mpDevice->handle(), _mpHandle, nullptr);
+    _mpHandle = VK_NULL_HANDLE;
+
     if (_mpVkSamplerYcbcrConversion != VK_NULL_HANDLE)
     {
-        vkDestroySamplerYcbcrConversion(_mpDevice->_mpHandle, _mpVkSamplerYcbcrConversion, nullptr);
+        vkDestroySamplerYcbcrConversion(_mpDevice->handle(), _mpVkSamplerYcbcrConversion, nullptr);
     }
     return true;
 }

@@ -10,10 +10,62 @@
 namespace axe::memory
 {
 
-class DefaultMemoryResource;
+// ----------------------------------------------------------------------------
+// We can manage default, namely global alloc in class DefaultMemoryResource
+// ---------------------------------------------------------------------------
+class DefaultMemoryResource final : public std::pmr::memory_resource
+{
+    // For covering std::pmr::polymorphic_allocator
+    virtual void* do_allocate(size_t bytes, size_t align) override;
+    virtual void do_deallocate(void* ptr, size_t bytes, size_t align) override;
+    virtual bool do_is_equal(const memory_resource& that) const noexcept override { return this == &that; }
 
-DefaultMemoryResource* get_default_allocator() noexcept;
+    DefaultMemoryResource() noexcept
+    {
+        std::pmr::set_default_resource(this);
+    }
+    ~DefaultMemoryResource() noexcept;
 
+#if AXE_CORE_MEM_DEBUG_ENABLE
+private:
+    std::atomic<u32> _mAllocBytes      = 0;
+    std::atomic<u32> _mAllocCount      = 0;
+    std::atomic<u32> _mFreeCount       = 0;
+    std::atomic<u32> _mAllocByPmrBytes = 0;
+    std::atomic<u32> _mFreeByPmrBytes  = 0;
+    std::atomic<u32> _mAllocByPmrCount = 0;
+    std::atomic<u32> _mFreeByPmrCount  = 0;
+
+public:
+#endif
+    [[nodiscard]] bool isLeak() const noexcept;
+    [[nodiscard]] u32 getAllocCount() const noexcept;
+    [[nodiscard]] u32 getAccumBytes() const noexcept;
+    [[nodiscard]] u32 getAccumByPmrBytes() const noexcept;
+    [[nodiscard]] u32 getAllocByPmrCount() const noexcept;
+
+public:
+    static DefaultMemoryResource* const get() noexcept
+    {
+        static DefaultMemoryResource ins;
+        return &ins;
+    }
+
+    // used for user-allocate
+    [[nodiscard]] void* realloc(void* p, size_t newsize) noexcept;
+    [[nodiscard]] void* new_n(size_t bytes);
+    [[nodiscard]] void* new_nothrow(size_t bytes) noexcept;
+    [[nodiscard]] void* new_aligned(size_t bytes, size_t align);
+    [[nodiscard]] void* new_aligned_nothrow(size_t bytes, size_t align) noexcept;
+    void free(void* p) noexcept;
+    void free_size(void* p, size_t bytes) noexcept;
+    void free_aligned(void* p, size_t align) noexcept;
+    void free_size_aligned(void* p, size_t bytes, size_t align) noexcept;
+};
+
+// ----------------------------------------------------------------------------
+// MonoMemoryResource
+// ---------------------------------------------------------------------------
 template <uint32_t BYTES = 4096>
 class MonoMemoryResource : public std::pmr::monotonic_buffer_resource
 {
@@ -30,6 +82,10 @@ public:
 private:
     uint8_t _mData[_round(BYTES)];
 };
+
+// ----------------------------------------------------------------------------
+// ptr
+// ---------------------------------------------------------------------------
 
 template <typename>
 class owner_ptr;

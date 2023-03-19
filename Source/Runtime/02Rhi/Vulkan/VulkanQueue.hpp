@@ -13,6 +13,7 @@ class Mutex;
 namespace axe::rhi
 {
 class VulkanDevice;
+class VulkanSwapChain;
 class VulkanQueue final : public Queue
 {
     friend class VulkanDevice;
@@ -25,10 +26,16 @@ class VulkanQueue final : public Queue
     bool _destroy() noexcept;
 
 public:
-    ~VulkanQueue() noexcept override = default;
-    void submit(QueueSubmitDesc& desc) noexcept override;
-    void present(QueuePresentDesc& desc) noexcept override;
-    void waitIdle() noexcept override;
+    AXE_PUBLIC ~VulkanQueue() noexcept override = default;
+    AXE_PUBLIC void submit(QueueSubmitDesc& desc) noexcept override;
+    AXE_PUBLIC void present(QueuePresentDesc& desc) noexcept override;
+    AXE_PUBLIC void waitIdle() noexcept override;
+
+public:
+    auto handle() noexcept { return _mpHandle; }
+
+public:
+    constexpr static VkObjectType TYPE_ID = VK_OBJECT_TYPE_QUEUE;
 
 private:
     VkQueue _mpHandle             = VK_NULL_HANDLE;
@@ -39,7 +46,7 @@ private:
     u32 _mVkQueueFamilyIndex : 8  = U8_MAX;
     u32 _mVkQueueIndex       : 8  = U8_MAX;
     u32 _mGpuMode            : 3  = GPU_MODE_SINGLE;
-    u32 _mType               : 3  = MAX_QUEUE_TYPE;
+    u32 _mType               : 3  = QUEUE_TYPE_MAX;
     u32 _mNodeIndex          : 4  = 0;
 };
 

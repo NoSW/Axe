@@ -2,8 +2,6 @@
 #include "02Rhi/Rhi.hpp"
 #include "02Rhi/Vulkan/VulkanEnums.hpp"
 
-#include <vma/vk_mem_alloc.h>
-
 #include <00Core/Thread/Thread.hpp>
 
 #include <string>
@@ -33,34 +31,25 @@ public:
 
     AXE_PUBLIC void releaseAdapter(Adapter*&) noexcept override;
 
-    auto getSwapchain() noexcept
-    {
-        return mpVkSwapChain;
-    }
-
-private:
-    bool _initVulkanMemoryAllocator() noexcept;
+public:
+    constexpr static VkObjectType TYPE_ID = VK_OBJECT_TYPE_INSTANCE;
 
 public:
     // handle
-    VkInstance _mpHandle         = VK_NULL_HANDLE;
+    VkInstance _mpHandle     = VK_NULL_HANDLE;
 
-    VkSurfaceKHR mpVkSurface     = VK_NULL_HANDLE;
-    VkSwapchainKHR mpVkSwapChain = VK_NULL_HANDLE;
+    VkSurfaceKHR mpVkSurface = VK_NULL_HANDLE;
 
 #ifdef AXE_RHI_VULKAN_ENABLE_DEBUG
     VkDebugUtilsMessengerEXT mpVkDebugUtilsMessenger = VK_NULL_HANDLE;
 #endif
-
-    VmaAllocator mpVmaAllocator = VK_NULL_HANDLE;
 
     // auto
     std::array<std::unique_ptr<VulkanAdapter>, MAX_NUM_ADAPTER_PER_BACKEND> _mAdapters;
 
     // scalar
     u32 _mRenderDocLayerEnabled        : 1 = 0;
-    u32 _mDedicatedAllocationExtension : 1 = 0;
-    u32 _mBufferDeviceAddressExtension : 1 = 0;
+
     u32 _mDeviceGroupCreationExtension : 1 = 0;
     u32 _mLinkedNodeCount              : 4 = 0;
     u32 _mUnlinkedBackendIndex         : 4 = 0;

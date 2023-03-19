@@ -18,35 +18,41 @@ class VulkanCmd final : public Cmd
     bool _destroy() noexcept;
 
 public:
-    ~VulkanCmd() noexcept override = default;
-    void begin() noexcept override;
-    void end() noexcept override;
-    void setViewport(float x, float y, float width, float height, float minDepth, float maxDepth) noexcept override;
-    void setScissor(u32 x, u32 y, u32 width, u32 height) noexcept override;
-    void setStencilReferenceValue(u32 val) noexcept override;
-    void bindRenderTargets() noexcept override;
-    void bindDescriptorSet() noexcept override;
-    void bindPushConstants() noexcept override;
-    void bindPipeline() noexcept override;
-    void bindIndexBuffer() noexcept override;
-    void bindVertexBuffer() noexcept override;
-    void draw(u32 vertexCount, u32 firstIndex) noexcept override;
-    void drawInstanced(u32 vertexCount, u32 firstIndex, u32 instanceCount, u32 firstInstance) noexcept override;
-    void drawIndexed(u32 indexCount, u32 firstIndex, u32 firstVertex) noexcept override;
-    void drawIndexedInstanced(u32 indexCount, u32 firstIndex, u32 instanceCount, u32 firstInstance, u32 firstVertex) noexcept override;
-    void dispatch(u32 groupCountX, u32 groupCountY, u32 groupCountZ) noexcept override;
-    void resourceBarrier() noexcept override;
-    void updateBuffer() noexcept override;
-    void updateSubresource() noexcept override;
-    void copySubresource() noexcept override;
-    void resetQueryPool() noexcept override;
-    void beginQuery() noexcept override;
-    void endQuery() noexcept override;
-    void resolveQuery() noexcept override;
-    void addDebugMarker() noexcept override;
-    void beginDebugMarker() noexcept override;
-    void writeDebugMarker() noexcept override;
-    void endDebugMarker() noexcept override;
+    AXE_PUBLIC ~VulkanCmd() noexcept override = default;
+    AXE_PUBLIC void begin() noexcept override;
+    AXE_PUBLIC void end() noexcept override;
+    AXE_PUBLIC void setViewport(float x, float y, float width, float height, float minDepth, float maxDepth) noexcept override;
+    AXE_PUBLIC void setScissor(u32 x, u32 y, u32 width, u32 height) noexcept override;
+    AXE_PUBLIC void setStencilReferenceValue(u32 val) noexcept override;
+    AXE_PUBLIC void bindRenderTargets() noexcept override;
+    AXE_PUBLIC void bindDescriptorSet() noexcept override;
+    AXE_PUBLIC void bindPushConstants() noexcept override;
+    AXE_PUBLIC void bindPipeline() noexcept override;
+    AXE_PUBLIC void bindIndexBuffer() noexcept override;
+    AXE_PUBLIC void bindVertexBuffer() noexcept override;
+    AXE_PUBLIC void draw(u32 vertexCount, u32 firstIndex) noexcept override;
+    AXE_PUBLIC void drawInstanced(u32 vertexCount, u32 firstIndex, u32 instanceCount, u32 firstInstance) noexcept override;
+    AXE_PUBLIC void drawIndexed(u32 indexCount, u32 firstIndex, u32 firstVertex) noexcept override;
+    AXE_PUBLIC void drawIndexedInstanced(u32 indexCount, u32 firstIndex, u32 instanceCount, u32 firstInstance, u32 firstVertex) noexcept override;
+    AXE_PUBLIC void dispatch(u32 groupCountX, u32 groupCountY, u32 groupCountZ) noexcept override;
+    AXE_PUBLIC void resourceBarrier(std::pmr::vector<TextureBarrier>*, std::pmr::vector<BufferBarrier>*, std::pmr::vector<RenderTargetBarrier>*) noexcept override;
+    AXE_PUBLIC void updateBuffer() noexcept override;
+    AXE_PUBLIC void updateSubresource() noexcept override;
+    AXE_PUBLIC void copySubresource() noexcept override;
+    AXE_PUBLIC void resetQueryPool() noexcept override;
+    AXE_PUBLIC void beginQuery() noexcept override;
+    AXE_PUBLIC void endQuery() noexcept override;
+    AXE_PUBLIC void resolveQuery() noexcept override;
+    AXE_PUBLIC void addDebugMarker() noexcept override;
+    AXE_PUBLIC void beginDebugMarker() noexcept override;
+    AXE_PUBLIC void writeDebugMarker() noexcept override;
+    AXE_PUBLIC void endDebugMarker() noexcept override;
+
+public:
+    auto handle() noexcept { return _mpHandle; }
+
+public:
+    constexpr static VkObjectType TYPE_ID = VK_OBJECT_TYPE_COMMAND_BUFFER;
 
 private:
     VkCommandBuffer _mpHandle               = VK_NULL_HANDLE;

@@ -1,21 +1,31 @@
 #include "02Rhi/Vulkan/VulkanAdapter.hpp"
+#include "02Rhi/Vulkan/VulkanDevice.hpp"
 
 #include <volk/volk.h>
-
-#include "02Rhi/Vulkan/VulkanDevice.hpp"
+#include <tiny_imageformat/tinyimageformat_apis.h>
 
 namespace axe::rhi
 {
 // see https://raw.githubusercontent.com/David-DiGioia/vulkan-diagrams/main/boiler_plate.png for overview of VkPhysicalDevice
-static const auto have_graphics_queue_family = [](const std::pmr::vector<VkQueueFamilyProperties2>& quFamProps2) -> std::tuple<int, int, int>
+static const auto query_family_index = [](VkPhysicalDevice pHandle) -> std::tuple<int, int, int>
 {
+    u32 quFamPropCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties2(pHandle, &quFamPropCount, nullptr);
+    std::pmr::vector<VkQueueFamilyProperties2> quFamProps2(quFamPropCount, {VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2});
+    vkGetPhysicalDeviceQueueFamilyProperties2(pHandle, &quFamPropCount, quFamProps2.data());
+
     u32 graphicsID = U8_MAX, transferID = U8_MAX, computeID = U8_MAX;
+    const auto grap_comp_flags  = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT;
+    const auto grap_trans_flags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT;
+    const auto comp_trans_flags = VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT;
+
     for (u32 i = 0; i < quFamProps2.size(); ++i)
     {
         if (quFamProps2[i].queueFamilyProperties.queueCount)
         {
             const auto& flags = quFamProps2[i].queueFamilyProperties.queueFlags;
-            bool isDedicated  = std::has_single_bit((u32)flags);
+            bool isDedicated  = std::has_single_bit((u32)flags) ||
+                               !(flags & grap_comp_flags) || !(flags & grap_trans_flags) || !(flags & comp_trans_flags);
             if (graphicsID == U8_MAX && (flags & VK_QUEUE_GRAPHICS_BIT)) { graphicsID = i; }
             if (transferID == U8_MAX && isDedicated && (flags & VK_QUEUE_TRANSFER_BIT)) { transferID = i; }
             if (computeID == U8_MAX && isDedicated && (flags & VK_QUEUE_COMPUTE_BIT)) { computeID = i; }
@@ -29,7 +39,7 @@ static const auto have_graphics_queue_family = [](const std::pmr::vector<VkQueue
         if (computeID == U8_MAX && (flags & VK_QUEUE_COMPUTE_BIT)) { computeID = i; }
     }
 
-    return {graphicsID, transferID, computeID};
+    return {graphicsID, computeID, transferID};
 };
 
 VulkanAdapter::VulkanAdapter(VulkanBackend* backend, VkPhysicalDevice handle, u8 nodeIndex) noexcept
@@ -55,12 +65,22 @@ VulkanAdapter::VulkanAdapter(VulkanBackend* backend, VkPhysicalDevice handle, u8
     std::pmr::vector<VkQueueFamilyProperties2> quFamProp2(quFamPropCount, {VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2});
     vkGetPhysicalDeviceQueueFamilyProperties2(_mpHandle, &quFamPropCount, quFamProp2.data());
 
-    auto [graphicsID, transferID, computeID]        = have_graphics_queue_family(quFamProp2);
-    _mQueueFamilyIndex[QUEUE_TYPE_GRAPHICS]         = graphicsID;
-    _mQueueFamilyIndex[QUEUE_TYPE_TRANSFER]         = transferID;
-    _mQueueFamilyIndex[QUEUE_TYPE_COMPUTE]          = computeID;
+    // Collect all the things of interest into structs
 
-    // Collect all the things of interest into a struct
+    // GPUCapBits
+    for (u32 i = 0; i < TinyImageFormat_Count; ++i)
+    {
+        VkFormat fmt = to_vk_enum((TinyImageFormat)i);
+        if (fmt == VK_FORMAT_UNDEFINED) { continue; }
+
+        VkFormatProperties formatSupport;
+        vkGetPhysicalDeviceFormatProperties(_mpHandle, fmt, &formatSupport);
+        _mGPUCapBits.mCanShaderReadFrom[i]      = (formatSupport.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT);
+        _mGPUCapBits.mCanShaderWriteTo[i]       = (formatSupport.optimalTilingFeatures & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT);
+        _mGPUCapBits.mCanRenderTargetWriteTo[i] = (formatSupport.optimalTilingFeatures & (VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT | VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT));
+    }
+
+    // GPUSettings
     _mpGPUSettings.mUniformBufferAlignment          = _mpProperties.properties.limits.minUniformBufferOffsetAlignment;
     _mpGPUSettings.mUploadBufferTextureAlignment    = _mpProperties.properties.limits.optimalBufferCopyOffsetAlignment;
     _mpGPUSettings.mUploadBufferTextureRowAlignment = _mpProperties.properties.limits.optimalBufferCopyRowPitchAlignment;
@@ -112,6 +132,14 @@ VulkanAdapter::VulkanAdapter(VulkanBackend* backend, VkPhysicalDevice handle, u8
             sprintf(_mpGPUSettings.mGpuVendorPreset.mGpuBackendVersion, "%u.%u,%u", VK_VERSION_MAJOR(version), VK_VERSION_MINOR(version), VK_VERSION_PATCH(version));
             break;
     }
+
+    auto [graQuFamId, comQuFamId, transQuFamId] = query_family_index(_mpHandle);
+    _mSupportGraphicsQueue                      = graQuFamId != U8_MAX;
+    _mSupportComputeQueue                       = comQuFamId != U8_MAX;
+    _mSupportTransferQueue                      = transQuFamId != U8_MAX;
+    _mHasDedicatedComputeQueue                  = _mSupportComputeQueue && comQuFamId != graQuFamId && comQuFamId != transQuFamId;
+    _mHasDedicatedTransferQueue                 = _mSupportTransferQueue && transQuFamId != graQuFamId && transQuFamId != comQuFamId;
+
     AXE_INFO("GPU[{}], detected. Vendor ID: {:#x}, Model ID: {:#x}, GPU Name: {}, Backend Version: {}",
              _mNodeIndex, _mpGPUSettings.mGpuVendorPreset.mVendorId, _mpGPUSettings.mGpuVendorPreset.mModelId, _mpGPUSettings.mGpuVendorPreset.mGpuName, _mpGPUSettings.mGpuVendorPreset.mGpuBackendVersion);
 }
@@ -154,13 +182,22 @@ void VulkanAdapter::release() noexcept
     for (auto& d : _mDevices) { d.reset(); }
 }
 
+bool VulkanAdapter::isSupportQueue(QueueType t) noexcept
+{
+    switch (t)
+    {
+        case QUEUE_TYPE_GRAPHICS: return _mSupportGraphicsQueue;
+        case QUEUE_TYPE_COMPUTE: return _mSupportComputeQueue;
+        case QUEUE_TYPE_TRANSFER: return _mSupportTransferQueue;
+        default: AXE_ASSERT(false, "Invalid type"); return false;
+    }
+}
+
 bool VulkanAdapter::isBetterGpu(const VulkanAdapter& a, const VulkanAdapter& b) noexcept
 {
     // prefer one has graphics queue
-    auto quGraA            = a._mQueueFamilyIndex[QUEUE_TYPE_GRAPHICS];
-    auto quGraB            = b._mQueueFamilyIndex[QUEUE_TYPE_GRAPHICS];
-    bool hasGraphicsQueueA = quGraA != U8_MAX;
-    bool hasGraphicsQueueB = quGraB != U8_MAX;
+    bool hasGraphicsQueueA = a._mSupportGraphicsQueue;
+    bool hasGraphicsQueueB = b._mSupportGraphicsQueue;
     if (hasGraphicsQueueA && !hasGraphicsQueueB) { return true; }
     if (!hasGraphicsQueueA && hasGraphicsQueueB) { return false; }
 
@@ -192,12 +229,8 @@ bool VulkanAdapter::isBetterGpu(const VulkanAdapter& a, const VulkanAdapter& b) 
     }
 
     // prefer one has dedicated compute queue for enabling asynchronous compute
-    auto quComA                    = a._mQueueFamilyIndex[QUEUE_TYPE_COMPUTE];
-    auto quComB                    = b._mQueueFamilyIndex[QUEUE_TYPE_COMPUTE];
-    auto quTransA                  = a._mQueueFamilyIndex[QUEUE_TYPE_TRANSFER];
-    auto quTransB                  = b._mQueueFamilyIndex[QUEUE_TYPE_TRANSFER];
-    bool hasDedicatedComputeQueueA = quComA != U8_MAX && quComA != quGraA && quComA != quTransA;
-    bool hasDedicatedComputeQueueB = quComB != U8_MAX && quComB != quGraB && quComB != quTransB;
+    bool hasDedicatedComputeQueueA = a._mSupportComputeQueue && a._mHasDedicatedComputeQueue;
+    bool hasDedicatedComputeQueueB = b._mSupportComputeQueue && b._mHasDedicatedComputeQueue;
     if (hasDedicatedComputeQueueA && !hasDedicatedComputeQueueB) { return true; }
     if (!hasDedicatedComputeQueueA && hasDedicatedComputeQueueB) { return false; }
 

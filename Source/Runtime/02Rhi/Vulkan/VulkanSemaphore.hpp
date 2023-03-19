@@ -13,17 +13,24 @@ class VulkanSemaphore final : public Semaphore
     friend class VulkanQueue;
     friend class VulkanSwapChain;
     AXE_NON_COPYABLE(VulkanSemaphore);
-    VulkanSemaphore(VulkanDevice* device) noexcept : _mpHandle(device) {}
+    VulkanSemaphore(VulkanDevice* device) noexcept : _mpDevice(device) {}
     bool _create(SemaphoreDesc&) noexcept;
     bool _destroy() noexcept;
 
 public:
     VulkanSemaphore() noexcept;
-    ~VulkanSemaphore() noexcept override = default;
+
+    AXE_PUBLIC ~VulkanSemaphore() noexcept override { AXE_ASSERT(_mpHandle == VK_NULL_HANDLE); }
+
+public:
+    auto handle() noexcept { return _mpHandle; }
+
+public:
+    constexpr static VkObjectType TYPE_ID = VK_OBJECT_TYPE_SEMAPHORE;
 
 private:
-    VulkanDevice* const _mpHandle = nullptr;
-    VkSemaphore _mpVkSemaphore    = VK_NULL_HANDLE;
+    VulkanDevice* const _mpDevice = nullptr;
+    VkSemaphore _mpHandle         = VK_NULL_HANDLE;
     u32 _mCurrentNodeIndex : 5    = 0;
     u32 _mSignaled         : 1    = 0;
     u32 _mPadA                    = 0;

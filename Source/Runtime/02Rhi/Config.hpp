@@ -19,32 +19,29 @@
 #error "No available render api, please check it"
 #endif
 
-#ifdef _DEBUG
-#define AXE_RHI_ENABLE_DEBUG 1
-#else
-#define AXE_RHI_ENABLE_DEBUG 0
-#endif
-
 //////////////////////////////////////////////////////////////////////////////////////////////
 //                             config for Vulkan
 //////////////////////////////////////////////////////////////////////////////////////////////
-#if AXE_02RHI_API_USED_VULKAN
-#define AXE_02RHI_VULKAN_USE_DISPATCH_TABLE 0  // 0 or 1
-#define AXE_02RHI_TARGET_VULKAN_VERSION     VK_API_VERSION_1_3
+// #if AXE_02RHI_API_USED_VULKAN
+// // #define AXE_RHI_VULKAN_USE_DISPATCH_TABLE 1
+// #endif
+
+#if _DEBUG
+#define AXE_RHI_VULKAN_ENABLE_DEBUG 1
 #endif
 
-#define AXE_RHI_VULKAN_ENABLE_DEBUG AXE_RHI_ENABLE_DEBUG
-
-#define VK_SUCCEEDED(result)        (((VkResult)(result)) == VK_SUCCESS)
-#define VK_FAILED(result)           (!VK_SUCCEEDED(result))
+#define VK_SUCCEEDED(result) (((VkResult)(result)) == VK_SUCCESS)
+#define VK_FAILED(result)    (!VK_SUCCEEDED(result))
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 //                             config for D3D12
 //////////////////////////////////////////////////////////////////////////////////////////////
-#define AXE_RHI_D3D12_ENABLE_DEBUG  AXE_RHI_ENABLE_DEBUG
+#if _DEBUG
+#define AXE_RHI_D3D12_ENABLE_DEBUG 1
+#endif
 
-#define DX_SUCCEEDED(hr)            (((HRESULT)(hr)) >= 0)
-#define DX_FAILED(hr)               (!DX_SUCCEEDED(hr))
+#define DX_SUCCEEDED(hr) (((HRESULT)(hr)) >= 0)
+#define DX_FAILED(hr)    (!DX_SUCCEEDED(hr))
 // clang-format off
 #define D3D12_FREE(p) do { AXE_ASSERT(p); p->Release(); p = nullptr; } while(0)
 // clang-format on

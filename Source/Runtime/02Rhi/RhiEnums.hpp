@@ -1,8 +1,10 @@
 #pragma once
 #include "02Rhi/Config.hpp"
 
-#include <00Core/Log/Log.hpp>
-#include <00Core/Reflection/Reflection.hpp>
+#include "00Core/Log/Log.hpp"
+#include "00Core/Reflection/Reflection.hpp"
+
+#include <tiny_imageformat/tinyimageformat_base.h>
 
 #include <string_view>
 #include <unordered_map>
@@ -76,7 +78,8 @@ enum QueueType
     QUEUE_TYPE_GRAPHICS = 0,
     QUEUE_TYPE_COMPUTE,
     QUEUE_TYPE_TRANSFER,
-    MAX_QUEUE_TYPE
+    QUEUE_TYPE_COUNT,
+    QUEUE_TYPE_MAX = QUEUE_TYPE_COUNT
 };
 
 enum QueueFlag
@@ -248,6 +251,30 @@ enum ResourceFlag
                                  RESOURCE_FLAG_INDIRECT_ARGUMENT | RESOURCE_FLAG_COPY_SOURCE,
 };
 
+enum ResourceMemoryUsage
+{
+
+    RESOURCE_MEMORY_USAGE_UNKNOWN    = 0,  // No intended memory usage specified.
+    RESOURCE_MEMORY_USAGE_GPU_ONLY   = 1,  // Memory will be used on device only, no need to be mapped on host.
+    RESOURCE_MEMORY_USAGE_CPU_ONLY   = 2,  // Memory will be mapped on host. Could be used for transfer to device.
+    RESOURCE_MEMORY_USAGE_CPU_TO_GPU = 3,  // Memory will be used for frequent (dynamic) updates from host and reads on device.
+    RESOURCE_MEMORY_USAGE_GPU_TO_CPU = 4,  // Memory will be used for writing on device and readback on host.
+    RESOURCE_MEMORY_USAGE_COUNT,
+    RESOURCE_MEMORY_USAGE_MAX_ENUM = 0x7FFFFFFF
+};
+
+enum BufferCreationFlags
+{
+    BUFFER_CREATION_FLAG_NONE                        = 1 << 0,  // Default flag (Buffer will use aliased memory, buffer will not be cpu accessible until mapBuffer is called)
+    BUFFER_CREATION_FLAG_OWN_MEMORY_BIT              = 1 << 2,  // Buffer will allocate its own memory (COMMITTED resource)
+    BUFFER_CREATION_FLAG_PERSISTENT_MAP_BIT          = 1 << 3,  // Buffer will be persistently mapped
+    BUFFER_CREATION_FLAG_ESRAM                       = 1 << 4,  // Use ESRAM to store this buffer
+    BUFFER_CREATION_FLAG_NO_DESCRIPTOR_VIEW_CREATION = 1 << 5,  // Flag to specify not to allocate descriptors for the resource
+    BUFFER_CREATION_FLAG_HOST_VISIBLE_VKONLY         = 1 << 6,  // Memory Host Flags
+    BUFFER_CREATION_FLAG_HOST_COHERENT_VKONLY        = 1 << 7,  // Memory Host Flags
+
+};
+
 enum TextureDimension
 {
     TEXTURE_DIM_1D,
@@ -262,6 +289,23 @@ enum TextureDimension
     TEXTURE_DIM_COUNT,
     TEXTURE_DIM_UNDEFINED,
 
+};
+
+enum IndirectArgumentType
+{
+    INDIRECT_ARG_INVALID,
+    INDIRECT_DRAW,
+    INDIRECT_DRAW_INDEX,
+    INDIRECT_DISPATCH,
+    INDIRECT_VERTEX_BUFFER,
+    INDIRECT_INDEX_BUFFER,
+    INDIRECT_CONSTANT,
+    INDIRECT_CONSTANT_BUFFER_VIEW_DXONLY,    // only for dx
+    INDIRECT_SHADER_RESOURCE_VIEW_DXONLY,    // only for dx
+    INDIRECT_UNORDERED_ACCESS_VIEW_DXONLY,   // only for dx
+    INDIRECT_COMMAND_BUFFER_MTONLY,          // metal ICB
+    INDIRECT_COMMAND_BUFFER_RESET_MTONLY,    // metal ICB reset
+    INDIRECT_COMMAND_BUFFER_OPTIMIZE_MTONLY  // metal ICB optimization
 };
 
 enum DescriptorType

@@ -6,8 +6,6 @@ namespace axe::window
 {
 bool Window::init(WindowDesc& desc) noexcept
 {
-    // auto* pmr = axe::memory::get_default_allocator();
-
     bool succ = SDL_Init(SDL_INIT_EVERYTHING) == 0;
     AXE_ASSERT(succ);
     u32 sdlWindowFlag = SDL_WINDOW_SHOWN;

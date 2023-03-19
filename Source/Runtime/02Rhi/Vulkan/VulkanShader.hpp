@@ -8,7 +8,7 @@ namespace axe::rhi
 class VulkanDevice;
 class VulkanRootSignature;
 
-class VulkanShader : public Shader
+class VulkanShader final : public Shader
 {
 private:
     AXE_NON_COPYABLE(VulkanShader);
@@ -19,6 +19,14 @@ private:
     friend class VulkanRootSignature;
 
 public:
+    void* handle() noexcept { return nullptr; }
+
+public:
+    ~VulkanShader() noexcept override = default;
+
+public:
+    constexpr static VkObjectType TYPE_ID = VK_OBJECT_TYPE_UNKNOWN;
+
 private:
     VulkanDevice* const _mpDevice = nullptr;
     std::array<VkShaderModule, SHADER_STAGE_FLAG_COUNT> _mpHandles{};

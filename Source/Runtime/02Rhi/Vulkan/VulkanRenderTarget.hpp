@@ -1,30 +1,42 @@
 #pragma once
 #include "02Rhi/Rhi.hpp"
 #include "02Rhi/Vulkan/VulkanEnums.hpp"
+#include "02Rhi/Vulkan/VulkanTexture.hpp"
 
 namespace axe::rhi
 {
 
 class VulkanDevice;
 class VulkanTexture;
+class VulkanCmd;
 
 class VulkanRenderTarget : public RenderTarget
 {
     friend class VulkanDevice;
+    friend class VulkanCmd;
     AXE_NON_COPYABLE(VulkanRenderTarget);
     VulkanRenderTarget(VulkanDevice* device) noexcept : _mpDevice(device) {}
-    bool _create(RenderTargetDesc&) noexcept { return true; }
-    bool _destroy() noexcept { return true; }
+    bool _create(RenderTargetDesc&) noexcept;
+    bool _destroy() noexcept;
 
 public:
-    ~VulkanRenderTarget() noexcept override = default;
+    AXE_PUBLIC ~VulkanRenderTarget() noexcept override { AXE_CHECK(_mpVkDescriptor == VK_NULL_HANDLE); }
+
+public:
+    void _initial_transition(ResourceState startState) noexcept;
+
+public:
+    constexpr static VkObjectType TYPE_ID = VulkanTexture::TYPE_ID;
+
+public:
+    auto handle() noexcept { return _mpTexture->handle(); }
 
 private:
     VulkanDevice* const _mpDevice = nullptr;
-    VulkanTexture* mTexture       = nullptr;
+    VulkanTexture* _mpTexture     = nullptr;
 
     VkImageView _mpVkDescriptor   = VK_NULL_HANDLE;
-    std::vector<VkImageView> _mpVkSliceDescriptors;
+    std::pmr::vector<VkImageView> _mpVkSliceDescriptors;
     u32 _mId = 0;
 
     ClearValue _mClearValue;
@@ -35,8 +47,8 @@ private:
     u32 _mDescriptors   : 20;
     u32 _mMipLevels     : 10;
     u32 _mSampleQuality : 5;
-    // TinyImageFormat mFormat;
-    MSAASampleCount mSampleCount;
+    TinyImageFormat _mFormat;
+    MSAASampleCount _mSampleCount;
 };
 
 }  // namespace axe::rhi

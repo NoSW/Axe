@@ -49,7 +49,7 @@ VulkanBackend::VulkanBackend(BackendDesc& desc) noexcept
     memory::MonoMemoryResource<4096> arena;
     // create instance
     _mGpuMode = desc.mGpuMode;
-#if AXE_02RHI_VULKAN_USE_DISPATCH_TABLE
+#if AXE_RHI_VULKAN_USE_DISPATCH_TABLE
     // TODO: using device table
 #else
     // Attempt to load Vulkan loader from the system
@@ -80,7 +80,7 @@ VulkanBackend::VulkanBackend(BackendDesc& desc) noexcept
         .applicationVersion = VK_MAKE_VERSION(0, 1, 0),
         .pEngineName        = "Axe",
         .engineVersion      = VK_MAKE_VERSION(0, 1, 0),
-        .apiVersion         = AXE_02RHI_TARGET_VULKAN_VERSION};
+        .apiVersion         = VK_API_VERSION_1_3};
 
     VkInstanceCreateInfo createInfo = {
         .sType                   = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
@@ -129,17 +129,20 @@ VulkanBackend::VulkanBackend(BackendDesc& desc) noexcept
     std::sort(_mAdapters.begin(), _mAdapters.begin() + gpuCount, [this](auto& gpu1, auto& gpu2)
               { return VulkanAdapter::isBetterGpu(*gpu1, *gpu2); });
 
-    AXE_CHECK(_mAdapters[0]->queueFamilyIndex(QUEUE_TYPE_GRAPHICS) != U8_MAX, "No gpu supporting graphics queue");
+    AXE_CHECK(_mAdapters[0]->isSupportQueue(QUEUE_TYPE_GRAPHICS), "No gpu supporting graphics queue");
     AXE_CHECK(_mAdapters[0]->type() != ADAPTER_TYPE_CPU, "The only available GPU is type of CPU");
 }
 
 VulkanBackend::~VulkanBackend() noexcept
 {
     if (mpVkSurface != VK_NULL_HANDLE) { vkDestroySurfaceKHR(_mpHandle, mpVkSurface, nullptr); }
-    if (mpVkDebugUtilsMessenger) { vkDestroyDebugUtilsMessengerEXT(_mpHandle, mpVkDebugUtilsMessenger, nullptr); }
+#if AXE_RHI_VULKAN_ENABLE_DEBUG
+    if (mpVkDebugUtilsMessenger)
+    {
+        vkDestroyDebugUtilsMessengerEXT(_mpHandle, mpVkDebugUtilsMessenger, nullptr);
+    }
+#endif
     vkDestroyInstance(_mpHandle, nullptr);
-
-    // vmaDestroyAllocator(mpVmaAllocator);
 }
 
 Adapter* VulkanBackend::requestAdapter(AdapterDesc& desc) noexcept
@@ -149,7 +152,7 @@ Adapter* VulkanBackend::requestAdapter(AdapterDesc& desc) noexcept
         if (adapter->idle())
         {
             adapter->take();
-            auto setting = adapter->requestGPUSettings();
+            const auto& setting = adapter->requestGPUSettings();
             AXE_INFO("Selected GPU[{}], Name: {}, Vendor Id: {:#x}, Model Id {:#x}, Backend Version: {}",
                      adapter->nodeIndex(), setting.mGpuVendorPreset.mGpuName, setting.mGpuVendorPreset.mVendorId,
                      setting.mGpuVendorPreset.mModelId, setting.mGpuVendorPreset.mGpuBackendVersion);
@@ -166,62 +169,6 @@ void VulkanBackend::releaseAdapter(Adapter*& adapter) noexcept
     static_cast<VulkanAdapter*>(adapter)->release();
     static_cast<VulkanAdapter*>(adapter)->take();
     adapter = nullptr;
-}
-
-bool VulkanBackend::_initVulkanMemoryAllocator() noexcept
-{
-    return true;
-    // VmaAllocatorCreateInfo vmaCreateInfo = {0};
-    // vmaCreateInfo.device                 = mpVkDevice;
-    // vmaCreateInfo.physicalDevice         = mpVkActiveGPU;
-    // vmaCreateInfo.instance               = mpVkInstance;
-    // vmaCreateInfo.flags |= mDedicatedAllocationExtension ?
-    // VMA_ALLOCATOR_CREATE_KHR_DEDICATED_ALLOCATION_BIT : 0;
-    // vmaCreateInfo.flags |= mBufferDeviceAddressExtension ?
-    // VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT : 0;
-
-    // VmaVulkanFunctions vulkanFunctions                      = {};
-    // vulkanFunctions.vkGetInstanceProcAddr                   =
-    // vkGetInstanceProcAddr; vulkanFunctions.vkGetDeviceProcAddr =
-    // vkGetDeviceProcAddr; vulkanFunctions.vkAllocateMemory = vkAllocateMemory;
-    // vulkanFunctions.vkBindBufferMemory                      =
-    // vkBindBufferMemory; vulkanFunctions.vkBindImageMemory =
-    // vkBindImageMemory; vulkanFunctions.vkCreateBuffer = vkCreateBuffer;
-    // vulkanFunctions.vkCreateImage                           = vkCreateImage;
-    // vulkanFunctions.vkDestroyBuffer                         =
-    // vkDestroyBuffer; vulkanFunctions.vkDestroyImage = vkDestroyImage;
-    // vulkanFunctions.vkFreeMemory                            = vkFreeMemory;
-    // vulkanFunctions.vkGetBufferMemoryRequirements           =
-    // vkGetBufferMemoryRequirements;
-    // vulkanFunctions.vkGetBufferMemoryRequirements2KHR       =
-    // vkGetBufferMemoryRequirements2KHR;
-    // vulkanFunctions.vkGetImageMemoryRequirements            =
-    // vkGetImageMemoryRequirements;
-    // vulkanFunctions.vkGetImageMemoryRequirements2KHR        =
-    // vkGetImageMemoryRequirements2KHR;
-    // vulkanFunctions.vkGetPhysicalDeviceMemoryProperties     =
-    // vkGetPhysicalDeviceMemoryProperties;
-    // vulkanFunctions.vkGetPhysicalDeviceProperties =
-    // vkGetPhysicalDeviceProperties; vulkanFunctions.vkMapMemory = vkMapMemory;
-    // vulkanFunctions.vkUnmapMemory                           = vkUnmapMemory;
-    // vulkanFunctions.vkFlushMappedMemoryRanges               =
-    // vkFlushMappedMemoryRanges; vulkanFunctions.vkInvalidateMappedMemoryRanges
-    // = vkInvalidateMappedMemoryRanges; vulkanFunctions.vkCmdCopyBuffer =
-    // vkCmdCopyBuffer; vulkanFunctions.vkBindBufferMemory2KHR =
-    // vkBindBufferMemory2; // need to VK_VERSION >= 1.1
-    // vulkanFunctions.vkBindImageMemory2KHR                   =
-    // vkBindImageMemory2;                       // need to VK_VERSION >= 1.1
-    // vulkanFunctions.vkGetPhysicalDeviceMemoryProperties2KHR =
-    // vkGetPhysicalDeviceMemoryProperties2KHR;  // need to VK_VERSION >= 1.1
-    // vulkanFunctions.vkGetDeviceBufferMemoryRequirements     =
-    // vkGetDeviceBufferMemoryRequirements;      // need to VK_VERSION >= 1.3
-    // vulkanFunctions.vkGetDeviceImageMemoryRequirements      =
-    // vkGetDeviceImageMemoryRequirements;
-    // // need to VK_VERSION >= 1.3 vmaCreateInfo.pVulkanFunctions =
-    // &vulkanFunctions; vmaCreateInfo.pAllocationCallbacks = nullptr;  //
-    // TODO: add custom memory management return
-    // vmaCreateAllocator(&vmaCreateInfo, &mpVmaAllocator)
-    // == VK_SUCCESS;
 }
 
 }  // namespace axe::rhi

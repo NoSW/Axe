@@ -4,7 +4,7 @@
 
 // clang-format off
 #define SPDLOG_FUNCTION     __func__
-#define SPDLOG_LEVEL_NAMES { "TRACE", "DEBUG", "INFO ", "WARN ", "ERROR", "UTERR", "OFF  " }
+#define SPDLOG_LEVEL_NAMES { "TRA", "DEV", "INF", "WAR", "ERR", "UTE", " OFF" }
 
 #if AXE_CORE_LOG_DEBUG_ENABLE
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG

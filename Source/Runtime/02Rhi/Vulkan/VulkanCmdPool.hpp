@@ -20,8 +20,14 @@ class VulkanCmdPool final : public CmdPool
     bool _destroy() noexcept;
 
 public:
-    ~VulkanCmdPool() noexcept override = default;
-    void reset() noexcept override;
+    AXE_PUBLIC ~VulkanCmdPool() noexcept override = default;
+    AXE_PUBLIC void reset() noexcept override;
+
+public:
+    auto handle() noexcept { return _mpHandle; }
+
+public:
+    constexpr static VkObjectType TYPE_ID = VK_OBJECT_TYPE_COMMAND_POOL;
 
 private:
     VulkanDevice* const _mpDevice = nullptr;
