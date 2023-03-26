@@ -161,7 +161,6 @@ void VulkanCmd::resourceBarrier(
             auto& pTrans                        = pBufferBarriers->at(i);
             auto* pBuffer                       = static_cast<VulkanBuffer*>(pTrans.pBuffer);
             auto& bufMemTrans                   = bufMemBarriers[i];
-            // blocked bu VulkanBuffer
 
             const bool isBothUA                 = pTrans.mBarrierInfo.mCurrentState == RESOURCE_STATE_UNORDERED_ACCESS && pTrans.mBarrierInfo.mNewState == RESOURCE_STATE_UNORDERED_ACCESS;
             auto [srcQuFamIndex, dstQuFamIndex] = findQueueFamIndexHelper(pTrans.mBarrierInfo);

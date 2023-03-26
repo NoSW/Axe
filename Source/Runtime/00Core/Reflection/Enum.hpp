@@ -16,64 +16,22 @@
 #error "Too old compiler that cannot support magic enum";
 #endif
 
+#include <concepts>
+
 #ifdef _MSC_VER
 #pragma warning(disable : 4067)  // warning C4067: unexpected tokens following preprocessor directive - expected a newline
 #endif
 
+template <typename E>
+concept T_Enum = std::is_enum_v<E>;
+
 namespace axe::reflection
 {
 // clang-format off
-#if AXE_(false, "Deprecated registration method of enum reflection")
-
-template <typename E, std::enable_if_t<std::is_enum<E>::value, bool> = true>
-constexpr auto operator*(E e1, E e2) { return std::array<E, 0>{}; }
-
-template <typename E, std::enable_if_t<std::is_enum<E>::value, bool> = true>
-constexpr std::string_view operator-(E e) { return ""; }
-
-template <typename E, std::enable_if_t<std::is_enum<E>::value, bool> = true>
-constexpr static auto enum_macro_impl()
-{
-     constexpr auto s = ((E)0) * ((E)0);
-     auto longValues  = *((E)0);
-     std::array<std::pair<E, std::string_view>, longValues.size()> entries;
-     std::size_t begin = 0, cnt = 0;
-
-     const auto pushEntry = [&](const std::string_view entry)
-     {
-         bool isAssigned = entry.find('=') < entry.size();
-         std::size_t bpos = 0;
-         while (entry[bpos] == ' ') { bpos++; }
-         std::size_t epos = bpos;
-         while (epos < entry.size() && entry[epos] != ' ' && entry[epos] != '=') { epos++; }
-         entries[cnt].second = entry.substr(bpos, epos - bpos);
-         entries[cnt].first  = (E)(isAssigned ? longValues[cnt] : (cnt ? (((long long)entries[cnt - 1].first) + 1) : 0));
-         cnt++;
-     };
-
-     for (std::size_t i = 0; i < s.size(); ++i) { if (s[i] == ',') { pushEntry(s.substr(begin, i - begin)); begin = i + 1; } }
-     if (begin < s.size()) { pushEntry(s.substr(begin, s.size() - begin)); }
-     return entries;
- }
-
-template <typename E, std::enable_if_t<std::is_enum<E>::value, bool> = true>
-constexpr static auto enum_entries()
-{
-     constexpr auto s = ((E)0) * ((E)0);
-     if constexpr (s.empty()) { return magic_enum::enum_entries<E>(); }
-     else { return enum_macro_impl<E>(); }
- }
-
-#define  AXE_REFLECTION_ENUM_INIT(E, ...) __VA_ARGS__ };                                    \
-    constexpr std::string_view operator*(E e1, E e2) { return #__VA_ARGS__; }               \
-    constexpr auto operator*(E e) { long long __VA_ARGS__; return std::array{__VA_ARGS__};
-
-#else 
-template <typename E, std::enable_if_t<std::is_enum<E>::value, bool> = true>
+template <T_Enum E>
 constexpr static auto enum_entries() { return magic_enum::enum_entries<E>(); }
-#endif
 
-template <typename E, std::enable_if_t<std::is_enum<E>::value, bool> = true>
+template <T_Enum E>
 constexpr static E enum_value(std::string_view name)
 {
      const auto entries = enum_entries<E>();
@@ -81,7 +39,7 @@ constexpr static E enum_value(std::string_view name)
      return (E)-1;
  }
 
-template <typename E, std::enable_if_t<std::is_enum<E>::value, bool> = true>
+template <T_Enum E>
 constexpr static std::string_view enum_name(E value)
 {
      const auto entries = enum_entries<E>();
@@ -97,7 +55,7 @@ using namespace magic_enum::bitwise_operators;
 namespace std
 {
 
-template <typename E, std::enable_if_t<std::is_enum<E>::value, bool> = true>
+template <T_Enum E>
 [[nodiscard]] inline string to_string(E value)
 {
     return string(axe::reflection::enum_name(value));

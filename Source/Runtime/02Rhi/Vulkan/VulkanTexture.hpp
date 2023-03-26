@@ -16,7 +16,7 @@ class VulkanTexture final : public Texture
     friend class VulkanCmd;
     AXE_NON_COPYABLE(VulkanTexture);
     VulkanTexture(VulkanDevice* device) noexcept : _mpDevice(device) {}
-    bool _create(TextureDesc&) noexcept;
+    bool _create(const TextureDesc&) noexcept;
     bool _destroy() noexcept;
 
 public:
@@ -26,7 +26,7 @@ public:
     auto handle() noexcept { return _mpHandle; }
 
 public:
-    constexpr static VkObjectType TYPE_ID = VK_OBJECT_TYPE_IMAGE;
+    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_IMAGE; }
 
 private:
     VulkanDevice* const _mpDevice         = nullptr;

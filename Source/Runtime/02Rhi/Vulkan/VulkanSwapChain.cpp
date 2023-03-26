@@ -221,7 +221,6 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
     renderTargetDesc.mMSAASampleCount = MSAA_SAMPLE_COUNT_1;
     renderTargetDesc.mSampleQuality   = 0;
     renderTargetDesc.mStartState      = RESOURCE_STATE_PRESENT;
-    renderTargetDesc.mNodeIndex       = 0; /*TODO*/
 
     // Populate the vk_image field and add the Vulkan texture objects
     for (u32 i = 0; i < swapchainImages.size(); ++i)

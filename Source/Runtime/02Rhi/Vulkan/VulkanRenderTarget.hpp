@@ -16,17 +16,14 @@ class VulkanRenderTarget : public RenderTarget
     friend class VulkanCmd;
     AXE_NON_COPYABLE(VulkanRenderTarget);
     VulkanRenderTarget(VulkanDevice* device) noexcept : _mpDevice(device) {}
-    bool _create(RenderTargetDesc&) noexcept;
+    bool _create(const RenderTargetDesc&) noexcept;
     bool _destroy() noexcept;
 
 public:
     AXE_PUBLIC ~VulkanRenderTarget() noexcept override { AXE_CHECK(_mpVkDescriptor == VK_NULL_HANDLE); }
 
 public:
-    void _initial_transition(ResourceState startState) noexcept;
-
-public:
-    constexpr static VkObjectType TYPE_ID = VulkanTexture::TYPE_ID;
+    constexpr static VkObjectType getVkTypeId() noexcept { return VulkanTexture::getVkTypeId(); }
 
 public:
     auto handle() noexcept { return _mpTexture->handle(); }

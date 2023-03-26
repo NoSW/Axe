@@ -56,7 +56,7 @@ u32 get_memory_type(u32 typeBits, const VkPhysicalDeviceMemoryProperties& memory
     return 0;
 }
 
-bool VulkanTexture::_create(TextureDesc& desc) noexcept
+bool VulkanTexture::_create(const TextureDesc& desc) noexcept
 {
     // args check
     if (desc.mSampleCount > MSAA_SAMPLE_COUNT_1 && desc.mMipLevels > 1)
@@ -124,7 +124,7 @@ bool VulkanTexture::_create(TextureDesc& desc) noexcept
             .arrayLayers           = desc.mArraySize,
             .samples               = to_vk_enum(desc.mSampleCount),
             .tiling                = VK_IMAGE_TILING_OPTIMAL,
-            .usage                 = (to_vk_enum(desc.mDescriptors) | additionalFlags),
+            .usage                 = (to_image_usage(desc.mDescriptors) | additionalFlags),
             .sharingMode           = VK_SHARING_MODE_EXCLUSIVE,
             .queueFamilyIndexCount = 0,
             .pQueueFamilyIndices   = nullptr,
@@ -361,7 +361,6 @@ bool VulkanTexture::_create(TextureDesc& desc) noexcept
     // populate members of this object
     _mWidth             = desc.mWidth;
     _mHeight            = desc.mHeight;
-    _mNodeIndex         = desc.mNodeIndex;
     _mDepth             = desc.mDepth;
     _mMipLevels         = desc.mMipLevels;
     _mUav               = desc.mDescriptors & DESCRIPTOR_TYPE_RW_TEXTURE;

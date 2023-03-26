@@ -7,6 +7,13 @@
 namespace axe::rhi
 {
 // see https://raw.githubusercontent.com/David-DiGioia/vulkan-diagrams/main/boiler_plate.png for overview of VkPhysicalDevice
+
+bool VulkanAdapter::isDedicatedQueue(VkQueueFlags quFlags) noexcept
+{
+    const auto allSupportedFalgs = quFlags & (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT);
+    return std::has_single_bit(allSupportedFalgs);
+}
+
 static const auto query_family_index = [](VkPhysicalDevice pHandle) -> std::tuple<int, int, int>
 {
     u32 quFamPropCount = 0;
@@ -15,17 +22,12 @@ static const auto query_family_index = [](VkPhysicalDevice pHandle) -> std::tupl
     vkGetPhysicalDeviceQueueFamilyProperties2(pHandle, &quFamPropCount, quFamProps2.data());
 
     u32 graphicsID = U8_MAX, transferID = U8_MAX, computeID = U8_MAX;
-    const auto grap_comp_flags  = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT;
-    const auto grap_trans_flags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT;
-    const auto comp_trans_flags = VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT;
-
     for (u32 i = 0; i < quFamProps2.size(); ++i)
     {
         if (quFamProps2[i].queueFamilyProperties.queueCount)
         {
             const auto& flags = quFamProps2[i].queueFamilyProperties.queueFlags;
-            bool isDedicated  = std::has_single_bit((u32)flags) ||
-                               !(flags & grap_comp_flags) || !(flags & grap_trans_flags) || !(flags & comp_trans_flags);
+            bool isDedicated  = VulkanAdapter::isDedicatedQueue(flags);
             if (graphicsID == U8_MAX && (flags & VK_QUEUE_GRAPHICS_BIT)) { graphicsID = i; }
             if (transferID == U8_MAX && isDedicated && (flags & VK_QUEUE_TRANSFER_BIT)) { transferID = i; }
             if (computeID == U8_MAX && isDedicated && (flags & VK_QUEUE_COMPUTE_BIT)) { computeID = i; }

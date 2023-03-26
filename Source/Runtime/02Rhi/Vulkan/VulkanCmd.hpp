@@ -52,7 +52,7 @@ public:
     auto handle() noexcept { return _mpHandle; }
 
 public:
-    constexpr static VkObjectType TYPE_ID = VK_OBJECT_TYPE_COMMAND_BUFFER;
+    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_COMMAND_BUFFER; }
 
 private:
     VkCommandBuffer _mpHandle               = VK_NULL_HANDLE;

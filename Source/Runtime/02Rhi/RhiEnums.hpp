@@ -118,6 +118,70 @@ enum AddressMode
     ADDRESS_MODE_CLAMP_TO_BORDER = 3,
 };
 
+enum BlendConstant
+{
+    BC_ZERO = 0,
+    BC_ONE,
+    BC_SRC_COLOR,
+    BC_ONE_MINUS_SRC_COLOR,
+    BC_DST_COLOR,
+    BC_ONE_MINUS_DST_COLOR,
+    BC_SRC_ALPHA,
+    BC_ONE_MINUS_SRC_ALPHA,
+    BC_DST_ALPHA,
+    BC_ONE_MINUS_DST_ALPHA,
+    BC_SRC_ALPHA_SATURATE,
+    BC_BLEND_FACTOR,
+    BC_ONE_MINUS_BLEND_FACTOR,
+    MAX_BLEND_CONSTANTS
+};
+
+enum BlendMode
+{
+    BM_ADD,
+    BM_SUBTRACT,
+    BM_REVERSE_SUBTRACT,
+    BM_MIN,
+    BM_MAX,
+    MAX_BLEND_MODES,
+};
+
+enum BlendStateTargets
+{
+    BLEND_STATE_TARGET_0   = 1 << 0,
+    BLEND_STATE_TARGET_1   = 1 << 1,
+    BLEND_STATE_TARGET_2   = 1 << 2,
+    BLEND_STATE_TARGET_3   = 1 << 3,
+    BLEND_STATE_TARGET_4   = 1 << 4,
+    BLEND_STATE_TARGET_5   = 1 << 5,
+    BLEND_STATE_TARGET_6   = 1 << 6,
+    BLEND_STATE_TARGET_7   = 1 << 7,
+    BLEND_STATE_TARGET_ALL = 0xFF,
+};
+
+enum StencilOp
+{
+    STENCIL_OP_KEEP,
+    STENCIL_OP_SET_ZERO,
+    STENCIL_OP_REPLACE,
+    STENCIL_OP_INVERT,
+    STENCIL_OP_INCR,
+    STENCIL_OP_DECR,
+    STENCIL_OP_INCR_SAT,
+    STENCIL_OP_DECR_SAT,
+    MAX_STENCIL_OPS,
+};
+
+enum Channel
+{
+    CH_NONE  = 0,
+    CH_RED   = 1 << 0,
+    CH_GREEN = 1 << 1,
+    CH_BLUE  = 1 << 2,
+    CH_ALPHA = 1 << 3,
+    CH_ALL   = CH_RED | CH_GREEN | CH_BLUE | CH_ALPHA,
+};
+
 enum CompareMode
 {
     CMP_MODE_NEVER    = 0,

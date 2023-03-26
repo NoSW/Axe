@@ -224,6 +224,23 @@ VkBufferUsageFlags to_buffer_usage(DescriptorType usage, bool texel) noexcept
     return result;
 }
 
+VkImageUsageFlags to_image_usage(DescriptorType usage) noexcept
+{
+    {
+        VkImageUsageFlags result = 0;
+        if (DESCRIPTOR_TYPE_TEXTURE == (usage & DESCRIPTOR_TYPE_TEXTURE))
+        {
+            result |= VK_IMAGE_USAGE_SAMPLED_BIT;
+        }
+
+        if (DESCRIPTOR_TYPE_RW_TEXTURE == (usage & DESCRIPTOR_TYPE_RW_TEXTURE))
+        {
+            result |= VK_IMAGE_USAGE_STORAGE_BIT;
+        }
+        return result;
+    }
+}
+
 VkFilter to_vk_enum(FilterType type) noexcept
 {
     switch (type)
@@ -330,5 +347,82 @@ VkSampleCountFlagBits to_vk_enum(MSAASampleCount type) noexcept
 }
 
 VkFormat to_vk_enum(TinyImageFormat fmt) noexcept { return (VkFormat)TinyImageFormat_ToVkFormat(fmt); }
+
+// clang-format off
+VkBlendFactor to_vk_enum(BlendConstant bc) noexcept
+{
+    switch (bc)
+    {
+        case BC_ZERO:                   return VK_BLEND_FACTOR_ZERO;
+        case BC_ONE:                    return VK_BLEND_FACTOR_ONE;
+        case BC_SRC_COLOR:              return VK_BLEND_FACTOR_SRC_COLOR;
+        case BC_ONE_MINUS_SRC_COLOR:    return VK_BLEND_FACTOR_ONE_MINUS_SRC_COLOR;
+        case BC_DST_COLOR:              return VK_BLEND_FACTOR_DST_COLOR;
+        case BC_ONE_MINUS_DST_COLOR:    return VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR;
+        case BC_SRC_ALPHA:              return VK_BLEND_FACTOR_SRC_ALPHA;
+        case BC_ONE_MINUS_SRC_ALPHA:    return VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        case BC_DST_ALPHA:              return VK_BLEND_FACTOR_DST_ALPHA;
+        case BC_ONE_MINUS_DST_ALPHA:    return VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA;
+        case BC_SRC_ALPHA_SATURATE:     return VK_BLEND_FACTOR_SRC_ALPHA_SATURATE;
+        case BC_BLEND_FACTOR:           return VK_BLEND_FACTOR_CONSTANT_COLOR;
+        case BC_ONE_MINUS_BLEND_FACTOR: return VK_BLEND_FACTOR_ONE_MINUS_CONSTANT_COLOR;
+        default: AXE_ASSERT(false, "Invalid Type"); return VK_BLEND_FACTOR_MAX_ENUM;
+    }
+}
+
+
+VkBlendOp to_vk_enum(BlendMode bm) noexcept
+{
+    switch (bm)
+    {
+        case BM_ADD:              return VK_BLEND_OP_ADD;
+        case BM_SUBTRACT:         return VK_BLEND_OP_SUBTRACT;
+        case BM_REVERSE_SUBTRACT: return VK_BLEND_OP_REVERSE_SUBTRACT;
+        case BM_MIN:              return VK_BLEND_OP_MIN;
+        case BM_MAX:              return VK_BLEND_OP_MAX;
+        default: AXE_ASSERT(false, "Invalid Type"); return VK_BLEND_OP_MAX_ENUM;
+    }
+}
+
+// clang-format on
+
+VkPipelineColorBlendStateCreateInfo to_vk_struct(const BlendStateDesc& blendDesc) noexcept
+{
+    std::array<VkPipelineColorBlendAttachmentState, MAX_RENDER_TARGET_ATTACHMENTS> vkBlendStates;
+    for (u32 i = 0; i < blendDesc.mAttachmentCount; ++i)
+    {
+        if (!blendDesc.mIndependentBlend && i > 0) { break; }
+
+        if (blendDesc.mRenderTargetMask & (1 << i))
+        {
+            const auto& rt = blendDesc.mPerRenderTarget[i];
+
+            VkBool32 blendDisable =
+                (to_vk_enum(rt.mSrcFactor) == VK_BLEND_FACTOR_ONE &&
+                 to_vk_enum(rt.mDstFactor) == VK_BLEND_FACTOR_ZERO &&
+                 to_vk_enum(rt.mSrcAlphaFactor) == VK_BLEND_FACTOR_ONE &&
+                 to_vk_enum(rt.mDstAlphaFactor) == VK_BLEND_FACTOR_ZERO);
+
+            vkBlendStates[i].blendEnable         = !blendDisable;
+            vkBlendStates[i].colorWriteMask      = rt.mMask;
+            vkBlendStates[i].srcColorBlendFactor = to_vk_enum(rt.mSrcFactor);
+            vkBlendStates[i].dstColorBlendFactor = to_vk_enum(rt.mDstFactor);
+            vkBlendStates[i].srcAlphaBlendFactor = to_vk_enum(rt.mSrcAlphaFactor);
+            vkBlendStates[i].dstAlphaBlendFactor = to_vk_enum(rt.mDstAlphaFactor);
+            vkBlendStates[i].colorBlendOp        = to_vk_enum(rt.mBlendMode);
+            vkBlendStates[i].alphaBlendOp        = to_vk_enum(rt.mBlendAlphaMode);
+        }
+    }
+
+    return VkPipelineColorBlendStateCreateInfo{
+        .sType           = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+        .pNext           = nullptr,
+        .flags           = 0,
+        .logicOpEnable   = VK_FALSE,
+        .logicOp         = VK_LOGIC_OP_CLEAR,
+        .attachmentCount = blendDesc.mAttachmentCount,
+        .pAttachments    = vkBlendStates.data(),
+        .blendConstants{0.0f, 0.0f, 0.0f, 0.0f}};
+}
 
 }  // namespace axe::rhi

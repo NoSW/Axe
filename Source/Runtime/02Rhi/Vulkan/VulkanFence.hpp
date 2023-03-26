@@ -16,7 +16,7 @@ class VulkanFence final : public Fence
     friend class VulkanSwapChain;
     AXE_NON_COPYABLE(VulkanFence);
     VulkanFence(VulkanDevice* device) noexcept : _mpDevice(device) {}
-    bool _create(FenceDesc& desc) noexcept;
+    bool _create(const FenceDesc& desc) noexcept;
     bool _destroy() noexcept;
 
 public:
@@ -28,7 +28,7 @@ public:
     auto handle() noexcept { return _mpHandle; }
 
 public:
-    constexpr static VkObjectType TYPE_ID = VK_OBJECT_TYPE_FENCE;
+    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_FENCE; }
 
 private:
     VulkanDevice* const _mpDevice = nullptr;

@@ -7,7 +7,7 @@
 
 namespace axe::rhi
 {
-bool VulkanBuffer::_create(BufferDesc& desc) noexcept
+bool VulkanBuffer::_create(const BufferDesc& desc) noexcept
 {
     AXE_ASSERT(desc.mSize);
 
@@ -89,7 +89,6 @@ bool VulkanBuffer::_create(BufferDesc& desc) noexcept
 
     _mSize              = desc.mSize;
     _mMemoryUsage       = desc.mMemoryUsage;
-    _mNodeIndex         = desc.mNodeIndex;
     _mDescriptors       = desc.mDescriptors;
     _mpCPUMappedAddress = allocInfo.pMappedData;
     if ((desc.mDescriptors & DESCRIPTOR_TYPE_BUFFER) || (desc.mDescriptors & DESCRIPTOR_TYPE_BUFFER_RAW))

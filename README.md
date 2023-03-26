@@ -13,9 +13,9 @@ Axe is a cross multi-platform ai-driven game engine(round 1, also an engineering
 
 |Platform|Compiler| Graphics API|
 |---|---|---|
-|Windows| MSVC>=17, Clang>=10, GCC>=11 | Vulkan>=1.3, Direct3D 12|
-|Linux| Clang>=10, GCC>=11  | Vulkan>=1.3|
-|MacOS| Clang>=10, GCC>=11  | Metal 3 |
+|Windows| MSVC>=17, Clang>=12, GCC>=11 | Vulkan>=1.3, Direct3D 12|
+|Linux| Clang>=12, GCC>=11  | Vulkan>=1.3|
+|MacOS| Clang>=12, GCC>=11  | Metal 3 |
 
 ## Requirements
 - [CMake>=3.20](https://cmake.org/download/)
@@ -39,6 +39,8 @@ run the python script that wraps cmake&build commands: (NOTE: `cmake` added to P
 ```shell
 > python3 generate_project.py --msvc # VS2022 is required 
 ```
+
+PS: The supporting facilities(build system, insight, etc.) for C++20 module are not yet complete, axe still uses #include
 
 ## Features
 

@@ -22,7 +22,7 @@ class VulkanQueue final : public Queue
     friend class VulkanSwapChain;
     AXE_NON_COPYABLE(VulkanQueue);
     VulkanQueue(VulkanDevice* device) noexcept : _mpDevice(device) {}
-    bool _create(QueueDesc&) noexcept;
+    bool _create(const QueueDesc&) noexcept;
     bool _destroy() noexcept;
 
 public:
@@ -35,7 +35,7 @@ public:
     auto handle() noexcept { return _mpHandle; }
 
 public:
-    constexpr static VkObjectType TYPE_ID = VK_OBJECT_TYPE_QUEUE;
+    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_QUEUE; }
 
 private:
     VkQueue _mpHandle             = VK_NULL_HANDLE;

@@ -3,35 +3,32 @@
 #include "02Rhi/Vulkan/VulkanTexture.hpp"
 
 #include <volk/volk.h>
-#include <tiny_imageformat/tinyimageformat_apis.h>
 #include <tiny_imageformat/tinyimageformat_query.h>
 
 namespace axe::rhi
 {
 
-bool VulkanRenderTarget::_create(RenderTargetDesc& desc) noexcept
+bool VulkanRenderTarget::_create(const RenderTargetDesc& desc) noexcept
 {
     const bool isDepth = TinyImageFormat_IsDepthOnly(desc.mFormat) || TinyImageFormat_IsDepthAndStencil(desc.mFormat);
     AXE_ASSERT(!((isDepth) && (desc.mDescriptors & DESCRIPTOR_TYPE_RW_TEXTURE)) && "Cannot use depth stencil as UAV");
 
-    desc.mMipLevels = std::max(1u, desc.mMipLevels);  // clamp mipLevels
+    _mMipLevels = std::max(1u, desc.mMipLevels);  // clamp mipLevels
     TextureDesc texDesc{
-        .pNativeHandle      = desc.mpNativeHandle,
-        .pName              = desc.mpName,
-        .mClearValue        = desc.mClearValue,
-        .mFlags             = desc.mFlags,
-        .mWidth             = desc.mWidth,
-        .mHeight            = desc.mHeight,
-        .mDepth             = desc.mDepth,
-        .mArraySize         = desc.mArraySize,
-        .mMipLevels         = desc.mMipLevels,
-        .mSampleCount       = desc.mMSAASampleCount,
-        .mSampleQuality     = desc.mSampleQuality,
-        .mFormat            = desc.mFormat,
-        .mStartState        = isDepth ? RESOURCE_STATE_RENDER_TARGET : RESOURCE_STATE_DEPTH_WRITE,
-        .mDescriptors       = desc.mDescriptors,
-        .mSharedNodeIndices = desc.mSharedNodeIndices,
-        .mNodeIndex         = desc.mNodeIndex
+        .pNativeHandle  = desc.mpNativeHandle,
+        .pName          = desc.mpName,
+        .mClearValue    = desc.mClearValue,
+        .mFlags         = desc.mFlags,
+        .mWidth         = desc.mWidth,
+        .mHeight        = desc.mHeight,
+        .mDepth         = desc.mDepth,
+        .mArraySize     = desc.mArraySize,
+        .mMipLevels     = _mMipLevels,
+        .mSampleCount   = desc.mMSAASampleCount,
+        .mSampleQuality = desc.mSampleQuality,
+        .mFormat        = desc.mFormat,
+        .mStartState    = isDepth ? RESOURCE_STATE_RENDER_TARGET : RESOURCE_STATE_DEPTH_WRITE,
+        .mDescriptors   = desc.mDescriptors,
 
     };
 
@@ -115,7 +112,7 @@ bool VulkanRenderTarget::_create(RenderTargetDesc& desc) noexcept
     AXE_CHECK(VK_SUCCEEDED(vkCreateImageView(_mpDevice->handle(), &rtvCreateInfo, nullptr, &_mpVkDescriptor)));
 
     const bool isTexture = desc.mDescriptors & DESCRIPTOR_TYPE_TEXTURE || desc.mDescriptors & DESCRIPTOR_TYPE_RW_TEXTURE;
-    for (u32 i = 0; i < desc.mMipLevels; ++i)
+    for (u32 i = 0; i < _mMipLevels; ++i)
     {
         rtvCreateInfo.subresourceRange.baseMipLevel = i;
         VkImageView pImageView                      = VK_NULL_HANDLE;
@@ -142,7 +139,6 @@ bool VulkanRenderTarget::_create(RenderTargetDesc& desc) noexcept
     _mHeight                                       = desc.mHeight;
     _mArraySize                                    = desc.mArraySize;
     _mDepth                                        = desc.mDepth;
-    _mMipLevels                                    = desc.mMipLevels;
     _mSampleQuality                                = desc.mSampleQuality;
     _mSampleCount                                  = desc.mMSAASampleCount;
     _mFormat                                       = desc.mFormat;
@@ -151,7 +147,7 @@ bool VulkanRenderTarget::_create(RenderTargetDesc& desc) noexcept
     // Unlike DX12, Vulkan textures start in undefined layout.
     // To keep in line with DX12, we transition them to the specified layout manually so app code doesn't
     // have to worry about this Render targets wont be created during runtime so this overhead will be minimal
-    _initial_transition(desc.mStartState);
+    _mpDevice->initial_transition((Texture*)_mpTexture, desc.mStartState);
 
     return true;
 }
@@ -173,30 +169,6 @@ bool VulkanRenderTarget::_destroy() noexcept
         vkDestroyImageView(_mpDevice->handle(), img, nullptr);
     }
     return true;
-}
-
-void VulkanRenderTarget::_initial_transition(ResourceState startState) noexcept
-{
-    // TODO acquire_mutex()
-    auto* pCmd     = static_cast<VulkanCmd*>(_mpDevice->_mNullDescriptors.mpInitialTransitionCmd);
-    auto* pCmdPool = static_cast<VulkanCmdPool*>(_mpDevice->_mNullDescriptors.mpInitialTransitionCmdPool);
-    pCmdPool->reset();
-
-    pCmd->begin();
-    TextureBarrier texBarrier;
-    texBarrier.mpTexture                                = _mpTexture;
-    texBarrier.mImageBarrier.mBarrierInfo.mCurrentState = RESOURCE_STATE_UNDEFINED,
-    texBarrier.mImageBarrier.mBarrierInfo.mNewState     = startState;
-    std::pmr::vector<TextureBarrier> texBarriers{texBarrier};
-    pCmd->resourceBarrier(&texBarriers, nullptr, nullptr);
-    pCmd->end();
-
-    QueueSubmitDesc submitDesc;
-    submitDesc.mCmds.push_back(pCmd);
-    submitDesc.mpSignalFence = _mpDevice->_mNullDescriptors.mpInitialTransitionFence;
-    _mpDevice->_mNullDescriptors.mpInitialTransitionQueue->submit(submitDesc);
-    _mpDevice->_mNullDescriptors.mpInitialTransitionFence->wait();
-    // TODO: release mutex
 }
 
 }  // namespace axe::rhi

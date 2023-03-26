@@ -10,7 +10,7 @@
 namespace axe::rhi
 {
 
-bool VulkanQueue::_create(QueueDesc& desc) noexcept
+bool VulkanQueue::_create(const QueueDesc& desc) noexcept
 {
     u32 nodeIndex = 0;  //_mpDevice->mGpuMode == GPU_MODE_LINKED ? desc.mNodeIndex : 0;
     u8 quFamIndex = U8_MAX, quIndex = U8_MAX, quFlag = 0;
@@ -108,10 +108,16 @@ void VulkanQueue::submit(QueueSubmitDesc& desc) noexcept
     //  TODO: add lock to make sure multiple threads dont use the same queue simultaneously
     // Many setups have just one queue family and one queue. In this case, async compute, async transfer doesn't exist and we end up using
     // the same queue for all three operations
-    auto* pVkFence = desc.mpSignalFence ? ((VulkanFence*)desc.mpSignalFence)->handle() : VK_NULL_HANDLE;
-    auto result    = vkQueueSubmit(_mpHandle, 1, &submitInfo, pVkFence);
-    if (VK_FAILED(result)) { AXE_ERROR("Failed to submit queue due to {}", string_VkResult(result)); }
-    if (pVkFence != VK_NULL_HANDLE) { ((VulkanFence*)desc.mpSignalFence)->_mSubmitted = true; }
+    auto* pFence = desc.mpSignalFence ? ((VulkanFence*)desc.mpSignalFence) : nullptr;
+    auto result  = vkQueueSubmit(_mpHandle, 1, &submitInfo, pFence ? pFence->handle() : VK_NULL_HANDLE);
+    if (VK_FAILED(result))
+    {
+        AXE_ERROR("Failed to submit queue due to {}", string_VkResult(result));
+    }
+    if (pFence)
+    {
+        pFence->_mSubmitted = true;
+    }
 }
 
 void VulkanQueue::present(QueuePresentDesc& desc) noexcept

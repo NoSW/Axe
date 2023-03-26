@@ -13,6 +13,8 @@
 namespace axe::rhi
 {
 
+bool find_intersect_set(const std::pmr::vector<const char*>& support, const std::pmr::vector<const char*>& want, std::pmr::vector<const char*>& ready, bool earlyExit) noexcept;
+
 class VulkanAdapter;
 
 class VulkanBackend final : public Backend
@@ -32,7 +34,7 @@ public:
     AXE_PUBLIC void releaseAdapter(Adapter*&) noexcept override;
 
 public:
-    constexpr static VkObjectType TYPE_ID = VK_OBJECT_TYPE_INSTANCE;
+    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_INSTANCE; }
 
 public:
     // handle

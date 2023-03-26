@@ -66,6 +66,7 @@ public:
     [[nodiscard]] virtual Buffer* createBuffer(BufferDesc&) noexcept                   = 0;
     [[nodiscard]] virtual RenderTarget* createRenderTarget(RenderTargetDesc&) noexcept = 0;
     [[nodiscard]] virtual Shader* createShader(ShaderDesc&) noexcept                   = 0;
+
     virtual bool destroySemaphore(Semaphore*&) noexcept                                = 0;
     virtual bool destroyFence(Fence*&) noexcept                                        = 0;
     virtual bool releaseQueue(Queue*&) noexcept                                        = 0;

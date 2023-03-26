@@ -202,63 +202,58 @@ struct SamplerDesc : public DescBase
 
 struct TextureDesc : public DescBase
 {
-    const void* pNativeHandle;  // Pointer to native texture handle if the texture does not own underlying resource
-    const char* pName;          // Debug name used in gpu profile
-    ClearValue mClearValue;     // Optimized clear value (recommended to use this same value when clearing the render target)
+    const void* pNativeHandle = nullptr;     // Pointer to native texture handle if the texture does not own underlying resource
+    const char* pName         = "Untitled";  // Debug name used in gpu profile
+    ClearValue mClearValue{};                // Optimized clear value (recommended to use this same value when clearing the render target)
     // #if defined(VULKAN)
     //     VkSamplerYcbcrConversionInfo* pVkSamplerYcbcrConversionInfo;
     // #endif
 
-    TextureCreationFlags mFlags;  // decides memory allocation strategy, sharing access,...
-    u32 mWidth;
-    u32 mHeight;
-    u32 mDepth;      // Should be 1 if not a mType is not TEXTURE_TYPE_3D)
-    u32 mArraySize;  // Should be 1 if texture is not a texture array or cubemap
-    u32 mMipLevels;  // number of mipmap levels
-    MSAASampleCount mSampleCount;
-    u32 mSampleQuality;  // The valid range is between zero and the value appropriate for mSampleCount
-    TinyImageFormat mFormat;
-    ResourceState mStartState;                 // What state will the texture get created in
-    DescriptorType mDescriptors;               // Descriptor creation
-    std::pmr::vector<u32> mSharedNodeIndices;  // GPU indices to share this texture
-    u32 mNodeIndex;                            // GPU which will own this texture
+    TextureCreationFlags mFlags  = TEXTURE_CREATION_FLAG_NONE;  // decides memory allocation strategy, sharing access,...
+    u32 mWidth                   = 0;
+    u32 mHeight                  = 0;
+    u32 mDepth                   = 0;  // Should be 1 if not a mType is not TEXTURE_TYPE_3D)
+    u32 mArraySize               = 0;  // Should be 1 if texture is not a texture array or cubemap
+    u32 mMipLevels               = 0;  // number of mipmap levels
+    MSAASampleCount mSampleCount = MSAA_SAMPLE_COUNT_1;
+    u32 mSampleQuality           = 0;  // The valid range is between zero and the value appropriate for mSampleCount
+    TinyImageFormat mFormat      = TinyImageFormat_UNDEFINED;
+    ResourceState mStartState    = RESOURCE_STATE_UNDEFINED;   // What state will the texture get created in
+    DescriptorType mDescriptors  = DESCRIPTOR_TYPE_UNDEFINED;  // Descriptor creation
 };
 
 struct BufferDesc : public DescBase
 {
     /// Size of the buffer (in bytes)
-    u64 mSize;
+    u64 mSize                         = 0;
     /// Set this to specify a counter buffer for this buffer (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
-    Buffer* mpCounterBuffer;
+    Buffer* mpCounterBuffer           = nullptr;
     /// Index of the first element accessible by the SRV/UAV (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
-    u64 mFirstElement;
+    u64 mFirstElement                 = 0;
     /// Number of elements in the buffer (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
-    u64 mElementCount;
+    u64 mElementCount                 = 0;
     /// Size of each element (in bytes) in the buffer (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
-    u64 mStructStride;
+    u64 mStructStride                 = 0;
     /// Debug name used in gpu profile
-    std::string_view mName;
+    std::string_view mName            = "Untitled";
     /// Alignment
-    u32 mAlignment;
+    u32 mAlignment                    = 0;
     /// Decides which memory heap buffer will use (default, upload, readback)
-    ResourceMemoryUsage mMemoryUsage;
+    ResourceMemoryUsage mMemoryUsage  = RESOURCE_MEMORY_USAGE_UNKNOWN;
     /// Creation flags of the buffer
-    BufferCreationFlags mFlags;
+    BufferCreationFlags mFlags        = BUFFER_CREATION_FLAG_NONE;
     /// What type of queue the buffer is owned by
-    QueueType mQueueType;
+    QueueType mQueueType              = QUEUE_TYPE_MAX;
     /// What state will the buffer get created in
-    ResourceState mStartState;
+    ResourceState mStartState         = RESOURCE_STATE_UNDEFINED;
     /// ICB draw type
-    IndirectArgumentType mICBDrawType;
+    IndirectArgumentType mICBDrawType = INDIRECT_ARG_INVALID;
     /// ICB max vertex buffers slots count
-    u32 mICBMaxCommandCount;
+    u32 mICBMaxCommandCount           = 0;
     /// Format of the buffer (applicable to typed storage buffers (Buffer<T>)
-    TinyImageFormat mFormat;
+    TinyImageFormat mFormat           = TinyImageFormat_UNDEFINED;
     /// Flags specifying the suitable usage of this buffer (Uniform buffer, Vertex Buffer, Index Buffer,...)
-    DescriptorType mDescriptors;
-    /// The index of the GPU in SLI/Cross-Fire that owns this buffer, or the Renderer index in unlinked mode.
-    u32 mNodeIndex;
-    std::pmr::vector<u32> mSharedNodeIndices;
+    DescriptorType mDescriptors       = DESCRIPTOR_TYPE_UNDEFINED;
 };
 
 struct RenderTargetDesc : public DescBase
@@ -277,8 +272,6 @@ struct RenderTargetDesc : public DescBase
     DescriptorType mDescriptors = DESCRIPTOR_TYPE_UNDEFINED;       // Descriptor creation
     const void* mpNativeHandle  = nullptr;
     const char* mpName          = "Untitled";  // Debug name used in gpu profile
-    std::pmr::vector<u32> mSharedNodeIndices;  // GPU indices to share this texture
-    u32 mNodeIndex = 0;                        // GPU which will own this texture
 };
 
 struct ShaderStageDesc
@@ -329,9 +322,10 @@ struct DescriptorInfo
 
 struct NullDescriptors
 {
-    std::array<std::array<Texture*, TEXTURE_DIM_COUNT>, MAX_LINKED_GPUS> mpDefaultTextureSRV{};
-    std::array<Buffer*, MAX_LINKED_GPUS> mpDefaultBufferSRV{};
-    std::array<Buffer*, MAX_LINKED_GPUS> mpDefaultBufferUAV{};
+    std::array<Texture*, TEXTURE_DIM_COUNT> mpDefaultTextureSRV{};
+    std::array<Texture*, TEXTURE_DIM_COUNT> mpDefaultTextureUAV{};
+    Buffer* mpDefaultBufferSRV          = nullptr;
+    Buffer* mpDefaultBufferUAV          = nullptr;
     Sampler* mpDefaultSampler           = nullptr;
     // Mutex mSubmitMutex;
 
@@ -343,6 +337,27 @@ struct NullDescriptors
     CmdPool* mpInitialTransitionCmdPool = nullptr;
     Cmd* mpInitialTransitionCmd         = nullptr;
     Fence* mpInitialTransitionFence     = nullptr;
+};
+
+// Raster
+struct BlendStateDesc
+{
+    struct
+    {
+        BlendConstant mSrcFactor      = BC_ONE;
+        BlendConstant mDstFactor      = BC_ZERO;
+        BlendConstant mSrcAlphaFactor = BC_ONE;
+        BlendConstant mDstAlphaFactor = BC_ZERO;
+        BlendMode mBlendMode          = BM_ADD;
+        BlendMode mBlendAlphaMode     = BM_ADD;
+        i32 mMask                     = CH_ALL;
+    } mPerRenderTarget[MAX_RENDER_TARGET_ATTACHMENTS];
+
+    u8 mAttachmentCount                 = 0;                       /// The render target attachment to set the blend state for.
+    BlendStateTargets mRenderTargetMask = BLEND_STATE_TARGET_ALL;  /// Mask that identifies the render targets affected by the blend state.
+    bool mAlphaToCoverage               = false;                   /// Set whether alpha to coverage should be enabled.
+    bool mIndependentBlend              = false;                   /// Set whether each render target has an unique blend function.
+                                                                   /// When false the blend function in slot 0 will be used for all render targets.
 };
 
 // Barrier

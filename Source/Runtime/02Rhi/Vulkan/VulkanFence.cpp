@@ -6,7 +6,7 @@
 namespace axe::rhi
 {
 
-bool VulkanFence::_create(FenceDesc& desc) noexcept
+bool VulkanFence::_create(const FenceDesc& desc) noexcept
 {
     AXE_ASSERT(_mpDevice);
     AXE_ASSERT(_mpDevice->handle());
@@ -40,7 +40,11 @@ void VulkanFence::wait() noexcept
     {
         auto result = vkWaitForFences(_mpDevice->handle(), 1, &_mpHandle, VK_TRUE, U64_MAX);
         if (VK_FAILED(result)) { AXE_ERROR("Failed to wait for fence due to {}", string_VkResult((result))); }
-        else { _mSubmitted = false; }
+        else
+        {
+            vkResetFences(_mpDevice->handle(), 1, &_mpHandle);
+            _mSubmitted = false;
+        }
     }
 }
 

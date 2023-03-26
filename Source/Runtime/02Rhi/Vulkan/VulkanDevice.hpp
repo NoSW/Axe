@@ -38,6 +38,8 @@ inline constexpr VkAllocationCallbacks g_VkAllocationCallbacks{
     .pfnInternalAllocation = vk_internal_allocation,
     .pfnInternalFree       = vk_internal_free};
 
+struct DeviceExtension;
+
 class VulkanDevice final : public Device
 {
 public:
@@ -57,17 +59,20 @@ public:
 private:
     void _collectQueueInfo() noexcept;
 
+    bool _createLogicalDevice(const DeviceDesc& desc) noexcept;
+    bool _initVMA() noexcept;
+    void _addDefaultResource() noexcept;
+
 public:
     VulkanDevice(VulkanAdapter*, DeviceDesc& desc) noexcept;
 
-    std::pair<u8, bool> queryAvailableQueueIndex(QueueType quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) const noexcept;
+    bool queryAvailableQueueIndex(QueueType quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) const noexcept;
 
     void requestQueueIndex(QueueType quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) noexcept;
 
     auto handle() noexcept { return _mpHandle; }
 
-private:
-    bool _initVMA() noexcept;
+    void initial_transition(Texture* pTexture, ResourceState startState) noexcept;
 
 private:
     void _setDebugLabel(void* handle, VkObjectType, std::string_view) noexcept;
@@ -84,8 +89,10 @@ private:
         else
         {
 #if AXE_RHI_VULKAN_ENABLE_DEBUG
+            static_assert(std::is_base_of_v<RhiObjectBase, T>, "T must be derived from RhiObjectBase for using _mLabel");
+            static_assert(std::is_base_of_v<DescBase, Desc>, "Desc must be derived from DescBase for using mLabel");
             p->_mLabel = desc.mLabel;
-            _setDebugLabel((void*)p->handle(), T::TYPE_ID, desc.mLabel);
+            _setDebugLabel((void*)p->handle(), T::getVkTypeId(), desc.mLabel);
 #endif
         }
 
@@ -129,28 +136,34 @@ public:
     AXE_PUBLIC bool destroyShader(Shader*& p) noexcept override { return _destroyHelper<VulkanShader>(p); }
 
 public:
-    constexpr static VkObjectType TYPE_ID = VK_OBJECT_TYPE_DEVICE;
+    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_DEVICE; }
 
 private:
     static constexpr u32 MAX_QUEUE_FLAG = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT |
                                           VK_QUEUE_TRANSFER_BIT | VK_QUEUE_SPARSE_BINDING_BIT | VK_QUEUE_PROTECTED_BIT;
 
+    // supporting status
     ShaderModel _mShaderModel                         = SHADER_MODEL_6_7;
     u32 _mExternalMemoryExtension      : 1            = 0;
     u32 _mDedicatedAllocationExtension : 1            = 0;
+    u32 _mDrawIndirectCountExtension   : 1            = 0;
     u32 _mBufferDeviceAddressExtension : 1            = 0;
+    u32 _mDescriptorIndexingExtension  : 1            = 0;
+    u32 _mYCbCrExtension               : 1            = 0;
     u32 _mRaytracingSupported          : 1            = 0;
 
+    // handles
     VulkanAdapter* const _mpAdapter                   = nullptr;
-
-    VmaAllocator _mpVmaAllocator                      = VK_NULL_HANDLE;
     VkDevice _mpHandle                                = VK_NULL_HANDLE;
+    VmaAllocator _mpVmaAllocator                      = VK_NULL_HANDLE;
+
+    // default resource
     VkDescriptorPool _mpEmptyDescriptorPool           = VK_NULL_HANDLE;
     VkDescriptorSetLayout _mpEmptyDescriptorSetLayout = VK_NULL_HANDLE;
     VkDescriptorSet _mpEmptyDescriptorSet             = VK_NULL_HANDLE;
-
     NullDescriptors _mNullDescriptors{};
 
+    // usage status
     struct QueueInfo
     {
         u32 mAvailableCount = 0;  // total available count

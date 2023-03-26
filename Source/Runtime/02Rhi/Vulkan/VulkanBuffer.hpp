@@ -15,7 +15,7 @@ class VulkanBuffer : public Buffer
     friend class VulkanCmd;
     AXE_NON_COPYABLE(VulkanBuffer);
     VulkanBuffer(VulkanDevice* device) noexcept : _mpDevice(device) {}
-    bool _create(BufferDesc&) noexcept;
+    bool _create(const BufferDesc&) noexcept;
     bool _destroy() noexcept;
 
 public:
@@ -25,7 +25,7 @@ public:
     auto handle() noexcept { return _mpHandle; }
 
 public:
-    constexpr static VkObjectType TYPE_ID = VK_OBJECT_TYPE_BUFFER;
+    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_BUFFER; }
 
 private:
     VulkanDevice* const _mpDevice      = nullptr;

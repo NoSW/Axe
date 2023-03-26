@@ -6,7 +6,7 @@
 namespace axe::rhi
 {
 
-bool VulkanSemaphore::_create(SemaphoreDesc& desc) noexcept
+bool VulkanSemaphore::_create(const SemaphoreDesc& desc) noexcept
 {
     VkSemaphoreCreateInfo createInfo{
         .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,

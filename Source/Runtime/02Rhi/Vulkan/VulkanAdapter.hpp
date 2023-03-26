@@ -34,13 +34,15 @@ public:
 
     static bool isBetterGpu(const VulkanAdapter& a, const VulkanAdapter& b) noexcept;
 
+    static bool isDedicatedQueue(VkQueueFlags quFlags) noexcept;
+
 public:
     AXE_PUBLIC Device* requestDevice(DeviceDesc&) noexcept override;
     AXE_PUBLIC void releaseDevice(Device*&) noexcept override;
     AXE_PUBLIC const GPUSettings& requestGPUSettings() const noexcept override { return _mpGPUSettings; };
 
 public:
-    constexpr static VkObjectType TYPE_ID = VK_OBJECT_TYPE_PHYSICAL_DEVICE;
+    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_PHYSICAL_DEVICE; }
 
 private:
     // ref

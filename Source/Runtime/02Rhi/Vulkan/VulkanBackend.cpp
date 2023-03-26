@@ -1,14 +1,12 @@
 #include "02Rhi/Vulkan/VulkanBackend.hpp"
 
 #include <00Core/IO/IO.hpp>
+#ifndef VK_VERSION_1_3
+#error ""
+#endif  // !VK_VERSION_1_3
 
 #define VOLK_IMPLEMENTATION
 #include <volk/volk.h>
-
-//#define VMA_IMPLEMENTATION
-//#include <vma/vk_mem_alloc.h>
-
-#include "VulkanWantedActivate.hpp"
 
 #include "02Rhi/Vulkan/VulkanAdapter.hpp"
 #include "02Rhi/Vulkan/VulkanDevice.hpp"
@@ -44,6 +42,79 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
     return VK_FALSE;
 }
 
+const static std::pmr::vector<const char*> gsWantedInstanceLayers = {
+#if AXE_RHI_VULKAN_ENABLE_DEBUG
+    "VK_LAYER_KHRONOS_validation",
+#endif
+    "VK_LAYER_KHRONOS_synchronization2",
+    "VK_LAYER_RENDERDOC_Capture",
+};
+
+const static std::pmr::vector<const char*> gsWantedInstanceExtensions = {
+    // Surface
+    VK_KHR_SURFACE_EXTENSION_NAME,
+    VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME,
+#if _WIN32
+    VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
+#elif __linux__
+    VK_KHR_XLIB_SURFACE_EXTENSION_NAME,
+#elif __APPLE__
+#error "Unsupported platform yet"
+#endif
+
+// For debug
+#if AXE_RHI_VULKAN_ENABLE_DEBUG
+#if VK_EXT_debug_utils
+    VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
+#else
+#error "Unsupported VK_EXT_debug_utils"
+#endif
+#endif
+
+    // Memory
+    VK_NV_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME,
+
+    // To legally use HDR formats
+    VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME,
+
+// Multi GPU Extensions
+#if VK_KHR_device_group_creation
+    VK_KHR_DEVICE_GROUP_CREATION_EXTENSION_NAME,
+#endif
+
+    // Property querying extensions
+    VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+
+};
+
+bool find_intersect_set(const std::pmr::vector<const char*>& support, const std::pmr::vector<const char*>& want, std::pmr::vector<const char*>& ready, bool earlyExit) noexcept
+{
+    for (const char* v1 : want)
+    {
+        if (std::find_if(ready.begin(), ready.end(), [v1](const char* v2)
+                         { return strcmp(v1, v2) == 0; }) != ready.end())
+        {
+            continue;  // already added to readyList
+        }
+
+        if (std::find_if(support.begin(), support.end(), [v1](const char* v2)
+                         { return strcmp(v1, v2) == 0; }) != support.end())
+        {
+            ready.push_back(v1);  // found firstly
+            AXE_INFO("{} enabled", v1);
+        }
+        else
+        {
+            AXE_WARN("{} is not supported", v1);  // not supported
+            if (earlyExit)
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 VulkanBackend::VulkanBackend(BackendDesc& desc) noexcept
 {
     memory::MonoMemoryResource<4096> arena;
@@ -70,8 +141,10 @@ VulkanBackend::VulkanBackend(BackendDesc& desc) noexcept
     std::pmr::vector<const char*> extensionNames(extensionCount, nullptr, &arena);
     for (u32 i = 0; i < extensions.size(); ++i) { extensionNames[i] = extensions[i].extensionName; }
 
-    filter_unsupported(layerNames, gsWantedInstanceLayers);
-    filter_unsupported(extensionNames, gsWantedInstanceExtensions);
+    std::pmr::vector<const char*> readyLayers(&arena);
+    std::pmr::vector<const char*> readyExts(&arena);
+    find_intersect_set(layerNames, gsWantedInstanceLayers, readyLayers, false);
+    find_intersect_set(extensionNames, gsWantedInstanceExtensions, readyExts, false);
 
     VkApplicationInfo appInfo = {
         .sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO,
@@ -87,10 +160,10 @@ VulkanBackend::VulkanBackend(BackendDesc& desc) noexcept
         .pNext                   = nullptr,
         .flags                   = 0,
         .pApplicationInfo        = &appInfo,
-        .enabledLayerCount       = (u32)gsWantedInstanceLayers.size(),
-        .ppEnabledLayerNames     = gsWantedInstanceLayers.data(),
-        .enabledExtensionCount   = (u32)gsWantedInstanceExtensions.size(),
-        .ppEnabledExtensionNames = gsWantedInstanceExtensions.data()};
+        .enabledLayerCount       = (u32)readyLayers.size(),
+        .ppEnabledLayerNames     = readyLayers.data(),
+        .enabledExtensionCount   = (u32)readyExts.size(),
+        .ppEnabledExtensionNames = readyExts.data()};
 
     auto result = vkCreateInstance(&createInfo, nullptr, &_mpHandle);
     AXE_CHECK(VK_SUCCEEDED(result));

@@ -196,8 +196,8 @@ void Forward::draw() noexcept
         },
         .mpRenderTarget = nullptr,
     }};
-    cmd->setViewport(0, 0, _mWidth, _mHeight, 0.0, 1.0);  // TODO: width & height
-    cmd->setScissor(0, 0, _mWidth, _mHeight);             // TODO: width & height
+    cmd->setViewport(0, 0, _mWidth, _mHeight, 0.0, 1.0);
+    cmd->setScissor(0, 0, _mWidth, _mHeight);
     cmd->end();
 
     // submit

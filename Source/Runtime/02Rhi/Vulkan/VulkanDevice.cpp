@@ -1,17 +1,181 @@
 #include "02Rhi/Vulkan/VulkanDevice.hpp"
-#include <volk/volk.h>
 
-#include "02Rhi/Vulkan/VulkanWantedActivate.hpp"
+#include <volk/volk.h>
 
 #define VMA_IMPLEMENTATION
 #include <vma/vk_mem_alloc.h>
 
-namespace axe::rhi
-{
-
 #if !(VMA_VULKAN_VERSION >= 1003000)
 #error "need vulkan>=1.3"
 #endif
+
+namespace axe::rhi
+{
+
+bool VulkanDevice::_createLogicalDevice(const DeviceDesc& desc) noexcept
+{
+    // Query layers and extensions
+    u32 layerCount = 0;
+    vkEnumerateDeviceLayerProperties(_mpAdapter->handle(), &layerCount, nullptr);
+    std::pmr::vector<VkLayerProperties> layers(layerCount);
+    vkEnumerateDeviceLayerProperties(_mpAdapter->handle(), &layerCount, layers.data());
+    std::pmr::vector<const char*> layerNames(layerCount, nullptr);
+    for (u32 i = 0; i < layers.size(); ++i) { layerNames[i] = layers[i].layerName; }
+    // if (strcmp(layerNames[i], "VK_LAYER_RENDERDOC_Capture") == 0) { true; }
+
+    u32 extensionCount = 0;
+    vkEnumerateDeviceExtensionProperties(_mpAdapter->handle(), nullptr, &extensionCount, nullptr);
+    std::vector<VkExtensionProperties> extensions(extensionCount);
+    vkEnumerateDeviceExtensionProperties(_mpAdapter->handle(), nullptr, &extensionCount, extensions.data());
+    std::pmr::vector<const char*> extensionNames(extensionCount, nullptr);
+    for (u32 i = 0; i < extensions.size(); ++i) { extensionNames[i] = extensions[i].extensionName; }
+
+    std::pmr::vector<const char*> readyLayers;
+    std::pmr::vector<const char*> readyExts;
+
+    const auto sup = [&readyExts, &extensionNames](std::pmr::vector<const char*> wantExtNames)
+    {
+        return find_intersect_set(extensionNames, wantExtNames, readyExts, true);
+    };
+
+    VkPhysicalDeviceFeatures2 gpuFeatures2 = {VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2};
+    VkBaseOutStructure* pBaseOutStructure  = (VkBaseOutStructure*)&gpuFeatures2;
+    const auto addIntoExtChain             = [&pBaseOutStructure](bool cond, VkBaseOutStructure* pNext)
+    {
+        if (cond)
+        {
+            pBaseOutStructure->pNext = pNext;
+            pBaseOutStructure        = (VkBaseOutStructure*)pBaseOutStructure->pNext;
+        }
+        return cond;
+    };
+
+#if VK_EXT_fragment_shader_interlock  // used for ROV type functionality in Vulkan
+    VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT fragmentShaderInterlockFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_INTERLOCK_FEATURES_EXT};
+    addIntoExtChain(sup({VK_EXT_FRAGMENT_SHADER_INTERLOCK_EXTENSION_NAME}), (VkBaseOutStructure*)&fragmentShaderInterlockFeatures);
+#endif
+#if VK_EXT_descriptor_indexing & VK_KHR_maintenance3  // Bindless & None Uniform access Extensions
+    VkPhysicalDeviceDescriptorIndexingFeaturesEXT descriptorIndexingFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT};
+    _mDescriptorIndexingExtension = addIntoExtChain(sup({VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME, VK_KHR_MAINTENANCE3_EXTENSION_NAME}), (VkBaseOutStructure*)&descriptorIndexingFeatures);
+#endif
+#if VK_KHR_sampler_ycbcr_conversion & VK_KHR_bind_memory2
+    VkPhysicalDeviceSamplerYcbcrConversionFeatures ycbcrFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SAMPLER_YCBCR_CONVERSION_FEATURES};
+    _mYCbCrExtension = addIntoExtChain(sup({VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME, VK_KHR_BIND_MEMORY_2_EXTENSION_NAME}), (VkBaseOutStructure*)&ycbcrFeatures);
+#endif
+#if VK_KHR_buffer_device_address
+    VkPhysicalDeviceBufferDeviceAddressFeatures enabledBufferDeviceAddressFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES};
+    _mBufferDeviceAddressExtension = addIntoExtChain(sup({VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME}), (VkBaseOutStructure*)&enabledBufferDeviceAddressFeatures);
+#endif
+    _mRaytracingSupported = _mBufferDeviceAddressExtension;
+#if VK_KHR_ray_tracing_pipeline
+    VkPhysicalDeviceRayTracingPipelineFeaturesKHR enabledRayTracingPipelineFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR};
+    _mRaytracingSupported &= addIntoExtChain(sup({VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME}), (VkBaseOutStructure*)&enabledRayTracingPipelineFeatures);
+#endif
+#if VK_KHR_acceleration_structure
+    VkPhysicalDeviceAccelerationStructureFeaturesKHR enabledAccelerationStructureFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR};
+    _mRaytracingSupported &= addIntoExtChain(sup({VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME}), (VkBaseOutStructure*)&enabledAccelerationStructureFeatures);
+#endif
+#if VK_KHR_ray_query
+    VkPhysicalDeviceRayQueryFeaturesKHR enabledRayQueryFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR};
+    _mRaytracingSupported &= addIntoExtChain(sup({VK_KHR_RAY_QUERY_EXTENSION_NAME}), (VkBaseOutStructure*)&enabledRayQueryFeatures);
+#endif
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+    _mExternalMemoryExtension = sup({VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME, VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME});
+#endif
+#if VK_KHR_draw_indirect_count
+    _mDrawIndirectCountExtension = sup({VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME});
+#endif
+
+    _mDedicatedAllocationExtension = sup({VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME, VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME});
+    _mRaytracingSupported &= sup({VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME});
+    _mRaytracingSupported &= sup({VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME});
+    _mRaytracingSupported &= sup({VK_KHR_SPIRV_1_4_EXTENSION_NAME});
+
+    sup({VK_KHR_SWAPCHAIN_EXTENSION_NAME});
+    sup({VK_KHR_MAINTENANCE1_EXTENSION_NAME});
+    sup({VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME});
+    sup({VK_EXT_SHADER_SUBGROUP_BALLOT_EXTENSION_NAME});
+    sup({VK_EXT_SHADER_SUBGROUP_VOTE_EXTENSION_NAME});
+    sup({VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME});
+    sup({VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME});
+    sup({VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME});
+    sup({VK_KHR_SWAPCHAIN_EXTENSION_NAME});
+
+    vkGetPhysicalDeviceFeatures2(_mpAdapter->handle(), &gpuFeatures2);
+
+    // TODO?
+    // VkPhysicalDeviceVulkan13Features deviceFeatures13 = {
+    //     .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
+    //     .pNext = nullptr};
+    // deviceFeatures13.dynamicRendering = VK_TRUE;
+
+    // Query queues
+    u32 quFamPropCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties2(_mpAdapter->handle(), &quFamPropCount, nullptr);
+    std::vector<VkQueueFamilyProperties2> quFamProp2(quFamPropCount, {VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2});
+    vkGetPhysicalDeviceQueueFamilyProperties2(_mpAdapter->handle(), &quFamPropCount, quFamProp2.data());
+
+    constexpr u32 MAX_QUEUE_FAMILIES = 16, MAX_QUEUE_COUNT = 64;
+    std::array<std::array<float, MAX_QUEUE_COUNT>, MAX_QUEUE_FAMILIES> quFamPriorities{1.0f};
+    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+    for (u32 i = 0; i < quFamProp2.size(); ++i)
+    {
+        u32 quCount = quFamProp2[i].queueFamilyProperties.queueCount;
+        if (quCount > 0)
+        {
+            quCount              = desc.mRequestAllAvailableQueues ? quCount : 1;
+            u32 queueFamilyFlags = quFamProp2[i].queueFamilyProperties.queueFlags;
+            if (quCount > MAX_QUEUE_COUNT)
+            {
+                AXE_WARN("{} queues queried from device are too many in queue family index {} with flag {} (support up to {})",
+                         quCount, i, (u32)queueFamilyFlags, MAX_QUEUE_COUNT);
+                quCount = MAX_QUEUE_COUNT;
+            }
+
+            queueCreateInfos.emplace_back(VkDeviceQueueCreateInfo{
+                .sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+                .pNext            = nullptr,
+                .flags            = 0,
+                .queueFamilyIndex = i,
+                .queueCount       = quCount,
+                .pQueuePriorities = quFamPriorities[i].data(),
+            });
+            AXE_INFO("Ready to be create: FamilyIndex[{}/{}] with flag {}(grap({}), comp({}), trans({})), requested queueCount is {} (total count is {}) (No specified priorities)",
+                     i, quFamProp2.size(), queueFamilyFlags,
+                     (bool)(queueFamilyFlags & VK_QUEUE_GRAPHICS_BIT),
+                     (bool)(queueFamilyFlags & VK_QUEUE_COMPUTE_BIT),
+                     (bool)(queueFamilyFlags & VK_QUEUE_TRANSFER_BIT),
+                     quCount, quFamProp2[i].queueFamilyProperties.queueCount);
+
+            _mQueueInfos[queueFamilyFlags] = QueueInfo{
+                .mAvailableCount = quCount, .mUsedCount = 0, .mFamilyIndex = (u8)i};
+        }
+    }
+
+    for (u8 i = 0; i < QUEUE_TYPE_COUNT; ++i)
+    {
+        u8 dontCareOutput1, dontCareOutput2;
+        queryAvailableQueueIndex((QueueType)i, _mQueueFamilyIndexes[i], dontCareOutput1, dontCareOutput2);
+    }
+
+    // create a logical device
+    VkDeviceCreateInfo deviceCreateInfo = {
+        .sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+        .pNext                   = &gpuFeatures2,
+        .flags                   = 0,
+        .queueCreateInfoCount    = (u32)queueCreateInfos.size(),
+        .pQueueCreateInfos       = queueCreateInfos.data(),
+        .enabledLayerCount       = (u32)readyLayers.size(),
+        .ppEnabledLayerNames     = readyLayers.data(),
+        .enabledExtensionCount   = (u32)readyExts.size(),
+        .ppEnabledExtensionNames = readyExts.data(),
+        .pEnabledFeatures        = nullptr};
+
+    auto result = vkCreateDevice(_mpAdapter->handle(), &deviceCreateInfo, nullptr, &_mpHandle);
+    AXE_ASSERT(VK_SUCCEEDED(result));
+    volkLoadDevice(_mpHandle);
+    return true;
+}
 
 bool VulkanDevice::_initVMA() noexcept
 {
@@ -41,9 +205,7 @@ bool VulkanDevice::_initVMA() noexcept
         .vkBindImageMemory2KHR                   = vkBindImageMemory2,
         .vkGetPhysicalDeviceMemoryProperties2KHR = vkGetPhysicalDeviceMemoryProperties2KHR,
         .vkGetDeviceBufferMemoryRequirements     = vkGetDeviceBufferMemoryRequirements,
-        .vkGetDeviceImageMemoryRequirements      = vkGetDeviceImageMemoryRequirements
-
-    };
+        .vkGetDeviceImageMemoryRequirements      = vkGetDeviceImageMemoryRequirements};
 
     VmaAllocatorCreateInfo vmaCreateInfo = {
         .flags                       = 0,  // to be continue
@@ -55,131 +217,144 @@ bool VulkanDevice::_initVMA() noexcept
         .pHeapSizeLimit              = nullptr,
         .pVulkanFunctions            = &vmaVkFunctions,
         .instance                    = _mpAdapter->backendHandle(),
-        .vulkanApiVersion            = VK_API_VERSION_1_3,
+        .vulkanApiVersion            = 0,  // VK_API_VERSION_1_3,// TODO: load 1.3 func failed
 #if VMA_EXTERNAL_MEMORY
         .pTypeExternalMemoryHandleTypes = nullptr,
 #endif
     };
     if (_mDedicatedAllocationExtension) { vmaCreateInfo.flags |= VMA_ALLOCATOR_CREATE_KHR_DEDICATED_ALLOCATION_BIT; }
     if (_mBufferDeviceAddressExtension) { vmaCreateInfo.flags |= VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT; }
-    return VK_SUCCEEDED(vmaCreateAllocator(&vmaCreateInfo, &_mpVmaAllocator));
+    bool succ = VK_SUCCEEDED(vmaCreateAllocator(&vmaCreateInfo, &_mpVmaAllocator));
+    AXE_CHECK(succ);
+    return succ;
+}
+
+void VulkanDevice::_addDefaultResource() noexcept
+{
+    {
+        //// Texture
+        TextureDesc texDesc{};
+        texDesc.pNativeHandle          = nullptr;
+        texDesc.pName                  = "Dummy Texture";
+        texDesc.mClearValue.rgba       = {0.0, 0.0, 0.0, 0.0};
+        texDesc.mFlags                 = TEXTURE_CREATION_FLAG_NONE;
+        texDesc.mMipLevels             = 1;
+        texDesc.mSampleQuality         = 0;
+        texDesc.mFormat                = TinyImageFormat_R8G8B8A8_UNORM;
+        texDesc.mStartState            = RESOURCE_STATE_COMMON;
+
+        ///// 1D, 2D, 3D
+        const auto createTextureHelper = [this, &texDesc](MSAASampleCount sampleCount, u32 arraySize, u32 width, u32 height, u32 depth, TextureDimension dim)
+        {
+            texDesc.mWidth                                   = width;
+            texDesc.mHeight                                  = height;
+            texDesc.mDepth                                   = depth;
+            texDesc.mArraySize                               = arraySize;
+            texDesc.mSampleCount                             = sampleCount;
+
+            texDesc.mDescriptors                             = DESCRIPTOR_TYPE_TEXTURE;
+            this->_mNullDescriptors.mpDefaultTextureSRV[dim] = this->createTexture(texDesc);
+
+            if (sampleCount == MSAA_SAMPLE_COUNT_1)
+            {
+                texDesc.mDescriptors                             = DESCRIPTOR_TYPE_RW_TEXTURE;
+                this->_mNullDescriptors.mpDefaultTextureUAV[dim] = this->createTexture(texDesc);
+            }
+        };
+        createTextureHelper(MSAA_SAMPLE_COUNT_1, 1, 1, 1, 1, TEXTURE_DIM_1D);
+        createTextureHelper(MSAA_SAMPLE_COUNT_1, 2, 1, 1, 1, TEXTURE_DIM_1D_ARRAY);
+        createTextureHelper(MSAA_SAMPLE_COUNT_1, 1, 2, 2, 1, TEXTURE_DIM_2D);
+        createTextureHelper(MSAA_SAMPLE_COUNT_1, 2, 2, 2, 1, TEXTURE_DIM_2D_ARRAY);
+        createTextureHelper(MSAA_SAMPLE_COUNT_4, 1, 2, 2, 1, TEXTURE_DIM_2DMS);
+        createTextureHelper(MSAA_SAMPLE_COUNT_4, 2, 2, 2, 1, TEXTURE_DIM_2DMS_ARRAY);
+        createTextureHelper(MSAA_SAMPLE_COUNT_1, 1, 2, 2, 2, TEXTURE_DIM_3D);
+
+        ///// cube
+        texDesc.mWidth                                                      = 2;
+        texDesc.mHeight                                                     = 2;
+        texDesc.mDepth                                                      = 1;
+        texDesc.mSampleCount                                                = MSAA_SAMPLE_COUNT_1;
+        texDesc.mDescriptors                                                = DESCRIPTOR_TYPE_TEXTURE_CUBE;
+
+        texDesc.mArraySize                                                  = 6;
+        this->_mNullDescriptors.mpDefaultTextureSRV[TEXTURE_DIM_CUBE]       = this->createTexture(texDesc);
+        texDesc.mArraySize                                                  = 12;
+        this->_mNullDescriptors.mpDefaultTextureSRV[TEXTURE_DIM_CUBE_ARRAY] = this->createTexture(texDesc);
+
+        //// Buffer
+        BufferDesc bufDesc{
+            .mSize               = sizeof(u32),
+            .mpCounterBuffer     = nullptr,
+            .mFirstElement       = 0,
+            .mElementCount       = 1,
+            .mStructStride       = sizeof(u32),
+            .mName               = "Dummy Buffer",
+            .mAlignment          = 0,
+            .mMemoryUsage        = RESOURCE_MEMORY_USAGE_GPU_ONLY,
+            .mFlags              = BUFFER_CREATION_FLAG_NONE,
+            .mQueueType          = QUEUE_TYPE_MAX,
+            .mStartState         = RESOURCE_STATE_COMMON,
+            .mICBDrawType        = INDIRECT_ARG_INVALID,
+            .mICBMaxCommandCount = 0,
+            .mFormat             = TinyImageFormat_R32_UINT,
+        };
+
+        bufDesc.mDescriptors                 = DESCRIPTOR_TYPE_BUFFER | DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        _mNullDescriptors.mpDefaultBufferSRV = this->createBuffer(bufDesc);
+        bufDesc.mDescriptors                 = DESCRIPTOR_TYPE_RW_BUFFER;
+        _mNullDescriptors.mpDefaultBufferUAV = this->createBuffer(bufDesc);
+    }
+
+    // TODO: mutex _mNullDescriptors.mSubmitMutex
+    /// sampler
+    SamplerDesc sampleDesc{};
+    _mNullDescriptors.mpDefaultSampler = this->createSampler(sampleDesc);
+
+    // command buffer to transition resources to the correct state
+    QueueDesc queueDesc{};
+    auto* pQueue = this->requestQueue(queueDesc);
+
+    CmdPoolDesc cmdPoolDesc{};
+    cmdPoolDesc.mpUsedForQueue = (Queue*)pQueue;
+    auto* pCmdPool             = this->createCmdPool(cmdPoolDesc);
+
+    CmdDesc cmdDesc{};
+    cmdDesc.mpCmdPool = pCmdPool;
+    auto* pCmd        = this->createCmd(cmdDesc);
+
+    FenceDesc fenceDesc{};
+    auto* pFence                                 = this->createFence(fenceDesc);
+
+    _mNullDescriptors.mpInitialTransitionQueue   = pQueue;
+    _mNullDescriptors.mpInitialTransitionCmdPool = pCmdPool;
+    _mNullDescriptors.mpInitialTransitionCmd     = pCmd;
+    _mNullDescriptors.mpInitialTransitionFence   = pFence;
+
+    // TODO: mutex _mNullDescriptors.mInitialTransitionMutex
+
+    for (uint32_t dim = 0; dim < TEXTURE_DIM_COUNT; ++dim)
+    {
+        if (_mNullDescriptors.mpDefaultTextureSRV[dim])
+        {
+            this->initial_transition(_mNullDescriptors.mpDefaultTextureSRV[dim], RESOURCE_STATE_SHADER_RESOURCE);
+        }
+        if (_mNullDescriptors.mpDefaultTextureUAV[dim])
+        {
+            this->initial_transition(_mNullDescriptors.mpDefaultTextureUAV[dim], RESOURCE_STATE_UNORDERED_ACCESS);
+        }
+    }
 }
 
 VulkanDevice::VulkanDevice(VulkanAdapter* pAdapter, DeviceDesc& desc) noexcept
     : _mpAdapter(pAdapter), _mShaderModel(desc.mShaderModel)
 {
-    u32 layerCount = 0;
-    vkEnumerateDeviceLayerProperties(pAdapter->handle(), &layerCount, nullptr);
-    std::pmr::vector<VkLayerProperties> layers(layerCount);
-    vkEnumerateDeviceLayerProperties(pAdapter->handle(), &layerCount, layers.data());
-    std::pmr::vector<const char*> layerNames(layerCount, nullptr);
-    for (u32 i = 0; i < layers.size(); ++i) { layerNames[i] = layers[i].layerName; }
-    // if (strcmp(layerNames[i], "VK_LAYER_RENDERDOC_Capture") == 0) { true; }
-
-    u32 extensionCount = 0;
-    vkEnumerateDeviceExtensionProperties(pAdapter->handle(), nullptr, &extensionCount, nullptr);
-    std::vector<VkExtensionProperties> extensions(extensionCount);
-    vkEnumerateDeviceExtensionProperties(pAdapter->handle(), nullptr, &extensionCount, extensions.data());
-    std::pmr::vector<const char*> extensionNames(extensionCount, nullptr);
-    for (u32 i = 0; i < extensions.size(); ++i) { extensionNames[i] = extensions[i].extensionName; }
-
-    filter_unsupported(layerNames, gWantedDeviceLayers);
-    filter_unsupported(extensionNames, gWantedDeviceExtensions);
-
-    const auto sup = [&extensionNames](const char* extName)
+    if (_createLogicalDevice(desc))
     {
-        bool ret       = std::find_if(gWantedDeviceExtensions.begin(), gWantedDeviceExtensions.end(), [extName](const char* ext)
-                                      { return !strcmp(extName, ext); }) != gWantedDeviceExtensions.end();
-        bool supported = std::find_if(extensionNames.begin(), extensionNames.end(), [extName](const char* ext)
-                                      { return !strcmp(extName, ext); }) != extensionNames.end();
-        if (!ret && supported) { AXE_ERROR("{} is supported but added to wanted", extName); }
-        return ret;
-    };
-
-    _mDedicatedAllocationExtension = sup(VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME) &&
-                                     sup(VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME);
-    _mBufferDeviceAddressExtension = sup(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME);
-    _mRaytracingSupported          = sup(VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME) &&
-                            sup(VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME) &&
-                            sup(VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME) &&
-                            sup(VK_KHR_ACCELERATION_STRUCTURE_EXTENSION_NAME) &&
-                            sup(VK_KHR_SPIRV_1_4_EXTENSION_NAME) &&
-                            sup(VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME);
-
-#ifdef VK_USE_PLATFORM_WIN32_KHR
-    _mExternalMemoryExtension = sup(VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME) &&
-                                sup(VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME);
-    if (_mExternalMemoryExtension)
-    {
-        AXE_INFO("Successfully loaded External Memory extension");
-    }
-#endif
-
-    // queue family properties
-    u32 quFamPropCount = 0;
-    vkGetPhysicalDeviceQueueFamilyProperties2(pAdapter->handle(), &quFamPropCount, nullptr);
-    std::vector<VkQueueFamilyProperties2> quFamProp2(quFamPropCount, {VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2});
-    vkGetPhysicalDeviceQueueFamilyProperties2(pAdapter->handle(), &quFamPropCount, quFamProp2.data());
-
-    constexpr u32 MAX_QUEUE_FAMILIES = 16, MAX_QUEUE_COUNT = 64;
-    std::array<std::array<float, MAX_QUEUE_COUNT>, MAX_QUEUE_FAMILIES> quFamPriorities{1.0f};
-    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-    for (u32 i = 0; i < quFamProp2.size(); ++i)
-    {
-        u32 quCount = quFamProp2[i].queueFamilyProperties.queueCount;
-        if (quCount > 0)
+        if (_initVMA())
         {
-            quCount              = desc.mRequestAllAvailableQueues ? quCount : 1;
-            u32 queueFamilyFlags = quFamProp2[i].queueFamilyProperties.queueFlags;
-            if (quCount > MAX_QUEUE_COUNT)
-            {
-                AXE_WARN("{} queues queried from device are too many in queue family index {} with flag {} (support up to {})",
-                         quCount, i, (u32)queueFamilyFlags, MAX_QUEUE_COUNT);
-                quCount = MAX_QUEUE_COUNT;
-            }
-
-            queueCreateInfos.emplace_back(VkDeviceQueueCreateInfo{
-                .sType            = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-                .pNext            = nullptr,
-                .flags            = 0,
-                .queueFamilyIndex = i,
-                .queueCount       = quCount,
-                .pQueuePriorities = quFamPriorities[i].data(),
-            });
-            AXE_INFO("Ready to be create: FamilyIndex[{}](total count is {}), requested queueCount is {} (total count is {}) (No specified priorities)",
-                     i, quFamProp2.size(), quCount, quFamProp2[i].queueFamilyProperties.queueCount);
-
-            _mQueueInfos[queueFamilyFlags] = QueueInfo{
-                .mAvailableCount = quCount, .mUsedCount = 0, .mFamilyIndex = (u8)i};
+            _addDefaultResource();
         }
     }
-
-    for (u8 i = 0; i < QUEUE_TYPE_COUNT; ++i)
-    {
-        u8 dontCareOutput1, dontCareOutput2;
-        queryAvailableQueueIndex((QueueType)i, _mQueueFamilyIndexes[i], dontCareOutput1, dontCareOutput2);
-    }
-
-    VkPhysicalDeviceVulkan13Features deviceFeatures13 = {
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
-        .pNext = nullptr};
-    deviceFeatures13.dynamicRendering   = VK_TRUE;
-
-    VkDeviceCreateInfo deviceCreateInfo = {
-        .sType                   = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-        .pNext                   = &deviceFeatures13,
-        .flags                   = 0,
-        .queueCreateInfoCount    = (u32)queueCreateInfos.size(),
-        .pQueueCreateInfos       = queueCreateInfos.data(),
-        .enabledLayerCount       = (u32)gWantedDeviceLayers.size(),
-        .ppEnabledLayerNames     = gWantedDeviceLayers.data(),
-        .enabledExtensionCount   = (u32)gWantedDeviceExtensions.size(),
-        .ppEnabledExtensionNames = gWantedDeviceExtensions.data(),
-        .pEnabledFeatures        = &pAdapter->features()->features};
-
-    auto result = vkCreateDevice(pAdapter->handle(), &deviceCreateInfo, nullptr, &_mpHandle);
-    AXE_ASSERT(VK_SUCCEEDED(result));
-    volkLoadDevice(_mpHandle);
 }
 
 VulkanDevice::~VulkanDevice() noexcept
@@ -198,16 +373,17 @@ VulkanDevice::~VulkanDevice() noexcept
 
 void VulkanDevice::requestQueueIndex(QueueType quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) noexcept
 {
-    auto [bitFlag, isConsume] = queryAvailableQueueIndex(quType, outQuFamIndex, outQuIndex, outFlag);
-    if (isConsume) { _mQueueInfos[bitFlag].mUsedCount++; }
+    bool isConsume = queryAvailableQueueIndex(quType, outQuFamIndex, outQuIndex, outFlag);
+    if (isConsume) { _mQueueInfos[outFlag].mUsedCount++; }
 }
 
-std::pair<u8, bool> VulkanDevice::queryAvailableQueueIndex(QueueType quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) const noexcept
+bool VulkanDevice::queryAvailableQueueIndex(QueueType quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) const noexcept
 {
     bool found                   = false;
     bool willConsumeDedicatedOne = false;
     u8 quFamIndex = U8_MAX, quIndex = U8_MAX;
-    auto requiredFlagBit = VK_QUEUE_FLAG_BITS_MAX_ENUM;
+    auto requiredFlagBit                = VK_QUEUE_FLAG_BITS_MAX_ENUM;
+    const auto allSupportedVkQueueFlags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT | VK_QUEUE_COMPUTE_BIT;
     switch (quType)
     {
         case QUEUE_TYPE_GRAPHICS: requiredFlagBit = VK_QUEUE_GRAPHICS_BIT; break;
@@ -216,46 +392,35 @@ std::pair<u8, bool> VulkanDevice::queryAvailableQueueIndex(QueueType quType, u8&
         default: AXE_ERROR("Unsupported queue type {}", reflection::enum_name(quType)); break;
     }
 
-    u32 minQueueFlag         = U32_MAX;
-
     // Try to find a dedicated queue of this type
-    auto& dedicatedQueueInfo = _mQueueInfos[requiredFlagBit];
-    if (dedicatedQueueInfo.mUsedCount < dedicatedQueueInfo.mAvailableCount)
+    u32 minSupportTypeCount = U32_MAX;
+    for (u32 flag = 0; flag < _mQueueInfos.size(); ++flag)
     {
-        found      = true;
-        quFamIndex = dedicatedQueueInfo.mFamilyIndex;
-        outFlag    = requiredFlagBit;
-        found      = true;
-
-        if (requiredFlagBit & VK_QUEUE_GRAPHICS_BIT)
+        auto& info = _mQueueInfos[flag];
+        if ((requiredFlagBit & flag) && info.mUsedCount < info.mAvailableCount)
         {
-            quIndex = 0;  // always return same one if graphics queue
-        }
-        else
-        {
-            quIndex                 = dedicatedQueueInfo.mUsedCount;
-            willConsumeDedicatedOne = true;
-        }
-    }
-    else
-    {
-        // Try to find a non-dedicated queue of this type if NOT provide a dedicated one.
-        for (u32 flag = 0; flag < _mQueueInfos.size(); ++flag)
-        {
-            auto& info = _mQueueInfos[flag];
-            if (info.mFamilyIndex == 0) { outFlag = flag; }  // default flag
-            if ((requiredFlagBit & flag) == requiredFlagBit)
+            u32 curTypeCount = std::popcount(flag & allSupportedVkQueueFlags);
+            if (requiredFlagBit & VK_QUEUE_GRAPHICS_BIT)
             {
-                if (info.mUsedCount < info.mAvailableCount)
-                {
-                    quFamIndex              = info.mFamilyIndex;
-                    quIndex                 = dedicatedQueueInfo.mUsedCount;
-                    willConsumeDedicatedOne = true;
-                    outFlag                 = flag;
-                    found                   = true;
-                    AXE_DEBUG("Not found a dedicated queue of {}, using a no-dedicated one(Flags={})", reflection::enum_name(quType), flag)
-                    break;
-                }
+                minSupportTypeCount     = curTypeCount;
+                quFamIndex              = info.mFamilyIndex;
+                quIndex                 = 0;
+                willConsumeDedicatedOne = false;
+                outFlag                 = flag;
+                found                   = true;
+                break;  // always return same one if graphics queue
+            }
+
+            if (minSupportTypeCount > curTypeCount)
+            {
+                minSupportTypeCount     = curTypeCount;
+                quFamIndex              = info.mFamilyIndex;
+                quIndex                 = info.mUsedCount;
+                willConsumeDedicatedOne = true;
+                outFlag                 = flag;
+                found                   = true;
+
+                if (minSupportTypeCount == 1) { break; }  // found dedicated one
             }
         }
     }
@@ -263,14 +428,51 @@ std::pair<u8, bool> VulkanDevice::queryAvailableQueueIndex(QueueType quType, u8&
     // Choose default queue if all tries fail.
     if (!found)
     {
-        found      = true;
+        for (u32 flag = 0; flag < _mQueueInfos.size(); ++flag)
+        {
+            if (_mQueueInfos[flag].mFamilyIndex == 0)
+            {
+                outFlag = flag;
+                break;
+            }
+        }
         quFamIndex = 0;
         quIndex    = 0;
-        AXE_DEBUG("Not found queue of {}, using default one(familyIndex=0.queueIndex=0)", reflection::enum_name(quType));
+        AXE_WARN("Not found queue of {}, using default one(familyIndex=0.queueIndex=0)", reflection::enum_name(quType));
+    }
+    else
+    {
+        AXE_INFO("Found queue of {} (familyIndex={}, flag={}, isDedicated={}, queueIndex={}/{})",
+                 reflection::enum_name(quType), quFamIndex, outFlag, (bool)(minSupportTypeCount == 1),
+                 quIndex, _mQueueInfos[outFlag].mAvailableCount);
     }
     outQuFamIndex = quFamIndex;
     outQuIndex    = quIndex;
-    return {requiredFlagBit, willConsumeDedicatedOne};
+    return willConsumeDedicatedOne;
+}
+
+void VulkanDevice::initial_transition(Texture* pTexture, ResourceState startState) noexcept
+{
+    // TODO acquire_mutex()
+    _mNullDescriptors.mpInitialTransitionCmdPool->reset();
+
+    _mNullDescriptors.mpInitialTransitionCmd->begin();
+
+    TextureBarrier texBarrier;
+    texBarrier.mpTexture                                = pTexture;
+    texBarrier.mImageBarrier.mBarrierInfo.mCurrentState = RESOURCE_STATE_UNDEFINED,
+    texBarrier.mImageBarrier.mBarrierInfo.mNewState     = startState;
+    std::pmr::vector<TextureBarrier> texBarriers{texBarrier};
+    _mNullDescriptors.mpInitialTransitionCmd->resourceBarrier(&texBarriers, nullptr, nullptr);
+
+    _mNullDescriptors.mpInitialTransitionCmd->end();
+
+    QueueSubmitDesc submitDesc;
+    submitDesc.mCmds.push_back(_mNullDescriptors.mpInitialTransitionCmd);
+    submitDesc.mpSignalFence = _mNullDescriptors.mpInitialTransitionFence;
+    _mNullDescriptors.mpInitialTransitionQueue->submit(submitDesc);
+    _mNullDescriptors.mpInitialTransitionFence->wait();
+    // TODO: release mutex
 }
 
 void VulkanDevice::_setDebugLabel(void* handle, VkObjectType type, std::string_view name) noexcept

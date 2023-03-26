@@ -9,7 +9,7 @@
 namespace axe::rhi
 {
 
-bool VulkanSampler::_create(SamplerDesc& desc) noexcept
+bool VulkanSampler::_create(const SamplerDesc& desc) noexcept
 {
     // default lod values
     float minSamplerLod = 0;

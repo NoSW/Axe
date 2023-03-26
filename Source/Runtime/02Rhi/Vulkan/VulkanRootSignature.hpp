@@ -22,7 +22,7 @@ public:
     auto handle() noexcept { return _mpPipelineLayout; }
 
 public:
-    constexpr static VkObjectType TYPE_ID = VK_OBJECT_TYPE_PIPELINE_LAYOUT;
+    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_PIPELINE_LAYOUT; }
 
 private:
     // created from

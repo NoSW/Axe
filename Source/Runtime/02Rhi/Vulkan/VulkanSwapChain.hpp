@@ -27,7 +27,7 @@ public:
     auto handle() noexcept { return _mpHandle; }
 
 public:
-    constexpr static VkObjectType TYPE_ID = VK_OBJECT_TYPE_SWAPCHAIN_KHR;
+    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_SWAPCHAIN_KHR; }
 
 private:
     std::pmr::vector<VulkanRenderTarget*> _mpRenderTargets;  // created from the swapchain back buffers

@@ -14,7 +14,7 @@ class VulkanSemaphore final : public Semaphore
     friend class VulkanSwapChain;
     AXE_NON_COPYABLE(VulkanSemaphore);
     VulkanSemaphore(VulkanDevice* device) noexcept : _mpDevice(device) {}
-    bool _create(SemaphoreDesc&) noexcept;
+    bool _create(const SemaphoreDesc&) noexcept;
     bool _destroy() noexcept;
 
 public:
@@ -26,7 +26,7 @@ public:
     auto handle() noexcept { return _mpHandle; }
 
 public:
-    constexpr static VkObjectType TYPE_ID = VK_OBJECT_TYPE_SEMAPHORE;
+    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_SEMAPHORE; }
 
 private:
     VulkanDevice* const _mpDevice = nullptr;

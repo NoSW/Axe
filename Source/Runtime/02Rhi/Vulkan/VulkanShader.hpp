@@ -25,7 +25,7 @@ public:
     ~VulkanShader() noexcept override = default;
 
 public:
-    constexpr static VkObjectType TYPE_ID = VK_OBJECT_TYPE_UNKNOWN;
+    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_UNKNOWN; }
 
 private:
     VulkanDevice* const _mpDevice = nullptr;
