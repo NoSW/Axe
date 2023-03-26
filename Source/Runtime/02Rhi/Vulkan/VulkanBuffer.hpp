@@ -40,7 +40,6 @@ private:
     u32 _mSize                = 0;
     u32 _mDescriptors : 20    = 0;
     u32 _mMemoryUsage : 3     = 0;
-    u32 _mNodeIndex   : 4     = 0;
 };
 
 }  // namespace axe::rhi

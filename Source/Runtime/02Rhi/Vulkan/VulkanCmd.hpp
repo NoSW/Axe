@@ -63,10 +63,7 @@ private:
     VulkanCmdPool* _mpCmdPool               = nullptr;
 
     u32 _mCmdBufferCount                    = 0;
-    u32 _mNodeIndex : 4                     = 0;
-    u32 _mType      : 3                     = 0;
-    u32 _mPadA                              = 0;
-    u64 _mPadB[9]{0};
+    u32 _mType : 3                          = 0;
 };
 
 }  // namespace axe::rhi

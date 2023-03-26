@@ -16,7 +16,6 @@ bool VulkanCmd::_create(CmdDesc& desc) noexcept
     _mpCmdPool       = (VulkanCmdPool*)desc.mpCmdPool;
     _mpQueue         = _mpCmdPool->_mpQueue;
     _mType           = _mpQueue->_mType;
-    _mNodeIndex      = _mpQueue->_mNodeIndex;
     _mCmdBufferCount = desc.mCmdCount;
 
     VkCommandBufferAllocateInfo allocInfo{
@@ -48,17 +47,6 @@ void VulkanCmd::begin() noexcept
         .flags            = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
         .pInheritanceInfo = nullptr,
     };
-
-    VkDeviceGroupCommandBufferBeginInfo deviceGroupBeginInfo{
-        .sType = VK_STRUCTURE_TYPE_DEVICE_GROUP_COMMAND_BUFFER_BEGIN_INFO,
-        .pNext = nullptr,
-
-    };
-    if (false /*mGpuMode == GPU_MODE_LINKED*/)
-    {
-        deviceGroupBeginInfo.deviceMask = (1 << _mNodeIndex);
-        beginInfo.pNext                 = &deviceGroupBeginInfo;
-    }
     auto result = vkBeginCommandBuffer(_mpHandle, &beginInfo);
     if (VK_FAILED(result)) { AXE_ERROR("Failed to begin VulkanCmd due to {}", string_VkResult(result)); }
 

@@ -83,7 +83,6 @@ struct DescBase
 struct BackendDesc : public DescBase
 {
     std::string_view mAppName = "Untitled";
-    GpuMode mGpuMode          = GPU_MODE_SINGLE;
 };
 
 struct AdapterDesc : public DescBase
@@ -109,7 +108,6 @@ struct FenceDesc : public DescBase
 
 struct QueueDesc : public DescBase
 {
-    u32 mNodeIndex          = 0;
     QueueType mType         = QUEUE_TYPE_GRAPHICS;
     QueueFlag mFlag         = QUEUE_FLAG_NONE;
     QueuePriority mPriority = QUEUE_PRIORITY_NORMAL;

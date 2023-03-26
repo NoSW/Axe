@@ -161,7 +161,6 @@ bool VulkanTexture::_create(const TextureDesc& desc) noexcept
 
         VmaAllocationCreateInfo memReqs{};
         if (desc.mFlags & TEXTURE_CREATION_FLAG_OWN_MEMORY_BIT) { memReqs.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT; }
-        if (false /* linkedMultiGpu */) { memReqs.flags |= VMA_ALLOCATION_CREATE_DONT_BIND_BIT; }
         memReqs.usage = (VmaMemoryUsage)VMA_MEMORY_USAGE_GPU_ONLY;
 
         if (_mpDevice->_mExternalMemoryExtension && desc.mFlags & TEXTURE_CREATION_FLAG_IMPORT_BIT)
@@ -286,11 +285,6 @@ bool VulkanTexture::_create(const TextureDesc& desc) noexcept
             }
 
             AXE_CHECK(VK_SUCCEEDED(vkBindImageMemory2(_mpDevice->handle(), numOfPlanes, bindImagesMemoryInfo)));
-        }
-
-        // Texture to be used on multiple GPUs
-        if (false /*linkedMultiGpu*/)
-        {
         }
 
     }  // if (_mpHandle == VK_NULL_HANDLE)

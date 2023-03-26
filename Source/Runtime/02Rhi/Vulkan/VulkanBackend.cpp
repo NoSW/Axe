@@ -119,7 +119,6 @@ VulkanBackend::VulkanBackend(BackendDesc& desc) noexcept
 {
     memory::MonoMemoryResource<4096> arena;
     // create instance
-    _mGpuMode = desc.mGpuMode;
 #if AXE_RHI_VULKAN_USE_DISPATCH_TABLE
     // TODO: using device table
 #else

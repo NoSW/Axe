@@ -15,12 +15,6 @@ namespace axe::rhi
 //////////////////////////////////////////////////////////////////////////////////////////////
 //                            enum
 //////////////////////////////////////////////////////////////////////////////////////////////
-enum GpuMode
-{
-    GPU_MODE_SINGLE = 0,
-    GPU_MODE_LINKED,
-    GPU_MODE_UNLINKED,
-};
 
 enum WaveOpsSupportFlag
 {
@@ -52,9 +46,6 @@ enum CapabilityLevel
 {
     MAX_INSTANCE_EXTENSIONS       = 64,
     MAX_DEVICE_EXTENSIONS         = 64,
-    MAX_LINKED_GPUS               = 4,  // Max number of GPUs in SLI or Cross-Fire
-    MAX_UNLINKED_GPUS             = 4,  // Max number of GPUs in unlinked mode
-    MAX_MULTIPLE_GPUS             = 4,  // Max number of GPus for either linked or unlinked mode.
     MAX_RENDER_TARGET_ATTACHMENTS = 8,
     MAX_VERTEX_BINDINGS           = 15,
     MAX_VERTEX_ATTRIBS            = 15,

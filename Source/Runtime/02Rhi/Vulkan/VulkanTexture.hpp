@@ -49,7 +49,6 @@ private:
     u32 _mArraySizeMinusOne : 11 = 0;
     u32 _mFormat            : 8  = 0;
     u32 _mAspectMask        : 4  = 0;  // specifying which aspects (COLOR,DEPTH,STENCIL) are included in the pVkImageView
-    u32 _mNodeIndex         : 4  = 0;
     u32 _mSampleCount       : 5  = 1;
     u32 _mUav               : 1  = 0;
     u32 _mOwnsImage         : 1  = 0;  // will be false if the underlying resource is not owned by the texture (swapchain textures,...)

@@ -31,8 +31,7 @@ public:
 private:
     VulkanDevice* const _mpDevice = nullptr;
     VkSemaphore _mpHandle         = VK_NULL_HANDLE;
-    u32 _mCurrentNodeIndex : 5    = 0;
-    u32 _mSignaled         : 1    = 0;
+    u32 _mSignaled : 1            = 0;
     u32 _mPadA                    = 0;
     u64 _mPadB                    = 0;
     u64 _mPadC                    = 0;

@@ -45,9 +45,7 @@ private:
     float _mTimestampPeriod       = 0.0f;
     u32 _mVkQueueFamilyIndex : 8  = U8_MAX;
     u32 _mVkQueueIndex       : 8  = U8_MAX;
-    u32 _mGpuMode            : 3  = GPU_MODE_SINGLE;
     u32 _mType               : 3  = QUEUE_TYPE_MAX;
-    u32 _mNodeIndex          : 4  = 0;
 };
 
 }  // namespace axe::rhi
