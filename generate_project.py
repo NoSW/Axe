@@ -33,6 +33,10 @@ def run_with_msvc():
     print_then_run(f"cmake -S {PJ_ROOT}  -B Build_msvc  -G \"Visual Studio 17 2022\" ")
     print(f"\nPlease open generated *.sln in above folder and build it with VS2022")
 
+def run_default():
+    if print_then_run(f"cmake -S {PJ_ROOT}  -B Build"):
+        print_then_run("cmake --build Build")
+
 if __name__ == "__main__":
     args = parser.parse_args()
 
@@ -49,5 +53,4 @@ if __name__ == "__main__":
     elif sys.platform == "win32":
         run_with_msvc()
     else:
-        print_then_run(f"cmake -S {PJ_ROOT}  -B Build")
-
+        run_default()

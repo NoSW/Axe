@@ -54,12 +54,14 @@ const static std::pmr::vector<const char*> gsWantedInstanceExtensions = {
     // Surface
     VK_KHR_SURFACE_EXTENSION_NAME,
     VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME,
-#if _WIN32
+#if defined(VK_USE_PLATFORM_WIN32_KHR)  // _win32
     VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
-#elif __linux__
+#elif defined(VK_USE_PLATFORM_XLIB_KHR)  // __linux__
     VK_KHR_XLIB_SURFACE_EXTENSION_NAME,
-#elif __APPLE__
-#error "Unsupported platform yet"
+#elif defined(VK_USE_PLATFORM_XCB_KHR)
+    VK_KHR_XCB_SURFACE_EXTENSION_NAME,
+#else
+#error "Unsupported platform"
 #endif
 
 // For debug
@@ -76,11 +78,6 @@ const static std::pmr::vector<const char*> gsWantedInstanceExtensions = {
 
     // To legally use HDR formats
     VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME,
-
-// Multi GPU Extensions
-#if VK_KHR_device_group_creation
-    VK_KHR_DEVICE_GROUP_CREATION_EXTENSION_NAME,
-#endif
 
     // Property querying extensions
     VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
