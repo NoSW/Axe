@@ -6,7 +6,7 @@
 
 #include <tiny_imageformat/tinyimageformat_apis.h>
 
-#include <volk/volk.h>
+#include <volk.h>
 #include <SDL_vulkan.h>
 
 namespace axe::rhi

@@ -1,9 +1,9 @@
 #include "02Rhi/Vulkan/VulkanDevice.hpp"
 
-#include <volk/volk.h>
+#include <volk.h>
 
 #define VMA_IMPLEMENTATION
-#include <vma/vk_mem_alloc.h>
+#include <vk_mem_alloc.h>
 
 #if !(VMA_VULKAN_VERSION >= 1003000)
 #error "need vulkan>=1.3"
@@ -11,6 +11,8 @@
 
 namespace axe::rhi
 {
+
+static constexpr bool ALREADY_PROMPTED_TO_VK_VERSION_1_2_OR_HIGHER = true;
 
 bool VulkanDevice::_createLogicalDevice(const DeviceDesc& desc) noexcept
 {
@@ -54,22 +56,15 @@ bool VulkanDevice::_createLogicalDevice(const DeviceDesc& desc) noexcept
     VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT fragmentShaderInterlockFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_INTERLOCK_FEATURES_EXT};
     addIntoExtChain(sup({VK_EXT_FRAGMENT_SHADER_INTERLOCK_EXTENSION_NAME}), (VkBaseOutStructure*)&fragmentShaderInterlockFeatures);
 #endif
-#if VK_EXT_descriptor_indexing & VK_KHR_maintenance3  // Bindless & None Uniform access Extensions
     VkPhysicalDeviceDescriptorIndexingFeaturesEXT descriptorIndexingFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES_EXT};
-    _mDescriptorIndexingExtension = addIntoExtChain(sup({VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME, VK_KHR_MAINTENANCE3_EXTENSION_NAME}), (VkBaseOutStructure*)&descriptorIndexingFeatures);
-#endif
-#if VK_KHR_sampler_ycbcr_conversion & VK_KHR_bind_memory2
+    addIntoExtChain(ALREADY_PROMPTED_TO_VK_VERSION_1_2_OR_HIGHER, (VkBaseOutStructure*)&descriptorIndexingFeatures);
     VkPhysicalDeviceSamplerYcbcrConversionFeatures ycbcrFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SAMPLER_YCBCR_CONVERSION_FEATURES};
-    _mYCbCrExtension = addIntoExtChain(sup({VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME, VK_KHR_BIND_MEMORY_2_EXTENSION_NAME}), (VkBaseOutStructure*)&ycbcrFeatures);
-#endif
-#if VK_KHR_buffer_device_address
+    addIntoExtChain(ALREADY_PROMPTED_TO_VK_VERSION_1_2_OR_HIGHER, (VkBaseOutStructure*)&ycbcrFeatures);
     VkPhysicalDeviceBufferDeviceAddressFeatures enabledBufferDeviceAddressFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES};
-    _mBufferDeviceAddressExtension = addIntoExtChain(sup({VK_KHR_BUFFER_DEVICE_ADDRESS_EXTENSION_NAME}), (VkBaseOutStructure*)&enabledBufferDeviceAddressFeatures);
-#endif
-    _mRaytracingSupported = _mBufferDeviceAddressExtension;
+    addIntoExtChain(ALREADY_PROMPTED_TO_VK_VERSION_1_2_OR_HIGHER, (VkBaseOutStructure*)&enabledBufferDeviceAddressFeatures);
 #if VK_KHR_ray_tracing_pipeline
     VkPhysicalDeviceRayTracingPipelineFeaturesKHR enabledRayTracingPipelineFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR};
-    _mRaytracingSupported &= addIntoExtChain(sup({VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME}), (VkBaseOutStructure*)&enabledRayTracingPipelineFeatures);
+    _mRaytracingSupported = addIntoExtChain(sup({VK_KHR_RAY_TRACING_PIPELINE_EXTENSION_NAME}), (VkBaseOutStructure*)&enabledRayTracingPipelineFeatures);
 #endif
 #if VK_KHR_acceleration_structure
     VkPhysicalDeviceAccelerationStructureFeaturesKHR enabledAccelerationStructureFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR};
@@ -80,25 +75,10 @@ bool VulkanDevice::_createLogicalDevice(const DeviceDesc& desc) noexcept
     _mRaytracingSupported &= addIntoExtChain(sup({VK_KHR_RAY_QUERY_EXTENSION_NAME}), (VkBaseOutStructure*)&enabledRayQueryFeatures);
 #endif
 #ifdef VK_USE_PLATFORM_WIN32_KHR
-    _mExternalMemoryExtension = sup({VK_KHR_EXTERNAL_MEMORY_EXTENSION_NAME, VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME});
+    _mExternalMemoryExtension = sup({VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME});
 #endif
-#if VK_KHR_draw_indirect_count
-    _mDrawIndirectCountExtension = sup({VK_KHR_DRAW_INDIRECT_COUNT_EXTENSION_NAME});
-#endif
-
-    _mDedicatedAllocationExtension = sup({VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME, VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME});
-    _mRaytracingSupported &= sup({VK_KHR_SHADER_FLOAT_CONTROLS_EXTENSION_NAME});
     _mRaytracingSupported &= sup({VK_KHR_DEFERRED_HOST_OPERATIONS_EXTENSION_NAME});
-    _mRaytracingSupported &= sup({VK_KHR_SPIRV_1_4_EXTENSION_NAME});
 
-    sup({VK_KHR_SWAPCHAIN_EXTENSION_NAME});
-    sup({VK_KHR_MAINTENANCE1_EXTENSION_NAME});
-    sup({VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME});
-    sup({VK_EXT_SHADER_SUBGROUP_BALLOT_EXTENSION_NAME});
-    sup({VK_EXT_SHADER_SUBGROUP_VOTE_EXTENSION_NAME});
-    sup({VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME});
-    sup({VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME});
-    sup({VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME});
     sup({VK_KHR_SWAPCHAIN_EXTENSION_NAME});
 
     vkGetPhysicalDeviceFeatures2(_mpAdapter->handle(), &gpuFeatures2);
@@ -222,8 +202,8 @@ bool VulkanDevice::_initVMA() noexcept
         .pTypeExternalMemoryHandleTypes = nullptr,
 #endif
     };
-    if (_mDedicatedAllocationExtension) { vmaCreateInfo.flags |= VMA_ALLOCATOR_CREATE_KHR_DEDICATED_ALLOCATION_BIT; }
-    if (_mBufferDeviceAddressExtension) { vmaCreateInfo.flags |= VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT; }
+    if constexpr (ALREADY_PROMPTED_TO_VK_VERSION_1_2_OR_HIGHER) { vmaCreateInfo.flags |= VMA_ALLOCATOR_CREATE_KHR_DEDICATED_ALLOCATION_BIT; }
+    if constexpr (ALREADY_PROMPTED_TO_VK_VERSION_1_2_OR_HIGHER) { vmaCreateInfo.flags |= VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT; }
     bool succ = VK_SUCCEEDED(vmaCreateAllocator(&vmaCreateInfo, &_mpVmaAllocator));
     AXE_CHECK(succ);
     return succ;
@@ -355,12 +335,13 @@ VulkanDevice::VulkanDevice(VulkanAdapter* pAdapter, DeviceDesc& desc) noexcept
             _addDefaultResource();
         }
     }
+    AXE_TRACE("created logical device");
 }
 
 VulkanDevice::~VulkanDevice() noexcept
 {
     AXE_ASSERT(_mpHandle);
-    vmaDestroyAllocator(_mpVmaAllocator);
+    // vmaDestroyAllocator(_mpVmaAllocator);
 
     vkDeviceWaitIdle(_mpHandle);  // block until all processing on all queues of a given device is finished
 

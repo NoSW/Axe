@@ -55,7 +55,7 @@ if(AUTO_LOCATE_VULKAN)
 else()
 	message(STATUS "Attempting to locate Vulkan SDK using manual path......")
 	set(VULKAN_SDK "C:/VulkanSDK")
-	set(VULKAN_VERSION "1.3.216.0")
+	set(VULKAN_VERSION "1.3.243.0")
 	set(VULKAN_PATH "${VULKAN_SDK}/${VULKAN_VERSION}")
 	message(STATUS "Using manual specified path: ${VULKAN_PATH}")
 
@@ -75,6 +75,8 @@ add_compile_definitions(VK_USE_PLATFORM_XLIB_KHR)
 endif()
 
 target_include_directories(${TARGET_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
+target_include_directories(${TARGET_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS}/volk) # for diff dir-tree between windows and linux
+target_include_directories(${TARGET_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS}/vma) # ditto
 target_link_libraries(${TARGET_NAME} PRIVATE ${Vulkan_LIB_LIST})
 
 ############################################################################################

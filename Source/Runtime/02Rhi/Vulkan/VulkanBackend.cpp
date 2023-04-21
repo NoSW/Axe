@@ -6,7 +6,7 @@
 #endif  // !VK_VERSION_1_3
 
 #define VOLK_IMPLEMENTATION
-#include <volk/volk.h>
+#include <volk.h>
 
 #include "02Rhi/Vulkan/VulkanAdapter.hpp"
 #include "02Rhi/Vulkan/VulkanDevice.hpp"
@@ -23,37 +23,61 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
     void* pUserData)
 {
+#if AXE_RHI_VK_CONFIG_OVERRIDE
+#define AXE_RHI_VK_VALIDATION_MSG "^^^^^^^^^^"
+#else
+#define AXE_RHI_VK_VALIDATION_MSG "{}: {}", pCallbackData->pMessageIdName, pCallbackData->pMessage
+#endif
+
     if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
     {
-        AXE_ERROR("{}: {}", pCallbackData->pMessageIdName, pCallbackData->pMessage);
+        AXE_ERROR(AXE_RHI_VK_VALIDATION_MSG);
     }
     else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
     {
-        AXE_WARN("{}: {}", pCallbackData->pMessageIdName, pCallbackData->pMessage);
+        AXE_WARN(AXE_RHI_VK_VALIDATION_MSG);
     }
     else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
     {
-        AXE_INFO("{}: {}", pCallbackData->pMessageIdName, pCallbackData->pMessage);
+        AXE_INFO(AXE_RHI_VK_VALIDATION_MSG);
     }
     else
     {
-        AXE_DEBUG("{}: {}", pCallbackData->pMessageIdName, pCallbackData->pMessage);
+        AXE_INFO(AXE_RHI_VK_VALIDATION_MSG);
     }
     return VK_FALSE;
+#undef AXE_RHI_VK_VALIDATION_MSG
 }
 
+// All available layers copied from Vulkan Configurator (NVIDIA GeForce RTX 4070 Ti)
+// Generally, they don't need to be enabled in the application, just use Vulkan Configurator to override when using
 const static std::pmr::vector<const char*> gsWantedInstanceLayers = {
 #if AXE_RHI_VULKAN_ENABLE_DEBUG
     "VK_LAYER_KHRONOS_validation",
 #endif
-    "VK_LAYER_KHRONOS_synchronization2",
+    // "VK_LAYER_NV_optimus",
     "VK_LAYER_RENDERDOC_Capture",
+    // "VK_LAYER_NV_nomad_release_public_2023_1_0",
+    // "VK_LAYER_NV_GPU_Trace_release_public_2023_1_0",
+    // "VK_LAYER_NV_nsight-sys",
+    // "VK_LAYER_VALVE_steam_overlay",
+    // "VK_LAYER_VALVE_steam_fossilize",
+    // "VK_LAYER_LUNARG_api_dump",
+    // "VK_LAYER_LUNARG_gfxreconstruct",
+    // "VK_LAYER_KHRONOS_synchronization2",
+    // "VK_LAYER_LUNARG_monitor",
+    // "VK_LAYER_LUNARG_screenshot",
+    // "VK_LAYER_KHRONOS_profiles",
 };
 
 const static std::pmr::vector<const char*> gsWantedInstanceExtensions = {
-    // Surface
+    // For display
+
+    /// Surface
     VK_KHR_SURFACE_EXTENSION_NAME,
     VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME,
+
+/// OS-Specific
 #if defined(VK_USE_PLATFORM_WIN32_KHR)  // _win32
     VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #elif defined(VK_USE_PLATFORM_XLIB_KHR)  // __linux__
@@ -64,7 +88,10 @@ const static std::pmr::vector<const char*> gsWantedInstanceExtensions = {
 #error "Unsupported platform"
 #endif
 
-// For debug
+    /// HDR formats
+    VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME,
+
+// For debug (mainly for marking VkObject. recommend running Vulkan Configurator to obtain a detailed validation report during debugging.
 #if AXE_RHI_VULKAN_ENABLE_DEBUG
 #if VK_EXT_debug_utils
     VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
@@ -72,15 +99,6 @@ const static std::pmr::vector<const char*> gsWantedInstanceExtensions = {
 #error "Unsupported VK_EXT_debug_utils"
 #endif
 #endif
-
-    // Memory
-    VK_NV_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME,
-
-    // To legally use HDR formats
-    VK_EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME,
-
-    // Property querying extensions
-    VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
 
 };
 
@@ -173,8 +191,13 @@ VulkanBackend::VulkanBackend(BackendDesc& desc) noexcept
         .sType           = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
         .pNext           = nullptr,
         .flags           = 0,
-        .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT,
-        .messageType     = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT,
+        .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
+                           VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                           VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT,
+        .messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+                       VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+                       VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT |
+                       VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT,
         .pfnUserCallback = debug_callback,
         .pUserData       = nullptr};
     AXE_CHECK(VK_SUCCEEDED(vkCreateDebugUtilsMessengerEXT(_mpHandle, &debugUtilsCreateInfo, nullptr, &mpVkDebugUtilsMessenger)));
@@ -218,9 +241,8 @@ Adapter* VulkanBackend::requestAdapter(AdapterDesc& desc) noexcept
 {
     for (auto& adapter : _mAdapters)
     {
-        if (adapter->idle())
+        if (adapter->idle2busy())
         {
-            adapter->take();
             const auto& setting = adapter->requestGPUSettings();
             AXE_INFO("Selected GPU[{}], Name: {}, Vendor Id: {:#x}, Model Id {:#x}, Backend Version: {}",
                      adapter->nodeIndex(), setting.mGpuVendorPreset.mGpuName, setting.mGpuVendorPreset.mVendorId,
@@ -235,8 +257,7 @@ Adapter* VulkanBackend::requestAdapter(AdapterDesc& desc) noexcept
 void VulkanBackend::releaseAdapter(Adapter*& adapter) noexcept
 {
     AXE_ASSERT(adapter);
-    static_cast<VulkanAdapter*>(adapter)->release();
-    static_cast<VulkanAdapter*>(adapter)->take();
+    static_cast<VulkanAdapter*>(adapter)->busy2idle();
     adapter = nullptr;
 }
 

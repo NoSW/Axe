@@ -2,7 +2,7 @@
 #include "02Rhi/Vulkan/VulkanDevice.hpp"
 #include "02Rhi/Vulkan/VulkanTexture.hpp"
 
-#include <volk/volk.h>
+#include <volk.h>
 #include <tiny_imageformat/tinyimageformat_query.h>
 
 namespace axe::rhi
@@ -83,8 +83,8 @@ bool VulkanRenderTarget::_create(const RenderTargetDesc& desc) noexcept
 
     const u32 depthArraySize = desc.mArraySize * desc.mDepth;
     const auto format        = to_vk_enum(texDesc.mFormat);
-    const auto viewType      = (VkImageViewType)(desc.mHeight > 1 ? (depthArraySize > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_TYPE_2D) :
-                                                                    (depthArraySize > 1 ? VK_IMAGE_VIEW_TYPE_1D_ARRAY : VK_IMAGE_TYPE_1D));
+    const auto viewType      = (VkImageViewType)(desc.mHeight > 1 ? (depthArraySize > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D) :
+                                                                    (depthArraySize > 1 ? VK_IMAGE_VIEW_TYPE_1D_ARRAY : VK_IMAGE_VIEW_TYPE_1D));
     VkImageViewCreateInfo rtvCreateInfo{
         .sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .pNext    = nullptr,

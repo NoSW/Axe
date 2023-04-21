@@ -22,20 +22,30 @@ def git_local_config():
     if shutil.which("git"):
         print_then_run("git config core.ignorecase false")
 
+BUILD_DIR_PREFIX = f"{PJ_ROOT}/Build_{sys.platform}"
+
+def clear_cmake_cache_files(build_dir):
+    cache_file = f"{build_dir}/CMakeCache.txt"
+    if input(f"Do you want to delete {cache_file} first? If you change the value of the variable in CMakeLists.txt, recommend delete it?[y/n]").lower() == 'y' and os.path.exists(cache_file):
+        os.remove(cache_file)
+
 def run_with_clang_or_gcc(compiler):
+    clear_cmake_cache_files(f"{BUILD_DIR_PREFIX}_{compiler}")
     cxx_compiler = "g++" if compiler == "gcc" else "clang++"
-    generator = " -G \"Ninja Multi-Config\" " if shutil.which("ninja") else ""
-    if print_then_run(f"cmake -S {PJ_ROOT}  -B Build_{compiler} {generator} -DCMAKE_C_COMPILER={compiler} -DCMAKE_CXX_COMPILER={cxx_compiler} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON "):
+    generator = " -G \"Ninja Multi-Config\" " if shutil.which("ninja") else " -G \"  Unix Makefiles\" "
+    if print_then_run(f"cmake -S {PJ_ROOT} -B {BUILD_DIR_PREFIX}_{compiler} {generator} -DCMAKE_C_COMPILER={compiler} -DCMAKE_CXX_COMPILER={cxx_compiler} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON "):
         mode = "Release" if input("\nStart build in Debug(default) or Release mode? [d/r]").lower() == 'r' else "Debug"
-        print_then_run(f"cmake --build Build_{compiler} --config {mode} -- -j {os.cpu_count() if os.cpu_count() else 1}")
+        print_then_run(f"cmake --build {BUILD_DIR_PREFIX}_{compiler} --config {mode} -- -j {os.cpu_count() if os.cpu_count() else 1}")
 
 def run_with_msvc():
-    print_then_run(f"cmake -S {PJ_ROOT}  -B Build_msvc  -G \"Visual Studio 17 2022\" ")
+    clear_cmake_cache_files(f"{BUILD_DIR_PREFIX}_msvc")
+    print_then_run(f"cmake -S {PJ_ROOT}  -B {BUILD_DIR_PREFIX}_msvc  -G \"Visual Studio 17 2022\" ")
     print(f"\nPlease open generated *.sln in above folder and build it with VS2022")
 
 def run_default():
-    if print_then_run(f"cmake -S {PJ_ROOT}  -B Build"):
-        print_then_run("cmake --build Build")
+    clear_cmake_cache_files(f"{BUILD_DIR_PREFIX}")
+    if print_then_run(f"cmake -S {PJ_ROOT}  -B {BUILD_DIR_PREFIX}"):
+        print_then_run(f"cmake --build {BUILD_DIR_PREFIX}")
 
 if __name__ == "__main__":
     args = parser.parse_args()

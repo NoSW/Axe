@@ -20,10 +20,7 @@ class DefaultMemoryResource final : public std::pmr::memory_resource
     virtual void do_deallocate(void* ptr, size_t bytes, size_t align) override;
     virtual bool do_is_equal(const memory_resource& that) const noexcept override { return this == &that; }
 
-    DefaultMemoryResource() noexcept
-    {
-        std::pmr::set_default_resource(this);
-    }
+    DefaultMemoryResource() noexcept;
     ~DefaultMemoryResource() noexcept;
 
 #if AXE_CORE_MEM_DEBUG_ENABLE

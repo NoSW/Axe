@@ -2,8 +2,8 @@
 #include "02Rhi/Vulkan/VulkanDevice.hpp"
 #include "00Core/Math/Math.hpp"
 
-#include <volk/volk.h>
-#include <vma/vk_mem_alloc.h>
+#include <volk.h>
+#include <vk_mem_alloc.h>
 
 namespace axe::rhi
 {

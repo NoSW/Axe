@@ -3,7 +3,7 @@
 
 #include "00Core/IO/IO.hpp"
 
-#include <volk/volk.h>
+#include <volk.h>
 #include <bit>
 
 namespace axe::rhi
@@ -103,7 +103,7 @@ bool VulkanShader::_destroy() noexcept
     if (_mpSpecializationInfo != nullptr)
     {
         delete[] _mpSpecializationInfo->pMapEntries;
-        delete[](u8*)(_mpSpecializationInfo->pData);
+        delete[] (u8*)(_mpSpecializationInfo->pData);
         delete _mpSpecializationInfo;
     }
     return true;

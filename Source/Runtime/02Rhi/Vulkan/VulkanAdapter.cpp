@@ -1,7 +1,7 @@
 #include "02Rhi/Vulkan/VulkanAdapter.hpp"
 #include "02Rhi/Vulkan/VulkanDevice.hpp"
 
-#include <volk/volk.h>
+#include <volk.h>
 #include <tiny_imageformat/tinyimageformat_apis.h>
 
 namespace axe::rhi
@@ -69,20 +69,20 @@ VulkanAdapter::VulkanAdapter(VulkanBackend* backend, VkPhysicalDevice handle, u8
 
     // Collect all the things of interest into structs
 
-    // GPUCapBits
+    /// GPUCapBits
     for (u32 i = 0; i < TinyImageFormat_Count; ++i)
     {
-        VkFormat fmt = to_vk_enum((TinyImageFormat)i);
-        if (fmt == VK_FORMAT_UNDEFINED) { continue; }
+        VkFormat format = to_vk_enum((TinyImageFormat)i);
+        if (format == VK_FORMAT_UNDEFINED || format >= 1'000'000'000) { continue; }  // only query **core** VkFormat enumeration tokens
 
         VkFormatProperties formatSupport;
-        vkGetPhysicalDeviceFormatProperties(_mpHandle, fmt, &formatSupport);
+        vkGetPhysicalDeviceFormatProperties(_mpHandle, format, &formatSupport);
         _mGPUCapBits.mCanShaderReadFrom[i]      = (formatSupport.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT);
         _mGPUCapBits.mCanShaderWriteTo[i]       = (formatSupport.optimalTilingFeatures & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT);
         _mGPUCapBits.mCanRenderTargetWriteTo[i] = (formatSupport.optimalTilingFeatures & (VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT | VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT));
     }
 
-    // GPUSettings
+    /// GPUSettings of interest
     _mpGPUSettings.mUniformBufferAlignment          = _mpProperties.properties.limits.minUniformBufferOffsetAlignment;
     _mpGPUSettings.mUploadBufferTextureAlignment    = _mpProperties.properties.limits.optimalBufferCopyOffsetAlignment;
     _mpGPUSettings.mUploadBufferTextureRowAlignment = _mpProperties.properties.limits.optimalBufferCopyRowPitchAlignment;
@@ -135,6 +135,7 @@ VulkanAdapter::VulkanAdapter(VulkanBackend* backend, VkPhysicalDevice handle, u8
             break;
     }
 
+    /// queue
     auto [graQuFamId, comQuFamId, transQuFamId] = query_family_index(_mpHandle);
     _mSupportGraphicsQueue                      = graQuFamId != U8_MAX;
     _mSupportComputeQueue                       = comQuFamId != U8_MAX;
@@ -179,11 +180,6 @@ void VulkanAdapter::releaseDevice(Device*& device) noexcept
     AXE_ERROR("Cannot release device that not create from this adapter");
 }
 
-void VulkanAdapter::release() noexcept
-{
-    for (auto& d : _mDevices) { d.reset(); }
-}
-
 bool VulkanAdapter::isSupportQueue(QueueType t) noexcept
 {
     switch (t)
@@ -203,7 +199,7 @@ bool VulkanAdapter::isBetterGpu(const VulkanAdapter& a, const VulkanAdapter& b) 
     if (hasGraphicsQueueA && !hasGraphicsQueueB) { return true; }
     if (!hasGraphicsQueueA && hasGraphicsQueueB) { return false; }
 
-    // prefer discrete gpu
+    // otherwise, prefer discrete gpu
     auto& propA = a._mpProperties.properties;
     auto& propB = b._mpProperties.properties;
     if (propA.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
@@ -212,7 +208,7 @@ bool VulkanAdapter::isBetterGpu(const VulkanAdapter& a, const VulkanAdapter& b) 
     if (propA.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
         propB.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) { return false; }
 
-    // prefer one has larger VRAM(video random-access memory)
+    // otherwise, prefer one has larger VRAM(video random-access memory)
     if (propA.vendorID == propB.vendorID && propA.deviceID == propB.deviceID)
     {
         const auto getVram = [](const VkPhysicalDeviceMemoryProperties2& memProp)
@@ -230,7 +226,7 @@ bool VulkanAdapter::isBetterGpu(const VulkanAdapter& a, const VulkanAdapter& b) 
         return getVram(memPropA) > getVram(memPropB);
     }
 
-    // prefer one has dedicated compute queue for enabling asynchronous compute
+    // otherwise, prefer one has dedicated compute queue for enabling asynchronous compute
     bool hasDedicatedComputeQueueA = a._mSupportComputeQueue && a._mHasDedicatedComputeQueue;
     bool hasDedicatedComputeQueueB = b._mSupportComputeQueue && b._mHasDedicatedComputeQueue;
     if (hasDedicatedComputeQueueA && !hasDedicatedComputeQueueB) { return true; }

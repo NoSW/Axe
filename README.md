@@ -13,9 +13,9 @@ Axe is a cross multi-platform ai-driven game engine(round 1, also an engineering
 
 |Platform|Compiler| Graphics API|
 |---|---|---|
-|Windows| MSVC>=17, Clang>=12, GCC>=11 | Vulkan>=1.3, Direct3D 12|
-|Linux| Clang>=12, GCC>=11  | Vulkan>=1.3|
-|MacOS| Clang>=12, GCC>=11  | Metal 3 |
+|Windows| MSVC>=17, Clang>=15, GCC>=11 | Vulkan>=1.3, Direct3D 12|
+|Linux| Clang>=15, GCC>=11  | Vulkan>=1.3|
+|MacOS| Clang>=15, GCC>=11  | MoltenVK/Metal |
 
 ## Requirements
 - [CMake>=3.20](https://cmake.org/download/)

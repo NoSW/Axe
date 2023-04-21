@@ -7,12 +7,18 @@
 #define SPDLOG_LEVEL_NAMES { "TRA", "DEV", "INF", "WAR", "ERR", "UTE", " OFF" }
 
 #if AXE_CORE_LOG_DEBUG_ENABLE
-#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_DEBUG
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_TRACE
 #else
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_INFO
 #endif
 
 #include <spdlog/spdlog.h>
+
+#if _WIN32
+#define AXEVS_DEBUG(fmt, ...) do { OutputDebugStringA((LPCSTR)(std::format(fmt "\n", ##__VA_ARGS__).c_str())); } while(0); // output msg to debug window of Visual Studio 20xx
+#else
+#define AXEVS_DEBUG(fmt, ...)
+#endif
 
 #define AXE_TRACE(...)              SPDLOG_TRACE("] " __VA_ARGS__);     // used only for print full visibility of what is happening in application
 #define AXE_DEBUG(...)              SPDLOG_DEBUG("] " __VA_ARGS__);     // used for print debug status and troubleshooting
@@ -27,7 +33,7 @@
 namespace axe::log
 {
 
-static void init() noexcept { spdlog::set_pattern("[%T] [%^%l%$] [%P:%t] [%s:%#] [%!%v"); }  // [time] [level] [PID:TID] [filename:line] [func] value
+static void init() noexcept { spdlog::set_pattern("%^[%T] [%l] [%P:%t] [%s:%#] [%!%v%$"); }  // COLOR_BEGIN [time] [level] [PID:TID] [filename:line] [func] value COLOR_END
 
 static void exit() noexcept { spdlog::shutdown(); }
 

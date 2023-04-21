@@ -77,7 +77,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "MSVC|Intel")
   set(MI_USE_CXX "ON")
 endif()
 
-if(False)#MI_OVERRIDE)
+if(MI_OVERRIDE)
   message(STATUS "Override standard malloc (MI_OVERRIDE=ON)")
   if(APPLE)
     if(MI_OSX_ZONE)
@@ -205,7 +205,7 @@ if(CMAKE_C_COMPILER_ID MATCHES "AppleClang|Clang|GNU|Intel" AND NOT CMAKE_SYSTEM
   else()
     list(APPEND mi_cflags -ftls-model=initial-exec)
   endif()
-  if(False)#MI_OVERRIDE)
+  if(MI_OVERRIDE)
     list(APPEND mi_cflags -fno-builtin-malloc)
   endif()
 endif()
@@ -397,7 +397,7 @@ endif()
 # -----------------------------------------------------------------------------
 # Set override properties
 # -----------------------------------------------------------------------------
-if (False)#MI_OVERRIDE)
+if (MI_OVERRIDE)
   if (MI_BUILD_SHARED)
     target_compile_definitions(mimalloc PRIVATE MI_MALLOC_OVERRIDE)
   endif()

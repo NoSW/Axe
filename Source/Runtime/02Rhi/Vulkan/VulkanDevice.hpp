@@ -19,7 +19,7 @@
 
 #include "00Core/Memory/Memory.hpp"
 
-#include <vma/vk_mem_alloc.h>
+#include <vk_mem_alloc.h>
 
 static inline void* VKAPI_PTR vk_allocation(void* pUserData, size_t size, size_t alignment, VkSystemAllocationScope allocationScope) { return axe::memory::DefaultMemoryResource::get()->new_aligned(size, alignment); }
 static inline void* VKAPI_PTR vk_reallocation(void* pUserData, void* pOriginal, size_t size, size_t alignment, VkSystemAllocationScope allocationScope) { return axe::memory::DefaultMemoryResource::get()->realloc(pOriginal, size); }
@@ -140,17 +140,12 @@ public:
 
 private:
     static constexpr u32 MAX_QUEUE_FLAG = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT |
-                                          VK_QUEUE_TRANSFER_BIT | VK_QUEUE_SPARSE_BINDING_BIT | VK_QUEUE_PROTECTED_BIT;
+                                          VK_QUEUE_TRANSFER_BIT | VK_QUEUE_SPARSE_BINDING_BIT | VK_QUEUE_PROTECTED_BIT | VK_QUEUE_VIDEO_DECODE_BIT_KHR | VK_QUEUE_OPTICAL_FLOW_BIT_NV;
 
     // supporting status
     ShaderModel _mShaderModel                         = SHADER_MODEL_6_7;
-    u32 _mExternalMemoryExtension      : 1            = 0;
-    u32 _mDedicatedAllocationExtension : 1            = 0;
-    u32 _mDrawIndirectCountExtension   : 1            = 0;
-    u32 _mBufferDeviceAddressExtension : 1            = 0;
-    u32 _mDescriptorIndexingExtension  : 1            = 0;
-    u32 _mYCbCrExtension               : 1            = 0;
-    u32 _mRaytracingSupported          : 1            = 0;
+    u32 _mExternalMemoryExtension : 1                 = 0;
+    u32 _mRaytracingSupported     : 1                 = 0;
 
     // handles
     VulkanAdapter* const _mpAdapter                   = nullptr;

@@ -5,7 +5,7 @@
 #include "02Rhi/Vulkan/VulkanCmd.hpp"
 #include "02Rhi/Vulkan/VulkanSwapChain.hpp"
 #include "02Rhi/Vulkan/VulkanDevice.hpp"
-#include <volk/volk.h>
+#include <volk.h>
 
 namespace axe::rhi
 {

@@ -30,6 +30,12 @@
 #define AXE_RHI_VULKAN_ENABLE_DEBUG 1
 #endif
 
+#if _WIN32
+#define AXE_RHI_VK_CONFIG_OVERRIDE 0
+#else
+#define AXE_RHI_VK_CONFIG_OVERRIDE 0
+#endif
+
 #define VK_SUCCEEDED(result) (((VkResult)(result)) == VK_SUCCESS)
 #define VK_FAILED(result)    (!VK_SUCCEEDED(result))
 

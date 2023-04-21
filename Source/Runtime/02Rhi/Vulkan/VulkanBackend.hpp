@@ -50,8 +50,6 @@ public:
     std::array<std::unique_ptr<VulkanAdapter>, MAX_NUM_ADAPTER_PER_BACKEND> _mAdapters;
 
     // scalar
-    u32 _mRenderDocLayerEnabled     : 1 = 0;
-
     u32 _mShaderTarget              : 4 = 0;
     u32 _mEnableGpuBasedValidation  : 1 = 0;
     u32 _mRequestAllAvailableQueues : 1 = 0;

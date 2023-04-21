@@ -4,6 +4,9 @@ project(Axe VERSION 0.1.0 LANGUAGES CXX)
 
 include(CMakePrintHelpers) # cmake_print_variables(..) used for printing
 
+
+set(AXE_USE_DYNAMIC_MIMALLOC OFF CACHE BOOL "useful when we need to detect memory usage except new/delete in third-party libraries, e.g., malloc/free")
+
 # Add property to allow making project folders in IDEs
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -42,6 +45,10 @@ foreach(src_file ${all_items})
 	endif()
 endforeach()
 endmacro()
+
+if (MSVC)
+  add_compile_options(/MP)
+endif()
 
 add_subdirectory(Source/ThirdParty)
 # add_subdirectory(Source/AssetSystem)

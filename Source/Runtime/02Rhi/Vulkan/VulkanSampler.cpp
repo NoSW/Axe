@@ -1,7 +1,7 @@
 #include "02Rhi/Vulkan/VulkanSampler.hpp"
 #include "02Rhi/Vulkan/VulkanDevice.hpp"
 #include "02Rhi/Vulkan/VulkanEnums.hpp"
-#include <volk/volk.h>
+#include <volk.h>
 
 #include <tiny_imageformat/tinyimageformat_apis.h>
 #include <tiny_imageformat/tinyimageformat_query.h>

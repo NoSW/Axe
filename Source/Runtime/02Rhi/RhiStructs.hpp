@@ -92,7 +92,6 @@ struct AdapterDesc : public DescBase
 
 struct DeviceDesc : public DescBase
 {
-    bool mEnableRenderDocLayer      = false;
     bool mRequestAllAvailableQueues = true;
     ShaderModel mShaderModel        = SHADER_MODEL_6_7;
 };

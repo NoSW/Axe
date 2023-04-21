@@ -3,7 +3,7 @@
 
 #include "00Core/Math/Math.hpp"
 
-#include <volk/volk.h>
+#include <volk.h>
 #include <tiny_imageformat/tinyimageformat_apis.h>
 #include <tiny_imageformat/tinyimageformat_query.h>
 

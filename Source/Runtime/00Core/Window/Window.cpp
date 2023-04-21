@@ -7,11 +7,15 @@ namespace axe::window
 bool Window::init(WindowDesc& desc) noexcept
 {
     bool succ = SDL_Init(SDL_INIT_EVERYTHING) == 0;
-    AXE_ASSERT(succ);
+    if (!succ)
+    {
+        AXE_ERROR("Failed to create Windows due to {}, try running `apt-get install libasound2-dev libpulse-dev` to fix it", SDL_GetError());
+        AXE_ASSERT(false);
+    }
     u32 sdlWindowFlag = SDL_WINDOW_SHOWN;
     sdlWindowFlag |= _mResizable ? SDL_WINDOW_RESIZABLE : 0;
 
-#define AXE_USE_MOLTEN_VK 0
+#define AXE_USE_MOLTEN_VK 1
 #if __APPLE__ && !AXE_USE_MOLTEN_VK
     sdlWindowFlag |= SDL_WINDOW_METAL;
 #else

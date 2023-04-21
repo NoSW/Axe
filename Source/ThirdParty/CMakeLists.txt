@@ -4,13 +4,21 @@ set(THIRD_PARTY_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 ##############################################################################
 #                                 mimalloc
 ##############################################################################
-set(MI_OVERRIDE OFF CACHE BOOL "" "")
+set(MI_OVERRIDE ON CACHE BOOL "")
 set(MI_OSX_INTERPOSE OFF CACHE BOOL "")
 set(MI_OSX_ZONE OFF CACHE BOOL "")
-set(MI_BUILD_SHARED OFF CACHE BOOL "")
+set(MI_BUILD_SHARED ON CACHE BOOL "")
 set(MI_BUILD_STATIC ON CACHE BOOL "")
 set(MI_BUILD_OBJECT OFF CACHE BOOL "")
 set(MI_BUILD_TESTS OFF CACHE BOOL "")
+if (CMAKE_C_COMPILER_ID STREQUAL  "clang")
+    set(MI_DEBUG_TSAN ON CACHE BOOL "")
+endif()
+if (CMAKE_CXX_COMPILER_ID STREQUAL  "clang++")
+    set(MI_DEBUG_UBSAN ON CACHE BOOL "")
+endif()
+set(MI_SKIP_COLLECT_ON_EXIT OFF CACHE BOOL "")
+
 add_subdirectory(mimalloc)
 set_target_properties(mimalloc-static PROPERTIES FOLDER "ThirdParty")
 

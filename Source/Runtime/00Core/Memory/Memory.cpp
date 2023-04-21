@@ -15,6 +15,17 @@
 
 namespace axe::memory
 {
+#ifndef AXE_CORE_MEM_DEBUG_ENABLE
+#define AXE_CORE_MEM_DEBUG_ENABLE 0
+#endif  // ! AXE_CORE_MEM_DEBUG_ENABLE
+
+DefaultMemoryResource::DefaultMemoryResource() noexcept
+{
+    std::pmr::set_default_resource(this);
+    mi_option_set_enabled(mi_option_show_errors, AXE_CORE_MEM_DEBUG_ENABLE);
+    mi_option_set_enabled(mi_option_show_stats, AXE_CORE_MEM_DEBUG_ENABLE);
+    mi_option_set_enabled(mi_option_verbose, AXE_CORE_MEM_DEBUG_ENABLE);
+}
 
 void* DefaultMemoryResource::do_allocate(size_t bytes, size_t align)
 {
@@ -199,3 +210,8 @@ void operator delete[](void* p, std::align_val_t al, const std::nothrow_t& tag) 
 #if _MSC_VER
 #pragma warning(pop)
 #endif
+
+// void* malloc(size_t bytes)
+//{
+//     return mi_malloc(bytes);
+// }

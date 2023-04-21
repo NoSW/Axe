@@ -138,6 +138,7 @@ typedef struct mi_nothrow_s { int _tag; } mi_nothrow_t;
 // This is not really necessary as they usually call
 // malloc/free anyway, but it improves performance.
 // ------------------------------------------------------
+#if 0 // will override in Axe
 #ifdef __cplusplus
   // ------------------------------------------------------
   // With a C++ compiler we override the new/delete operators.
@@ -213,6 +214,7 @@ typedef struct mi_nothrow_s { int _tag; } mi_nothrow_t;
     #error "define overloads for new/delete for this platform (just for performance, can be skipped)"
   #endif
 #endif // __cplusplus
+#endif
 
 // ------------------------------------------------------
 // Further Posix & Unix functions definitions

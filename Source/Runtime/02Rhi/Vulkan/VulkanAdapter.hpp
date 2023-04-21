@@ -13,15 +13,14 @@ class VulkanAdapter final : public Adapter
 {
 public:
     VulkanAdapter(VulkanBackend* backend, VkPhysicalDevice handle, u8 nodeIndex) noexcept;
-    ~VulkanAdapter() noexcept
-    {
-        release();
-        //
-    };
-    void release() noexcept;
+    ~VulkanAdapter() noexcept { busy2idle(); }
     u8 nodeIndex() const noexcept { return _mNodeIndex; }
-    bool idle() const noexcept { return (bool)_mIdle; }
-    bool take() noexcept { return _mIdle ? !(_mIdle = 0) : false; }
+    bool idle2busy() noexcept { return _mIdle ? !(_mIdle = 0) : false; }
+    void busy2idle() noexcept
+    {
+        for (auto& d : _mDevices) { AXE_ASSERT(d.get() == nullptr); }
+        _mIdle = true;
+    }
     auto handle() const noexcept { return _mpHandle; }
     auto* features() const noexcept { return &_mpFeatures; }
     AdapterType type() const noexcept { return (AdapterType)_mpProperties.properties.deviceType; }
