@@ -7,13 +7,11 @@
 #define AXE_02RHI_API_FLAG_NULL      0
 #define AXE_02RHI_API_FLAG_VULKAN    (1 << 0)
 #define AXE_02RHI_API_FLAG_D3D12     (1 << 1)
-#define AXE_02RHI_API_FLAG_METAL     (1 << 2)
 
 #define AXE_02RHI_API_FLAG_AVAILABLE AXE_02RHI_API_FLAG_VULKAN  // TODO: move this to CMake
 
 #define AXE_02RHI_API_USED_VULKAN    (AXE_02RHI_API_FLAG_AVAILABLE | AXE_02RHI_API_FLAG_VULKAN)
 #define AXE_02RHI_API_USED_D3D12     (AXE_02RHI_API_FLAG_AVAILABLE | AXE_02RHI_API_FLAG_D3D12)
-#define AXE_02RHI_API_USED_METAL     (AXE_02RHI_API_FLAG_AVAILABLE | AXE_02RHI_API_FLAG_METAL)
 
 #if !(AXE_02RHI_API_FLAG_AVAILABLE & 0xff)
 #error "No available render api, please check it"
@@ -51,7 +49,3 @@
 // clang-format off
 #define D3D12_FREE(p) do { AXE_ASSERT(p); p->Release(); p = nullptr; } while(0)
 // clang-format on
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-//                             config for Metal
-//////////////////////////////////////////////////////////////////////////////////////////////

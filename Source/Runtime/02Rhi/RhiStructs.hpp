@@ -279,7 +279,7 @@ struct ShaderStageDesc
     ShaderStageLoadFlag mFlags = SHADER_STAGE_LOAD_FLAG_NONE;
 };
 
-struct ShaderConstants  // only supported by Vulkan and Metal APIs
+struct ShaderConstants  // only supported by Vulkan APIs
 {
     std::pmr::vector<u8> mBlob;
     u32 mIndex;

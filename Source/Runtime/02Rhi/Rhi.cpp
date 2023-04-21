@@ -17,7 +17,6 @@ Backend* createBackend(GraphicsApi api, BackendDesc& desc) noexcept
     {
         case GRAPHICS_API_VULKAN: return new VulkanBackend(desc);
         case GRAPHICS_API_D3D12: return nullptr;
-        case GRAPHICS_API_METAL: return nullptr;
         default:
             AXE_ERROR("Unrecognized graphics api")
             return nullptr;

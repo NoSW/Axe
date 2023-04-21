@@ -14,13 +14,7 @@ bool Window::init(WindowDesc& desc) noexcept
     }
     u32 sdlWindowFlag = SDL_WINDOW_SHOWN;
     sdlWindowFlag |= _mResizable ? SDL_WINDOW_RESIZABLE : 0;
-
-#define AXE_USE_MOLTEN_VK 1
-#if __APPLE__ && !AXE_USE_MOLTEN_VK
-    sdlWindowFlag |= SDL_WINDOW_METAL;
-#else
     sdlWindowFlag |= SDL_WINDOW_VULKAN;
-#endif
 
     _mpSDLWindow = SDL_CreateWindow(desc.mTitle.data(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _mWidth, _mHeight, sdlWindowFlag);
 

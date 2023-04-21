@@ -151,6 +151,3 @@ Based on webGPU draft([online doc](https://www.w3.org/TR/webgpu/)) and open sour
 ![VulkanApi](Images/VulkanAPI.png)
 
 ### **D3D12**
-
-
-### **Metal**

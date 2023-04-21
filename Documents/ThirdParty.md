@@ -7,7 +7,7 @@
 |[**SDL**](https://github.com/libsdl-org/SDL)| a **cross-platform** development library designed to provide low level access to audio, keyboard, mouse, joystick, and graphics hardware via OpenGL and Direct3D.|zlib | static-link|
 | [**spdlog**](https://github.com/gabime/spdlog)| a very **fast, header-only/compiled**, C++ logging library.| MIT  |header-only|
 |[**glm**](https://github.com/g-truc/glm)| a header only C++ mathematics library **for graphics software** based on the OpenGL Shading Language (GLSL) specifications. | MIT  |header-only |
-|[**tiny_imageformat**](https://github.com/DeanoC/tiny_imageformat)| a header only library implementing the common image pixel formats that are used in real-time graphics (including Vulkan, D3D, Metal, etc.) |MIT  | header-only |
+|[**tiny_imageformat**](https://github.com/DeanoC/tiny_imageformat)| a header only library implementing the common image pixel formats that are used in real-time graphics (including Vulkan, D3D, etc.) |MIT  | header-only |
 |[json](https://github.com/nlohmann/json) | a easy-to-use json parser, **serious tested**, trivial integrated | MIT  | not added yet| 
 |[yaml-cpp](https://github.com/jbeder/yaml-cpp) | a yaml parser |  MIT  | not added yet|
 |[doctest](https://github.com/doctest/doctest) | a new C++ testing framework but is by far the fastest both in compile times (by orders of magnitude) and runtime compared to other feature-rich alternatives. |  MIT  | not added yet| 

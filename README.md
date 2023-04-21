@@ -3,8 +3,8 @@ Axe is a cross multi-platform ai-driven game engine(round 1, also an engineering
 
 ## Goal
 
-- practice modern c++ programming skills: C++20, OOP, STL, template, multi-threading, reflection, cross-platform(Windows, Linux, MacOS, ...) etc
-- dive into more underlying details about modern graphics apis (Vulkan, D3D12, Metal)
+- practice modern c++ programming skills: C++20, OOP, STL, template, multi-threading, reflection, cross-platform(Windows, Linux, ...) etc
+- dive into more underlying details about modern graphics apis (Vulkan, D3D12)
 - explore architecture of modern game engine (abstraction, layering, compile-time/edit-time/runtime/loop-time designs)
 - experiment some fundamental and interested graphics features(forward, deferred pipeline, shadow, GI,  etc)
 - try to integrate various AIGC techniques (e.g., AIG shaders/models/textures/audio/animation ...)
@@ -15,7 +15,6 @@ Axe is a cross multi-platform ai-driven game engine(round 1, also an engineering
 |---|---|---|
 |Windows| MSVC>=17, Clang>=15, GCC>=11 | Vulkan>=1.3, Direct3D 12|
 |Linux| Clang>=15, GCC>=11  | Vulkan>=1.3|
-|MacOS| Clang>=15, GCC>=11  | MoltenVK/Metal |
 
 ## Requirements
 - [CMake>=3.20](https://cmake.org/download/)
@@ -60,7 +59,7 @@ Axe is basically designed according to the architecture shown right. Thanks to t
   - (WIP) Universal scene description based on [USD](https://github.com/PixarAnimationStudios/USD) of pixar
   - (WIP) Universal material description based on [MaterialX](https://github.com/AcademySoftwareFoundation/MaterialX)
 - **02Rhi**(Rendering Hardware Interface)
-  - (WIP) wrap multi modern rendering apis with [WebGPU](https://www.w3.org/TR/webgpu/) style, supporting D3D12, Vulkan, Metal
+  - (WIP) wrap multi modern rendering apis with [WebGPU](https://www.w3.org/TR/webgpu/) style, supporting D3D12, Vulkan
   - (WIP) Dynamic Descriptor Management.
   - (WIP) Memory Management based on [VulkanMemoryAllocation](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator).
   - (WIP) Multi-threaded Command Buffer Generation

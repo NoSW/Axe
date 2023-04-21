@@ -135,6 +135,9 @@ inline constexpr u64 U64_MAX = 0xffffffffffffffffull;
  *   - using `__cplusplus > 201703L` to check support of c++20  (usually, it needs Clang>=10, GCC>=11, MSVC>=19)
  *   - using `_DEBUG` to check global build type
  */
+#if !defined(_WIN32) && !defined(__linux__)
+#error "unsupported platform"
+#endif
 
 #if AXE_BUILD_DLL
 #if _MSC_VER
