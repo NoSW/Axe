@@ -48,52 +48,42 @@ void DefaultMemoryResource::do_deallocate(void* ptr, size_t bytes, size_t align)
 DefaultMemoryResource::~DefaultMemoryResource() noexcept
 {
 #if AXE_CORE_MEM_DEBUG_ENABLE
-    uint32_t totalAllocCount = _mAllocCount.load();
-    uint32_t totalFreeCount  = _mFreeCount.load();
-    uint32_t pmrAllocCount   = _mAllocByPmrCount.load();
-    uint32_t pmrFreeCount    = _mFreeByPmrCount.load();
-    uint32_t totalBytes      = _mAllocBytes.load();
-    uint32_t pmrBytes        = _mAllocByPmrBytes.load();
+    uint32_t totalAllocCount     = _mAllocCount.load();
+    uint32_t totalFreeCount      = _mFreeCount.load();
+    uint32_t totalFreeNullCount  = _mFreeNullCount.load();
+    uint32_t pmrAllocCount       = _mAllocByPmrCount.load();
+    uint32_t pmrFreeCount        = _mFreeByPmrCount.load();
+    uint32_t totalBytes          = _mAllocBytes.load();
+    uint32_t pmrBytes            = _mAllocByPmrBytes.load();
+
+    uint32_t totalValidFreeCount = totalFreeCount - totalFreeNullCount;
 
     printf("all: alloc/free count %u/%u, accum bytes %u\n", totalAllocCount, totalFreeCount, totalBytes);
     printf("pmr: alloc/free count %u/%u, accum bytes %u\n", pmrAllocCount, pmrFreeCount, pmrBytes);
     printf("new: alloc/free count %u/%u, accum bytes %u\n", totalAllocCount - pmrAllocCount, totalFreeCount - pmrFreeCount, totalBytes - pmrBytes);
 
-    if (totalAllocCount != totalFreeCount || pmrAllocCount != pmrFreeCount || pmrBytes != _mFreeByPmrBytes.load()) { printf("\033[41mERROR: memory leak! %u pointer(s) \033[0m\n", totalAllocCount - totalFreeCount); }
+    assert(totalAllocCount >= totalValidFreeCount, "memory croupted");
+    assert(pmrAllocCount >= pmrFreeCount, "memory croupted");
+    if (totalAllocCount != totalValidFreeCount || pmrAllocCount != pmrFreeCount || pmrBytes != _mFreeByPmrBytes.load()) { printf("\033[41mERROR: memory leak! %u pointer(s) \033[0m\n", totalAllocCount - totalFreeCount); }
 
 #endif
     std::pmr::set_default_resource(nullptr);
 }
 
-#if AXE_CORE_MEM_DEBUG_ENABLE
-[[nodiscard]] bool DefaultMemoryResource::isLeak() const noexcept
-{
-    return _mAllocCount == _mFreeCount;
-}
-[[nodiscard]] u32 DefaultMemoryResource::getAllocCount() const noexcept { return _mAllocCount; }
-[[nodiscard]] u32 DefaultMemoryResource::getAccumBytes() const noexcept { return _mAllocBytes; }
-[[nodiscard]] u32 DefaultMemoryResource::getAccumByPmrBytes() const noexcept { return _mAllocByPmrBytes; }
-[[nodiscard]] u32 DefaultMemoryResource::getAllocByPmrCount() const noexcept { return _mAllocByPmrCount; }
-#else
-[[nodiscard]] bool DefaultMemoryResource::isLeak() const noexcept
-{
-    return false;
-}
-[[nodiscard]] u32 DefaultMemoryResource::getAllocCount() const noexcept { return 0; }
-[[nodiscard]] u32 DefaultMemoryResource::getAccumBytes() const noexcept { return 0; }
-[[nodiscard]] u32 DefaultMemoryResource::getAccumByPmrBytes() const noexcept { return 0; }
-[[nodiscard]] u32 DefaultMemoryResource::getAllocByPmrCount() const noexcept { return 0; }
-#endif
-
 // used for user-allocate
 [[nodiscard]] void* DefaultMemoryResource::realloc(void* p, size_t newsize) noexcept
 {
+    void* ret = mi_realloc(p, newsize);
 #if AXE_CORE_MEM_DEBUG_ENABLE
     _mAllocBytes += newsize;
     _mAllocCount++;
-    _mFreeCount++;
+    if (p)
+    {
+        if (p != ret) { _mFreeCount++; }
+    }
+    else { _mFreeNullCount++; }
 #endif
-    return mi_realloc(p, newsize);
+    return ret;
 }
 
 [[nodiscard]] void* DefaultMemoryResource::new_n(size_t bytes)
@@ -136,6 +126,7 @@ void DefaultMemoryResource::free(void* p) noexcept
 {
 #if AXE_CORE_MEM_DEBUG_ENABLE
     _mFreeCount++;
+    if (!p) { _mFreeNullCount++; }
 #endif
     mi_free(p);
 }
@@ -144,6 +135,7 @@ void DefaultMemoryResource::free_size(void* p, size_t bytes) noexcept
 {
 #if AXE_CORE_MEM_DEBUG_ENABLE
     _mFreeCount++;
+    if (!p) { _mFreeNullCount++; }
 #endif
     mi_free_size(p, bytes);
 }
@@ -152,6 +144,7 @@ void DefaultMemoryResource::free_aligned(void* p, size_t align) noexcept
 {
 #if AXE_CORE_MEM_DEBUG_ENABLE
     _mFreeCount++;
+    if (!p) { _mFreeNullCount++; }
 #endif
     mi_free_aligned(p, align);
 }
@@ -160,6 +153,7 @@ void DefaultMemoryResource::free_size_aligned(void* p, size_t bytes, size_t alig
 {
 #if AXE_CORE_MEM_DEBUG_ENABLE
     _mFreeCount++;
+    if (!p) { _mFreeNullCount++; }
 #endif
     mi_free_size_aligned(p, bytes, align);
 }

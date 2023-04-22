@@ -1,5 +1,5 @@
 # Axe
-Axe is a cross multi-platform ai-driven game engine(round 1, also an engineering practice about *[Game Engine Architecture, Third Edition](https://www.gameenginebook.com/)*).
+Axe is a cross multi-platform ai-driven game engine(round 1, also an learning project about *[Game Engine Architecture, Third Edition](https://www.gameenginebook.com/)*).
 
 ## Goal
 
@@ -16,11 +16,13 @@ Axe is a cross multi-platform ai-driven game engine(round 1, also an engineering
 |Windows| MSVC>=17, Clang>=15, GCC>=11 | Vulkan>=1.3, Direct3D 12|
 |Linux| Clang>=15, GCC>=11  | Vulkan>=1.3|
 
+Other platform won't be supported since it just a learning project.
+
 ## Requirements
 - [CMake>=3.20](https://cmake.org/download/)
 - [Python>=3.10](https://www.python.org/downloads/)
 - [VulkanSDK>=1.3](https://vulkan.lunarg.com/) ([start on linux](https://vulkan.lunarg.com/doc/view/latest/linux/getting_started.html), [start on windows](https://vulkan.lunarg.com/doc/view/latest/windows/getting_started.html))
-- Windows 10 SDK containing [Direct3D 12](https://learn.microsoft.com/en-us/windows/win32/direct3d12/direct3d-12-graphics) if on Windows
+- Windows 10/11 SDK containing [Direct3D 12](https://learn.microsoft.com/en-us/windows/win32/direct3d12/direct3d-12-graphics) if on Windows
 
 ## How to build
 

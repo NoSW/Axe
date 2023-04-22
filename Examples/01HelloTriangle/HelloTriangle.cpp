@@ -37,8 +37,5 @@ class HelloTriangle final : public app::App
 int main(int argc, char** argv)
 {
     HelloTriangle app;
-
-    auto r = app.run(argc, argv);
-    axe::memory::DefaultMemoryResource::get();
-    return 0;
+    return app.run(argc, argv);
 }

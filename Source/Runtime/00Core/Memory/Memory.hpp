@@ -28,18 +28,12 @@ private:
     std::atomic<u32> _mAllocBytes      = 0;
     std::atomic<u32> _mAllocCount      = 0;
     std::atomic<u32> _mFreeCount       = 0;
+    std::atomic<u32> _mFreeNullCount   = 0;
     std::atomic<u32> _mAllocByPmrBytes = 0;
     std::atomic<u32> _mFreeByPmrBytes  = 0;
     std::atomic<u32> _mAllocByPmrCount = 0;
     std::atomic<u32> _mFreeByPmrCount  = 0;
-
-public:
 #endif
-    [[nodiscard]] bool isLeak() const noexcept;
-    [[nodiscard]] u32 getAllocCount() const noexcept;
-    [[nodiscard]] u32 getAccumBytes() const noexcept;
-    [[nodiscard]] u32 getAccumByPmrBytes() const noexcept;
-    [[nodiscard]] u32 getAllocByPmrCount() const noexcept;
 
 public:
     static DefaultMemoryResource* const get() noexcept

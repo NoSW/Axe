@@ -33,7 +33,7 @@ bool VulkanRenderTarget::_create(const RenderTargetDesc& desc) noexcept
     };
 
     // Create SRV by default for a render target unless this is on tile texture where SRV is not supported
-    if (!(desc.mDescriptors & TEXTURE_CREATION_FLAG_ON_TILE))
+    if (!((u32)desc.mDescriptors & (u32)TEXTURE_CREATION_FLAG_ON_TILE))
     {
         texDesc.mDescriptors |= DESCRIPTOR_TYPE_TEXTURE;
     }

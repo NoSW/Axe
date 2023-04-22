@@ -209,7 +209,7 @@ bool VulkanDevice::_initVMA() noexcept
     return succ;
 }
 
-void VulkanDevice::_addDefaultResource() noexcept
+void VulkanDevice::_createDefaultResource() noexcept
 {
     {
         //// Texture
@@ -325,6 +325,19 @@ void VulkanDevice::_addDefaultResource() noexcept
     }
 }
 
+void VulkanDevice::_destroyDefaultResource() noexcept
+{
+    for (Texture* pTex : _mNullDescriptors.mpDefaultTextureSRV) { destroyTexture(pTex); }
+    for (Texture* pTex : _mNullDescriptors.mpDefaultTextureUAV) { destroyTexture(pTex); }
+    destroyBuffer(_mNullDescriptors.mpDefaultBufferSRV);
+    destroyBuffer(_mNullDescriptors.mpDefaultBufferUAV);
+    destroySampler(_mNullDescriptors.mpDefaultSampler);
+    destroyFence(_mNullDescriptors.mpInitialTransitionFence);
+    releaseQueue(_mNullDescriptors.mpInitialTransitionQueue);
+    destroyCmd(_mNullDescriptors.mpInitialTransitionCmd);
+    destroyCmdPool(_mNullDescriptors.mpInitialTransitionCmdPool);
+}
+
 VulkanDevice::VulkanDevice(VulkanAdapter* pAdapter, DeviceDesc& desc) noexcept
     : _mpAdapter(pAdapter), _mShaderModel(desc.mShaderModel)
 {
@@ -332,7 +345,7 @@ VulkanDevice::VulkanDevice(VulkanAdapter* pAdapter, DeviceDesc& desc) noexcept
     {
         if (_initVMA())
         {
-            _addDefaultResource();
+            _createDefaultResource();
         }
     }
     AXE_TRACE("created logical device");
@@ -341,14 +354,9 @@ VulkanDevice::VulkanDevice(VulkanAdapter* pAdapter, DeviceDesc& desc) noexcept
 VulkanDevice::~VulkanDevice() noexcept
 {
     AXE_ASSERT(_mpHandle);
-    // vmaDestroyAllocator(_mpVmaAllocator);
-
-    vkDeviceWaitIdle(_mpHandle);  // block until all processing on all queues of a given device is finished
-
-    // if (mpImageAvailableSemaphore != VK_NULL_HANDLE) { vkDestroySemaphore(mpVkDevice, mpImageAvailableSemaphore, nullptr); }
-    // if (mpRenderingFinishedSemaphore != VK_NULL_HANDLE) { vkDestroySemaphore(mpVkDevice, mpRenderingFinishedSemaphore, nullptr); }
-    // if (mpVkSwapChain != VK_NULL_HANDLE) { vkDestroySwapchainKHR(mpVkDevice, mpVkSwapChain, nullptr); }
-
+    _destroyDefaultResource();
+    vmaDestroyAllocator(_mpVmaAllocator);
+    vkDeviceWaitIdle(_mpHandle);          // block until all processing on all queues of a given device is finished
     vkDestroyDevice(_mpHandle, nullptr);  // all queues associated with it are destroyed automatically
 }
 

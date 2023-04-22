@@ -24,8 +24,8 @@
 static inline void* VKAPI_PTR vk_allocation(void* pUserData, size_t size, size_t alignment, VkSystemAllocationScope allocationScope) { return axe::memory::DefaultMemoryResource::get()->new_aligned(size, alignment); }
 static inline void* VKAPI_PTR vk_reallocation(void* pUserData, void* pOriginal, size_t size, size_t alignment, VkSystemAllocationScope allocationScope) { return axe::memory::DefaultMemoryResource::get()->realloc(pOriginal, size); }
 static inline void VKAPI_PTR vk_free(void* pUserData, void* pMemory) { axe::memory::DefaultMemoryResource::get()->free(pMemory); }
-static inline void VKAPI_PTR vk_internal_allocation(void* pUserData, size_t size, VkInternalAllocationType allocationType, VkSystemAllocationScope allocationScope) { AXE_ASSERT(false); }
-static inline void VKAPI_PTR vk_internal_free(void* pUserData, size_t size, VkInternalAllocationType allocationType, VkSystemAllocationScope allocationScope) { AXE_ASSERT(false); }
+static inline void VKAPI_PTR vk_internal_allocation(void* pUserData, size_t size, VkInternalAllocationType allocationType, VkSystemAllocationScope allocationScope) { AXE_ASSERT(false, "never used"); }
+static inline void VKAPI_PTR vk_internal_free(void* pUserData, size_t size, VkInternalAllocationType allocationType, VkSystemAllocationScope allocationScope) { AXE_ASSERT(false, "never used"); }
 
 namespace axe::rhi
 {
@@ -61,7 +61,8 @@ private:
 
     bool _createLogicalDevice(const DeviceDesc& desc) noexcept;
     bool _initVMA() noexcept;
-    void _addDefaultResource() noexcept;
+    void _createDefaultResource() noexcept;
+    void _destroyDefaultResource() noexcept;
 
 public:
     VulkanDevice(VulkanAdapter*, DeviceDesc& desc) noexcept;
