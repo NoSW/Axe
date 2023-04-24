@@ -52,6 +52,19 @@ bool VulkanDevice::_createLogicalDevice(const DeviceDesc& desc) noexcept
         return cond;
     };
 
+    // allow device-local memory allocations to be paged in and out by the operating system and **may** transparently move
+    // device-local memory allocations to host-local memory to better share device-local memory with other applications,if enabled
+#if VK_EXT_pageable_device_local_memory & VK_EXT_memory_priority
+    VkPhysicalDevicePageableDeviceLocalMemoryFeaturesEXT pageableDeviceLocalMemoryFeatures{
+        .sType                     = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PAGEABLE_DEVICE_LOCAL_MEMORY_FEATURES_EXT,
+        .pNext                     = nullptr,
+        .pageableDeviceLocalMemory = VK_TRUE};
+    if (sup({VK_EXT_MEMORY_PRIORITY_EXTENSION_NAME}))  // extension dependency of VK_EXT_pageable_device_local_memory
+    {
+        addIntoExtChain(sup({VK_EXT_PAGEABLE_DEVICE_LOCAL_MEMORY_EXTENSION_NAME}), (VkBaseOutStructure*)&pageableDeviceLocalMemoryFeatures);
+    }
+#endif
+
 #if VK_EXT_fragment_shader_interlock  // used for ROV type functionality in Vulkan
     VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT fragmentShaderInterlockFeatures{VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_INTERLOCK_FEATURES_EXT};
     addIntoExtChain(sup({VK_EXT_FRAGMENT_SHADER_INTERLOCK_EXTENSION_NAME}), (VkBaseOutStructure*)&fragmentShaderInterlockFeatures);
@@ -188,7 +201,7 @@ bool VulkanDevice::_initVMA() noexcept
         .vkGetDeviceImageMemoryRequirements      = vkGetDeviceImageMemoryRequirements};
 
     VmaAllocatorCreateInfo vmaCreateInfo = {
-        .flags                       = 0,  // to be continue
+        .flags                       = VMA_ALLOCATOR_CREATE_EXT_MEMORY_PRIORITY_BIT,  // to be continue
         .physicalDevice              = _mpAdapter->handle(),
         .device                      = _mpHandle,
         .preferredLargeHeapBlockSize = 0,  // default value
@@ -348,16 +361,21 @@ VulkanDevice::VulkanDevice(VulkanAdapter* pAdapter, DeviceDesc& desc) noexcept
             _createDefaultResource();
         }
     }
-    AXE_TRACE("created logical device");
 }
 
 VulkanDevice::~VulkanDevice() noexcept
 {
     AXE_ASSERT(_mpHandle);
-    _destroyDefaultResource();
-    vmaDestroyAllocator(_mpVmaAllocator);
-    vkDeviceWaitIdle(_mpHandle);          // block until all processing on all queues of a given device is finished
-    vkDestroyDevice(_mpHandle, nullptr);  // all queues associated with it are destroyed automatically
+    {
+        _destroyDefaultResource();
+    }
+    {
+        vmaDestroyAllocator(_mpVmaAllocator);
+    }
+    {
+        vkDeviceWaitIdle(_mpHandle);          // block until all processing on all queues of a given device is finished
+        vkDestroyDevice(_mpHandle, nullptr);  // all queues associated with it are destroyed automatically
+    }
 }
 
 void VulkanDevice::requestQueueIndex(QueueType quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) noexcept

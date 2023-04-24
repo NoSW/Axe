@@ -17,6 +17,13 @@ enum
     MAX_PLANE_COUNT                      = 3
 };
 
+// Use vkSetDeviceMemoryPriorityEXT to provide the OS with information on which allocations should stay in memory and which should be demoted first when video memory is limited.
+// The highest priority should be given to GPU-written resources like color attachments, depth attachments, storage images, and buffers written from the GPU.
+
+inline constexpr float VK_DEVICE_MEM_PRIORITY_HIGHEST = 1.0f;
+inline constexpr float VK_DEVICE_MEM_PRIORITY_MIDDLE  = 0.5f;
+inline constexpr float VK_DEVICE_MEM_PRIORITY_LOWEST  = 0.0f;
+
 struct DeterminePipelineStageOption
 {
     VkAccessFlags mAccessFlags;

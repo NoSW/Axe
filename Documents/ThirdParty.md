@@ -3,11 +3,11 @@
 |Repository|Description|License|NOTE|
 |---|---|---|---|
 | [VulkanSDK](https://www.lunarg.com/vulkan-sdk/)| a collection of essential tools used for developing Vulkan application, including [dxc](https://github.com/microsoft/DirectXShaderCompiler), [glslang](https://github.com/KhronosGroup/glslang), [shaderc](https://github.com/google/shaderc), [spirv_cross](https://github.com/KhronosGroup/SPIRV-Cross), [spirv-headers](https://github.com/KhronosGroup/SPIRV-Headers), [spirv-tools](https://github.com/KhronosGroup/SPIRV-Tools), [vma](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator), [volk](https://github.com/zeux/volk),  [Vulkan-Headers](https://github.com/KhronosGroup/Vulkan-Headers) |  | |
-| [**mimalloc**](https://github.com/microsoft/mimalloc)| a general purpose allocator with excellent performance characteristics. |MIT  | static-link|
-|[**SDL**](https://github.com/libsdl-org/SDL)| a **cross-platform** development library designed to provide low level access to audio, keyboard, mouse, joystick, and graphics hardware via OpenGL and Direct3D.|zlib | static-link|
-| [**spdlog**](https://github.com/gabime/spdlog)| a very **fast, header-only/compiled**, C++ logging library.| MIT  |header-only|
-|[**glm**](https://github.com/g-truc/glm)| a header only C++ mathematics library **for graphics software** based on the OpenGL Shading Language (GLSL) specifications. | MIT  |header-only |
-|[**tiny_imageformat**](https://github.com/DeanoC/tiny_imageformat)| a header only library implementing the common image pixel formats that are used in real-time graphics (including Vulkan, D3D, etc.) |MIT  | header-only |
+| [**mimalloc**](https://github.com/microsoft/mimalloc)| a general purpose allocator with excellent performance characteristics. |MIT  | removed override for new/delete, see mimalloc/src/alloc-override.c|
+|[**SDL**](https://github.com/libsdl-org/SDL)| a **cross-platform** development library designed to provide low level access to audio, keyboard, mouse, joystick, and graphics hardware via OpenGL and Direct3D.|zlib | static-link, no custom modification |
+| [**spdlog**](https://github.com/gabime/spdlog)| a very **fast, header-only/compiled**, C++ logging library.| MIT  |header-only, no custom modification|
+|[**glm**](https://github.com/g-truc/glm)| a header only C++ mathematics library **for graphics software** based on the OpenGL Shading Language (GLSL) specifications. | MIT  |header-only, no custom modification |
+|[**tiny_imageformat**](https://github.com/DeanoC/tiny_imageformat)| a header only library implementing the common image pixel formats that are used in real-time graphics (including Vulkan, D3D, etc.) |MIT  | header-only, lots of custom modification |
 |[json](https://github.com/nlohmann/json) | a easy-to-use json parser, **serious tested**, trivial integrated | MIT  | not added yet| 
 |[yaml-cpp](https://github.com/jbeder/yaml-cpp) | a yaml parser |  MIT  | not added yet|
 |[doctest](https://github.com/doctest/doctest) | a new C++ testing framework but is by far the fastest both in compile times (by orders of magnitude) and runtime compared to other feature-rich alternatives. |  MIT  | not added yet| 

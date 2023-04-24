@@ -62,8 +62,8 @@ DefaultMemoryResource::~DefaultMemoryResource() noexcept
     printf("pmr: alloc/free count %u/%u, accum bytes %u\n", pmrAllocCount, pmrFreeCount, pmrBytes);
     printf("new: alloc/free count %u/%u, accum bytes %u\n", totalAllocCount - pmrAllocCount, totalFreeCount - pmrFreeCount, totalBytes - pmrBytes);
 
-    assert(totalAllocCount >= totalValidFreeCount, "memory croupted");
-    assert(pmrAllocCount >= pmrFreeCount, "memory croupted");
+    assert(totalAllocCount >= totalValidFreeCount);
+    assert(pmrAllocCount >= pmrFreeCount);
     if (totalAllocCount != totalValidFreeCount || pmrAllocCount != pmrFreeCount || pmrBytes != _mFreeByPmrBytes.load()) { printf("\033[41mERROR: memory leak! %u pointer(s) \033[0m\n", totalAllocCount - totalFreeCount); }
 
 #endif
