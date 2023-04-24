@@ -20,7 +20,8 @@ endif()
 set(MI_SKIP_COLLECT_ON_EXIT OFF CACHE BOOL "")
 
 add_subdirectory(mimalloc)
-set_target_properties(mimalloc-static PROPERTIES FOLDER "ThirdParty")
+set_target_properties(mimalloc-static PROPERTIES FOLDER "ThirdParty/mimalloc")
+set_target_properties(mimalloc PROPERTIES FOLDER "ThirdParty/mimalloc")
 
 ##############################################################################
 #                                 SDL
@@ -41,8 +42,8 @@ set(SDL2_DISABLE_SDL2MAIN ON CACHE BOOL "")
 set(SDL2_DISABLE_INSTALL ON CACHE BOOL "")
 set(SDL2_DISABLE_UNINSTALL ON CACHE BOOL "")
 add_subdirectory(SDL)
-set_target_properties(SDL2-static PROPERTIES FOLDER "ThirdParty")
-set_target_properties(sdl_headers_copy PROPERTIES FOLDER "ThirdParty")
+set_target_properties(SDL2-static PROPERTIES FOLDER "ThirdParty/SDL")
+set_target_properties(sdl_headers_copy PROPERTIES FOLDER "ThirdParty/SDL")
 
 ##############################################################################
 #                                 spdlog (header-only)
@@ -67,3 +68,17 @@ set_target_properties(glm PROPERTIES FOLDER "ThirdParty")
 ##############################################################################
 add_subdirectory(tiny_imageformat)
 set_target_properties(tiny_imageformat PROPERTIES FOLDER "ThirdParty")
+##############################################################################
+#                                 SPIRV-Cross
+##############################################################################
+set(SPIRV_CROSS_CLI OFF CACHE BOOL "")
+set(SPIRV_CROSS_ENABLE_TESTS OFF CACHE BOOL "")
+add_subdirectory(SPIRV-Cross)
+set_target_properties(spirv-cross-core PROPERTIES FOLDER "ThirdParty/SPIRV-Cross")
+set_target_properties(spirv-cross-glsl PROPERTIES FOLDER "ThirdParty/SPIRV-Cross")
+set_target_properties(spirv-cross-cpp PROPERTIES FOLDER "ThirdParty/SPIRV-Cross")
+set_target_properties(spirv-cross-reflect PROPERTIES FOLDER "ThirdParty/SPIRV-Cross")
+set_target_properties(spirv-cross-msl PROPERTIES FOLDER "ThirdParty/SPIRV-Cross")
+set_target_properties(spirv-cross-hlsl PROPERTIES FOLDER "ThirdParty/SPIRV-Cross")
+set_target_properties(spirv-cross-util PROPERTIES FOLDER "ThirdParty/SPIRV-Cross")
+set_target_properties(spirv-cross-c PROPERTIES FOLDER "ThirdParty/SPIRV-Cross")

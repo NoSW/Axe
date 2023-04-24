@@ -13,6 +13,7 @@ else()
 endif()
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "Runtime")
+target_link_libraries(${TARGET_NAME} PRIVATE spirv-cross-core spirv-cross-glsl spirv-cross-cpp spirv-cross-reflect spirv-cross-msl spirv-cross-hlsl spirv-cross-util spirv-cross-c)
 target_link_libraries(${TARGET_NAME} PUBLIC 00Core)
 target_include_directories(${TARGET_NAME} PUBLIC ${TNIY_IMAGEFORMAT_INCLUDE_DIR})
 
