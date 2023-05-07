@@ -25,7 +25,7 @@ public:
     AXE_PUBLIC void setScissor(u32 x, u32 y, u32 width, u32 height) noexcept override;
     AXE_PUBLIC void setStencilReferenceValue(u32 val) noexcept override;
     AXE_PUBLIC void bindRenderTargets() noexcept override;
-    AXE_PUBLIC void bindDescriptorSet() noexcept override;
+    AXE_PUBLIC void bindDescriptorSet(u32 index, DescriptorSet* pSet) noexcept override;
     AXE_PUBLIC void bindPushConstants() noexcept override;
     AXE_PUBLIC void bindPipeline() noexcept override;
     AXE_PUBLIC void bindIndexBuffer() noexcept override;

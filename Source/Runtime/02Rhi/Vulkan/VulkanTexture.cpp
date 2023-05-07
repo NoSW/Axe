@@ -215,8 +215,7 @@ bool VulkanTexture::_create(const TextureDesc& desc) noexcept
             u32 memoryTypeIndex                 = 0;
             VmaAllocationCreateInfo lazyMemReqs = memReqs;
             lazyMemReqs.usage                   = VMA_MEMORY_USAGE_GPU_LAZILY_ALLOCATED;
-            auto result                         = vmaFindMemoryTypeIndex(_mpDevice->_mpVmaAllocator, U32_MAX, &lazyMemReqs, &memoryTypeIndex);
-            if (VK_SUCCEEDED(result))
+            if (vmaFindMemoryTypeIndex(_mpDevice->_mpVmaAllocator, U32_MAX, &lazyMemReqs, &memoryTypeIndex) == VK_SUCCESS)
             {
                 memReqs = lazyMemReqs;
                 createInfo.usage |= VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
@@ -231,7 +230,7 @@ bool VulkanTexture::_create(const TextureDesc& desc) noexcept
         VmaAllocationInfo allocInfo{};
         if (isSinglePlane)
         {
-            AXE_CHECK(VK_SUCCEEDED(vmaCreateImage(_mpDevice->_mpVmaAllocator, &createInfo, &memReqs, &_mpHandle, &_mpVkAllocation, &allocInfo)));
+            if (VK_FAILED(vmaCreateImage(_mpDevice->_mpVmaAllocator, &createInfo, &memReqs, &_mpHandle, &_mpVkAllocation, &allocInfo))) { return false; }
         }
         else  // Multi-planar formats
         {
@@ -252,7 +251,7 @@ bool VulkanTexture::_create(const TextureDesc& desc) noexcept
             createInfo.pNext = &formatList;
 
             // Create Image
-            AXE_CHECK(VK_SUCCEEDED(vkCreateImage(_mpDevice->handle(), &createInfo, nullptr, &_mpHandle)));
+            if (VK_FAILED(vkCreateImage(_mpDevice->handle(), &createInfo, nullptr, &_mpHandle))) { return false; }
 
             VkMemoryRequirements vkMemReq{};
             std::array<u64, MAX_PLANE_COUNT> planesOffsets{};
@@ -264,7 +263,7 @@ bool VulkanTexture::_create(const TextureDesc& desc) noexcept
             VkPhysicalDeviceMemoryProperties memProps{};
             vkGetPhysicalDeviceMemoryProperties(_mpDevice->_mpAdapter->handle(), &memProps);
             memAllocInfo.memoryTypeIndex = get_memory_type(vkMemReq.memoryTypeBits, memProps, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-            AXE_CHECK(VK_SUCCEEDED(vkAllocateMemory(_mpDevice->handle(), &memAllocInfo, nullptr, &_mpVkDeviceMemory)));
+            if (VK_FAILED(vkAllocateMemory(_mpDevice->handle(), &memAllocInfo, nullptr, &_mpVkDeviceMemory))) { return false; }
 
             // Bind planes to their memories
             VkBindImageMemoryInfo bindImagesMemoryInfo[MAX_PLANE_COUNT];
@@ -284,7 +283,7 @@ bool VulkanTexture::_create(const TextureDesc& desc) noexcept
                 bindImageMemoryInfo.memoryOffset                     = planesOffsets[i];
             }
 
-            AXE_CHECK(VK_SUCCEEDED(vkBindImageMemory2(_mpDevice->handle(), numOfPlanes, bindImagesMemoryInfo)));
+            if (VK_FAILED(vkBindImageMemory2(_mpDevice->handle(), numOfPlanes, bindImagesMemoryInfo))) { return false; }
         }
 
     }  // if (_mpHandle == VK_NULL_HANDLE)
@@ -328,12 +327,12 @@ bool VulkanTexture::_create(const TextureDesc& desc) noexcept
 
     if (descriptors & DESCRIPTOR_TYPE_TEXTURE)
     {
-        AXE_CHECK(VK_SUCCEEDED((vkCreateImageView(_mpDevice->handle(), &srvDesc, nullptr, &_mpVkSRVDescriptor))));
+        if (VK_FAILED(vkCreateImageView(_mpDevice->handle(), &srvDesc, nullptr, &_mpVkSRVDescriptor))) { return false; }
     }
     if ((TinyImageFormat_HasStencil(desc.mFormat)) && (descriptors & DESCRIPTOR_TYPE_TEXTURE))
     {
         srvDesc.subresourceRange.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT;
-        AXE_CHECK(VK_SUCCEEDED((vkCreateImageView(_mpDevice->handle(), &srvDesc, nullptr, &_mpVkSRVStencilDescriptor))));
+        if (VK_FAILED(vkCreateImageView(_mpDevice->handle(), &srvDesc, nullptr, &_mpVkSRVStencilDescriptor))) { return false; }
     }
     if (descriptors & DESCRIPTOR_TYPE_RW_TEXTURE)
     {
@@ -348,7 +347,7 @@ bool VulkanTexture::_create(const TextureDesc& desc) noexcept
         for (u32 i = 0; i < desc.mMipLevels; ++i)
         {
             uavDesc.subresourceRange.baseMipLevel = i;
-            AXE_CHECK(VK_SUCCEEDED(vkCreateImageView(_mpDevice->handle(), &uavDesc, nullptr, &_mpVkUAVDescriptors[i])));
+            if (VK_FAILED(vkCreateImageView(_mpDevice->handle(), &uavDesc, nullptr, &_mpVkUAVDescriptors[i]))) { return false; }
         }
     }
 

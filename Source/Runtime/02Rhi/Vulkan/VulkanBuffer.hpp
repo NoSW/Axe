@@ -9,10 +9,12 @@ namespace axe::rhi
 {
 class VulkanDevice;
 class VulkanCmd;
+class VulkanDescriptorSet;
 class VulkanBuffer : public Buffer
 {
     friend class VulkanDevice;
     friend class VulkanCmd;
+    friend class VulkanDescriptorSet;
     AXE_NON_COPYABLE(VulkanBuffer);
     VulkanBuffer(VulkanDevice* device) noexcept : _mpDevice(device) {}
     bool _create(const BufferDesc&) noexcept;

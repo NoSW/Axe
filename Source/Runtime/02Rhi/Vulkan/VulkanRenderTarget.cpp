@@ -109,7 +109,7 @@ bool VulkanRenderTarget::_create(const RenderTargetDesc& desc) noexcept
         },
     };
 
-    AXE_CHECK(VK_SUCCEEDED(vkCreateImageView(_mpDevice->handle(), &rtvCreateInfo, nullptr, &_mpVkDescriptor)));
+    if (VK_FAILED(vkCreateImageView(_mpDevice->handle(), &rtvCreateInfo, nullptr, &_mpVkDescriptor))) { return false; }
 
     const bool isTexture = desc.mDescriptors & DESCRIPTOR_TYPE_TEXTURE || desc.mDescriptors & DESCRIPTOR_TYPE_RW_TEXTURE;
     for (u32 i = 0; i < _mMipLevels; ++i)
@@ -122,12 +122,12 @@ bool VulkanRenderTarget::_create(const RenderTargetDesc& desc) noexcept
             {
                 rtvCreateInfo.subresourceRange.layerCount     = 1;
                 rtvCreateInfo.subresourceRange.baseArrayLayer = j;
-                AXE_CHECK(VK_SUCCEEDED(vkCreateImageView(_mpDevice->handle(), &rtvCreateInfo, nullptr, &pImageView)));
+                if (VK_FAILED(vkCreateImageView(_mpDevice->handle(), &rtvCreateInfo, nullptr, &pImageView))) { return false; }
             }
         }
         else
         {
-            AXE_CHECK(VK_SUCCEEDED(vkCreateImageView(_mpDevice->handle(), &rtvCreateInfo, nullptr, &pImageView)));
+            if (VK_FAILED(vkCreateImageView(_mpDevice->handle(), &rtvCreateInfo, nullptr, &pImageView))) { return false; }
         }
         _mpVkSliceDescriptors.push_back(pImageView);
     }
@@ -156,11 +156,7 @@ bool VulkanRenderTarget::_destroy() noexcept
 {
     AXE_ASSERT(_mpDevice);
     auto* pTexture = (Texture*)_mpTexture;
-    if (!_mpDevice->destroyTexture(pTexture))
-    {
-        AXE_ERROR("Failed to destroy texture");
-        return false;
-    }
+    if (AXE_FAILED(_mpDevice->destroyTexture(pTexture))) { return false; }
     vkDestroyImageView(_mpDevice->handle(), _mpVkDescriptor, nullptr);
     _mpVkDescriptor = VK_NULL_HANDLE;
 

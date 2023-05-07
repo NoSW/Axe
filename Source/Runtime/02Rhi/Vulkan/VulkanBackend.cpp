@@ -14,6 +14,8 @@
 #include "00Core/Memory/Memory.hpp"
 #include "00Core/OS/OS.hpp"
 
+#include "01Resource/Shader/Shader.hpp"
+
 namespace axe::rhi
 {
 
@@ -138,7 +140,7 @@ VulkanBackend::VulkanBackend(BackendDesc& desc) noexcept
     // TODO: using device table
 #else
     // Attempt to load Vulkan loader from the system
-    AXE_CHECK(VK_SUCCEEDED(volkInitialize()))
+    VK_SUCCEEDED(volkInitialize());
 #endif
 
     u32 layerCount = 0;
@@ -179,8 +181,7 @@ VulkanBackend::VulkanBackend(BackendDesc& desc) noexcept
         .enabledExtensionCount   = (u32)readyExts.size(),
         .ppEnabledExtensionNames = readyExts.data()};
 
-    auto result = vkCreateInstance(&createInfo, nullptr, &_mpHandle);
-    AXE_CHECK(VK_SUCCEEDED(result));
+    VK_SUCCEEDED(vkCreateInstance(&createInfo, nullptr, &_mpHandle));
 
     // load all required Vulkan entrypoints, including all extensions
     volkLoadInstanceOnly(_mpHandle);
@@ -200,17 +201,15 @@ VulkanBackend::VulkanBackend(BackendDesc& desc) noexcept
                        VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT,
         .pfnUserCallback = debug_callback,
         .pUserData       = nullptr};
-    AXE_CHECK(VK_SUCCEEDED(vkCreateDebugUtilsMessengerEXT(_mpHandle, &debugUtilsCreateInfo, nullptr, &mpVkDebugUtilsMessenger)));
+    VK_SUCCEEDED(vkCreateDebugUtilsMessengerEXT(_mpHandle, &debugUtilsCreateInfo, nullptr, &mpVkDebugUtilsMessenger));
 #endif
 
     // collect available gpus
     u32 gpuCount = 0;
-    result       = vkEnumeratePhysicalDevices(_mpHandle, &gpuCount, nullptr);
-    AXE_ASSERT(VK_SUCCEEDED(result));
+    VK_SUCCEEDED(vkEnumeratePhysicalDevices(_mpHandle, &gpuCount, nullptr));
     AXE_ASSERT(gpuCount > 0, "No detected gpu");
     std::pmr::vector<VkPhysicalDevice> gpus(gpuCount, &arena);
-    result = vkEnumeratePhysicalDevices(_mpHandle, &gpuCount, gpus.data());
-    AXE_ASSERT(VK_SUCCEEDED(result));
+    VK_SUCCEEDED(vkEnumeratePhysicalDevices(_mpHandle, &gpuCount, gpus.data()));
 
     gpuCount = std::min(gpuCount, (u32)MAX_NUM_ADAPTER_PER_BACKEND);
     for (u32 i = 0; i < gpuCount; ++i)

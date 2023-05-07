@@ -13,7 +13,7 @@ namespace axe::rhi
 
 enum
 {
-    MAX_DESCRIPTOR_POOL_SIZE_ARRAY_COUNT = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT + 1,
+    MAX_DESCRIPTOR_POOL_SIZE_ARRAY_COUNT = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT + 1,  // maximum count of descriptor pool for each set
     MAX_PLANE_COUNT                      = 3
 };
 
@@ -42,6 +42,7 @@ VkAccessFlags           resource_state_to_access_flags(ResourceState state) noex
 VkImageLayout           resource_state_to_image_layout(ResourceState usage) noexcept;
 VkBufferUsageFlags      to_buffer_usage(DescriptorType usage, bool texel) noexcept;
 VkImageUsageFlags       to_image_usage(DescriptorType usage) noexcept;
+VkPipelineBindPoint     to_pipeline_bind_point(PipelineType type) noexcept;
 
 // enum to enum
 VkFilter                to_vk_enum(FilterType) noexcept;

@@ -27,6 +27,10 @@ class HelloTriangle final : public app::App
 
     bool draw() override
     {
+        // int* p = new int;
+        int s;
+        // AXE_INFO("{:#018x} {:#018x} {:#018X}", (u64)p, (u64)&s, (u64)(void*)foo);
+
         constexpr int v6 = math::max(3, 4);
         // auto x  = memory::make_owner<float>((float)3.0);
         // auto ob = memory::make_observer(x);

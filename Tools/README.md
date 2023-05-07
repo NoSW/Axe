@@ -1,9 +1,5 @@
 # Tools
 
-## Bin
-
-Various binary offline command line tools under different operating systems(Windows, Linux)
-
 ### CXX
 - clang-tools, developed by LLVM, [[github](https://github.com/llvm/llvm-project)]
     - clang-format, a cpp code style formatter developed by LLVM, as an additional tool of clang compiler. [[Clang-Format Style Options(v14.0.0)](https://releases.llvm.org/14.0.0/tools/clang/docs/ClangFormatStyleOptions.html#:~:text=clang%2Dformat%20supports%20two%20ways,file%20in%20the%20project%20directory.)]

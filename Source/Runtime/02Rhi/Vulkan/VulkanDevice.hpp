@@ -16,6 +16,8 @@
 #include "02Rhi/Vulkan/VulkanRenderTarget.hpp"
 #include "02Rhi/Vulkan/VulkanSwapChain.hpp"
 #include "02Rhi/Vulkan/VulkanShader.hpp"
+#include "02Rhi/Vulkan/VulkanRootSignature.hpp"
+#include "02Rhi/Vulkan/VulkanDescriptorSet.hpp"
 
 #include "00Core/Memory/Memory.hpp"
 
@@ -55,6 +57,7 @@ public:
     friend class VulkanSwapChain;
     friend class VulkanShader;
     friend class VulkanRootSignature;
+    friend class VulkanDescriptorSet;
 
 private:
     void _collectQueueInfo() noexcept;
@@ -72,6 +75,12 @@ public:
     void requestQueueIndex(QueueType quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) noexcept;
 
     auto handle() noexcept { return _mpHandle; }
+
+    VkSampler getDefaultSamplerHandle() noexcept { return ((VulkanSampler*)_mNullDescriptors.mpDefaultSampler)->handle(); }
+    VkBuffer getDefaultBufferSRVHandle() noexcept { return ((VulkanBuffer*)_mNullDescriptors.mpDefaultBufferSRV)->handle(); }
+    VkBuffer getDefaultBufferUAVHandle() noexcept { return ((VulkanBuffer*)_mNullDescriptors.mpDefaultBufferUAV)->handle(); }
+    VkImage getDefaultTextureSRVHandle(TextureDimension dim) noexcept { return ((VulkanTexture*)_mNullDescriptors.mpDefaultTextureSRV[(u8)dim])->handle(); }
+    VkImage getDefaultTextureUAVHandle(TextureDimension dim) noexcept { return ((VulkanTexture*)_mNullDescriptors.mpDefaultTextureUAV[(u8)dim])->handle(); }
 
     void initial_transition(Texture* pTexture, ResourceState startState) noexcept;
 
@@ -124,6 +133,8 @@ public:
     AXE_PUBLIC [[nodiscard]] Buffer* createBuffer(BufferDesc& desc) noexcept override { return (Buffer*)_createHelper<VulkanBuffer>(desc); }
     AXE_PUBLIC [[nodiscard]] RenderTarget* createRenderTarget(RenderTargetDesc& desc) noexcept override { return (RenderTarget*)_createHelper<VulkanRenderTarget>(desc); }
     AXE_PUBLIC [[nodiscard]] Shader* createShader(ShaderDesc& desc) noexcept override { return (Shader*)_createHelper<VulkanShader>(desc); }
+    AXE_PUBLIC [[nodiscard]] RootSignature* createRootSignature(RootSignatureDesc& desc) noexcept override { return (RootSignature*)_createHelper<VulkanRootSignature>(desc); }
+    AXE_PUBLIC [[nodiscard]] DescriptorSet* createDescriptorSet(DescriptorSetDesc& desc) noexcept override { return (DescriptorSet*)_createHelper<VulkanDescriptorSet>(desc); }
     AXE_PUBLIC bool destroySemaphore(Semaphore*& p) noexcept override { return _destroyHelper<VulkanSemaphore>(p); }
     AXE_PUBLIC bool destroyFence(Fence*& p) noexcept override { return _destroyHelper<VulkanFence>(p); }
     AXE_PUBLIC bool releaseQueue(Queue*& p) noexcept override { return _destroyHelper<VulkanQueue>(p); }
@@ -135,6 +146,8 @@ public:
     AXE_PUBLIC bool destroyBuffer(Buffer*& p) noexcept override { return _destroyHelper<VulkanBuffer>(p); }
     AXE_PUBLIC bool destroyRenderTarget(RenderTarget*& p) noexcept override { return _destroyHelper<VulkanRenderTarget>(p); }
     AXE_PUBLIC bool destroyShader(Shader*& p) noexcept override { return _destroyHelper<VulkanShader>(p); }
+    AXE_PUBLIC bool destroyRootSignature(RootSignature*& p) noexcept override { return _destroyHelper<VulkanRootSignature>(p); }
+    AXE_PUBLIC bool destroyDescriptorSet(DescriptorSet*& p) noexcept override { return _destroyHelper<VulkanDescriptorSet>(p); }
 
 public:
     constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_DEVICE; }
@@ -155,7 +168,7 @@ private:
 
     // default resource
     VkDescriptorPool _mpEmptyDescriptorPool           = VK_NULL_HANDLE;
-    VkDescriptorSetLayout _mpEmptyDescriptorSetLayout = VK_NULL_HANDLE;
+    VkDescriptorSetLayout _mpEmptyDescriptorSetLayout = VK_NULL_HANDLE;  // TODO
     VkDescriptorSet _mpEmptyDescriptorSet             = VK_NULL_HANDLE;
     NullDescriptors _mNullDescriptors{};
 

@@ -9,11 +9,13 @@ namespace axe::rhi
 class VulkanDevice;
 class VulkanRenderTarget;
 class VulkanCmd;
+class VulkanDescriptorSet;
 class VulkanTexture final : public Texture
 {
     friend class VulkanDevice;
     friend class VulkanRenderTarget;
     friend class VulkanCmd;
+    friend class VulkanDescriptorSet;
     AXE_NON_COPYABLE(VulkanTexture);
     VulkanTexture(VulkanDevice* device) noexcept : _mpDevice(device) {}
     bool _create(const TextureDesc&) noexcept;

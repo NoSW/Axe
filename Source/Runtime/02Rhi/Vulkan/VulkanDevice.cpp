@@ -217,9 +217,7 @@ bool VulkanDevice::_initVMA() noexcept
     };
     if constexpr (ALREADY_PROMPTED_TO_VK_VERSION_1_2_OR_HIGHER) { vmaCreateInfo.flags |= VMA_ALLOCATOR_CREATE_KHR_DEDICATED_ALLOCATION_BIT; }
     if constexpr (ALREADY_PROMPTED_TO_VK_VERSION_1_2_OR_HIGHER) { vmaCreateInfo.flags |= VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT; }
-    bool succ = VK_SUCCEEDED(vmaCreateAllocator(&vmaCreateInfo, &_mpVmaAllocator));
-    AXE_CHECK(succ);
-    return succ;
+    return VK_SUCCEEDED(vmaCreateAllocator(&vmaCreateInfo, &_mpVmaAllocator));
 }
 
 void VulkanDevice::_createDefaultResource() noexcept
@@ -336,10 +334,48 @@ void VulkanDevice::_createDefaultResource() noexcept
             this->initial_transition(_mNullDescriptors.mpDefaultTextureUAV[dim], RESOURCE_STATE_UNORDERED_ACCESS);
         }
     }
+
+    // create an empty descriptor set for deal with such case: set=0, set=2 is used, but not set=1. we will use a empty descriptor set for it.
+    {
+        VkDescriptorPoolSize descriptorPoolSizes[1] = {{VK_DESCRIPTOR_TYPE_SAMPLER, 1}};  // we create a minimal one since vulkan spec not allow to creat true empty descriptor pool
+        VkDescriptorPoolCreateInfo poolCreateInfo{
+            .sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+            .pNext         = NULL,
+            .flags         = 0,
+            .maxSets       = 1,
+            .poolSizeCount = 1,
+            .pPoolSizes    = descriptorPoolSizes};
+        if (VK_FAILED(vkCreateDescriptorPool(_mpHandle, &poolCreateInfo, &g_VkAllocationCallbacks, &_mpEmptyDescriptorPool))) { return; }
+
+        VkDescriptorSetLayoutCreateInfo layoutCreateInfo = {
+            .sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+            .pNext        = nullptr,
+            .flags        = 0,
+            .bindingCount = 0,
+            .pBindings    = nullptr};
+        if (VK_FAILED(vkCreateDescriptorSetLayout(_mpHandle, &layoutCreateInfo, &g_VkAllocationCallbacks, &_mpEmptyDescriptorSetLayout))) { return; }
+
+        VkDescriptorSetAllocateInfo setAllocInfo{
+            .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+            .pNext              = nullptr,
+            .descriptorPool     = _mpEmptyDescriptorPool,
+            .descriptorSetCount = 1,
+            .pSetLayouts        = &_mpEmptyDescriptorSetLayout};
+        if (VK_FAILED(vkAllocateDescriptorSets(_mpHandle, &setAllocInfo, &_mpEmptyDescriptorSet))) { return; }
+    }
 }
 
 void VulkanDevice::_destroyDefaultResource() noexcept
 {
+    AXE_ASSERT(_mpHandle);
+    AXE_ASSERT(_mpEmptyDescriptorSet);
+    AXE_ASSERT(_mpEmptyDescriptorSetLayout);
+    AXE_ASSERT(_mpEmptyDescriptorPool);
+
+    // _mpEmptyDescriptorSet will be destroyed by vkDestroyDescriptorPool automatically
+    vkDestroyDescriptorSetLayout(_mpHandle, _mpEmptyDescriptorSetLayout, &g_VkAllocationCallbacks);
+    vkDestroyDescriptorPool(_mpHandle, _mpEmptyDescriptorPool, &g_VkAllocationCallbacks);
+
     for (Texture* pTex : _mNullDescriptors.mpDefaultTextureSRV) { destroyTexture(pTex); }
     for (Texture* pTex : _mNullDescriptors.mpDefaultTextureUAV) { destroyTexture(pTex); }
     destroyBuffer(_mNullDescriptors.mpDefaultBufferSRV);

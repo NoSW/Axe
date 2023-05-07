@@ -37,6 +37,10 @@ private:
 
     rhi::Semaphore* _mpImageAcquiredSemaphore = nullptr;
     rhi::SwapChain* _mpSwapChain              = nullptr;
+    rhi::RenderTarget* _mpDepthBuffer         = nullptr;
+
+    rhi::Shader* _mpBasicShader               = nullptr;
+    rhi::Shader* _mpSkyboxShader              = nullptr;
 };
 
 }  // namespace axe::pipeline

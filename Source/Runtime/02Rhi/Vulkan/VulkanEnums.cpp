@@ -241,6 +241,17 @@ VkImageUsageFlags to_image_usage(DescriptorType usage) noexcept
     }
 }
 
+VkPipelineBindPoint to_pipeline_bind_point(PipelineType type) noexcept
+{
+    switch (type)
+    {
+        case PIPELINE_TYPE_COMPUTE: return VK_PIPELINE_BIND_POINT_COMPUTE;
+        case PIPELINE_TYPE_GRAPHICS: return VK_PIPELINE_BIND_POINT_GRAPHICS;
+        case PIPELINE_TYPE_RAYTRACING: return VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR;
+        default: AXE_ASSERT(false, "Invalid Type"); return VK_PIPELINE_BIND_POINT_MAX_ENUM;
+    }
+}
+
 VkFilter to_vk_enum(FilterType type) noexcept
 {
     switch (type)

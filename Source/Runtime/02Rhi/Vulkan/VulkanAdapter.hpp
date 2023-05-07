@@ -30,6 +30,8 @@ public:
     bool isSupportWrite(TinyImageFormat format) const noexcept { return _mGPUCapBits.mCanShaderWriteTo[format]; }
     bool isSupportRenderTargetWrite(TinyImageFormat format) const noexcept { return _mGPUCapBits.mCanRenderTargetWriteTo[format]; }
     bool isSupportQueue(QueueType) noexcept;
+    u32 maxUniformBufferRange() const noexcept { return _mpProperties.properties.limits.maxUniformBufferRange; }
+    u32 maxStorageBufferRange() const noexcept { return _mpProperties.properties.limits.maxStorageBufferRange; }
 
     static bool isBetterGpu(const VulkanAdapter& a, const VulkanAdapter& b) noexcept;
 

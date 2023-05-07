@@ -22,6 +22,7 @@ see https://stackoverflow.com/questions/787533/is-pragma-once-a-safe-include-gua
 */
 #pragma once
 #include <chrono>
+#include <limits>
 #include <memory_resource>
 
 // DISCUSSION: constexpr v.s. inline constexpr, see https://quuxplusone.github.io/blog/2022/07/08/inline-constexpr/
@@ -31,27 +32,31 @@ see https://stackoverflow.com/questions/787533/is-pragma-once-a-safe-include-gua
 namespace axe
 {
 
-using i8                     = signed char;
-using i16                    = short;
-using i32                    = int;
-using i64                    = long long;
-using u8                     = unsigned char;
-using u16                    = unsigned short;
-using u32                    = unsigned int;
-using u64                    = unsigned long long;
+using i8                           = std::int8_t;
+using i16                          = std::int16_t;
+using i32                          = std::int32_t;
+using i64                          = std::int64_t;
+using u8                           = std::uint8_t;
+using u16                          = std::uint16_t;
+using u32                          = std::uint32_t;
+using u64                          = std::uint64_t;
 
-inline constexpr i8 I8_MIN   = (-127 - 1);
-inline constexpr i8 I8_MAX   = 127;
-inline constexpr i16 I16_MIN = (-32767 - 1);
-inline constexpr i16 I16_MAX = 32767;
-inline constexpr i32 I32_MIN = (-2147483647 - 1);
-inline constexpr i32 I32_MAX = 2147483647;
-inline constexpr i64 I64_MIN = (-9223372036854775807ll - 1);
-inline constexpr i64 I64_MAX = 9223372036854775807ll;
-inline constexpr u8 U8_MAX   = 0xffu;
-inline constexpr u16 U16_MAX = 0xffffu;
-inline constexpr u32 U32_MAX = 0xffffffffu;
-inline constexpr u64 U64_MAX = 0xffffffffffffffffull;
+inline constexpr i8 I8_MIN         = std::numeric_limits<i8>::min();
+inline constexpr i8 I8_MAX         = std::numeric_limits<i8>::max();
+inline constexpr i16 I16_MIN       = std::numeric_limits<i16>::min();
+inline constexpr i16 I16_MAX       = std::numeric_limits<i16>::max();
+inline constexpr i32 I32_MIN       = std::numeric_limits<i32>::min();
+inline constexpr i32 I32_MAX       = std::numeric_limits<i32>::max();
+inline constexpr i64 I64_MIN       = std::numeric_limits<i64>::min();
+inline constexpr i64 I64_MAX       = std::numeric_limits<i64>::max();
+inline constexpr u8 U8_MAX         = std::numeric_limits<u8>::max();
+inline constexpr u16 U16_MAX       = std::numeric_limits<u16>::max();
+inline constexpr u32 U32_MAX       = std::numeric_limits<u32>::max();
+inline constexpr u64 U64_MAX       = std::numeric_limits<u64>::max();
+inline constexpr float FLOAT_MIN   = std::numeric_limits<float>::min();
+inline constexpr float FLOAT_MAX   = std::numeric_limits<float>::max();
+inline constexpr double DOUBLE_MIN = std::numeric_limits<double>::min();
+inline constexpr double DOUBLE_MAX = std::numeric_limits<double>::max();
 
 }  // namespace axe
 
@@ -88,6 +93,9 @@ inline constexpr u64 U64_MAX = 0xffffffffffffffffull;
 // used for comment on an active/inactive piece of code
 #define AXE_(enable, comment) enable
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+//                             un-windows
+//////////////////////////////////////////////////////////////////////////////////////////////
 #undef max
 #undef min
 
@@ -139,7 +147,7 @@ inline constexpr u64 U64_MAX = 0xffffffffffffffffull;
 #error "unsupported platform"
 #endif
 
-#if AXE_BUILD_DLL
+#if AXE_(0, "not used yet")
 #if _MSC_VER
 #define AXE_API_EXPORT __declspec(dllexport)
 #define AXE_API_IMPORT __declspec(dllimport)

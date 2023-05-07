@@ -3,6 +3,7 @@
 #include "02Rhi/Vulkan/VulkanQueue.hpp"
 #include "02Rhi/Vulkan/VulkanTexture.hpp"
 #include "02Rhi/Vulkan/VulkanBuffer.hpp"
+#include "02Rhi/Vulkan/VulkanDescriptorSet.hpp"
 
 #include "02Rhi/Vulkan/VulkanDevice.hpp"
 
@@ -88,7 +89,32 @@ void VulkanCmd::setScissor(u32 x, u32 y, u32 width, u32 height) noexcept
 
 void VulkanCmd::setStencilReferenceValue(u32 val) noexcept {}
 
-void VulkanCmd::bindDescriptorSet() noexcept {}
+void VulkanCmd::bindDescriptorSet(u32 index, DescriptorSet* pSet) noexcept
+{
+    auto* pVulkanDescriptorSet    = (VulkanDescriptorSet*)pSet;
+    auto* pVulkanRootSignature    = pVulkanDescriptorSet->_mpRootSignature;
+    VkPipelineBindPoint bindPoint = to_pipeline_bind_point(pVulkanDescriptorSet->_mpRootSignature->_mPipelineType);
+
+    AXE_ASSERT(index < pVulkanDescriptorSet->_mpHandles.size());
+    if (_mpBoundPipelineLayout != pVulkanDescriptorSet->_mpRootSignature->_mpPipelineLayout)
+    {
+        _mpBoundPipelineLayout = pVulkanDescriptorSet->_mpRootSignature->_mpPipelineLayout;
+        for (u32 i = 0; i < DESCRIPTOR_UPDATE_FREQ_COUNT; ++i)
+        {
+            if (pVulkanDescriptorSet->_mpRootSignature->_mpDescriptorSetLayouts[i] == VK_NULL_HANDLE)
+            {
+                vkCmdBindDescriptorSets(_mpHandle, bindPoint, _mpBoundPipelineLayout, i, 1, &_mpDevice->_mpEmptyDescriptorSet, 0, nullptr);
+            }
+        }
+    }
+    constexpr u32 VK_MAX_ROOT_DESCRIPTORS = 32;
+    std::array<u32, VK_MAX_ROOT_DESCRIPTORS> offsets{};  // ?
+
+    vkCmdBindDescriptorSets(
+        _mpHandle, bindPoint, _mpBoundPipelineLayout,
+        pVulkanDescriptorSet->_mUpdateFrequency, 1, &pVulkanDescriptorSet->_mpHandles[index],
+        pVulkanDescriptorSet->_mDynamicUniformData.size(), offsets.data());
+}
 
 void VulkanCmd::bindPushConstants() noexcept {}
 

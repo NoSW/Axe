@@ -498,7 +498,7 @@ inline constexpr ShaderStageFlag get_shader_stage(std::string_view ext)
 struct VertexInput
 {
     // resource name
-    std::string_view mName;
+    std::pmr::string mName;
 
     // The size of the attribute
     u32 mSize;
@@ -512,7 +512,7 @@ struct ShaderResource
     DescriptorType mType;
     u32 mSet;
     u32 mBindingLocation;
-    u32 mSize;
+    u32 mSize;  // element count of array
 
     bool operator==(const ShaderResource& b) const
     {
@@ -541,7 +541,7 @@ struct ShaderReflection
     std::pmr::vector<VertexInput> mVertexInputs;
     std::pmr::vector<ShaderResource> mShaderResources;
     std::pmr::vector<ShaderVariable> mShaderVariables;
-    std::string_view mEntryPoint_VkOnly;
+    std::pmr::string mEntryPoint_VkOnly;
     ShaderStageFlag mShaderStage;
     u32 mNumThreadsPerGroup[3];  // for compute shader
     u32 mNumControlPoint;        // for tessellation
@@ -551,8 +551,8 @@ struct PipelineReflection
 {
     ShaderStageFlag mShaderStages;
     std::array<std::unique_ptr<ShaderReflection>, SHADER_STAGE_FLAG_COUNT> mShaderReflections{};
-    std::pmr::vector<ShaderResource> mShaderResources;
-    std::pmr::vector<ShaderVariable> mShaderVariables;
+    std::pmr::vector<ShaderResource> mShaderResources;  // unique shader resources, (we need indexing here, so use vector just fine)
+    std::pmr::vector<ShaderVariable> mShaderVariables;  // unique shader variables
 };
 
 }  // namespace axe::rhi

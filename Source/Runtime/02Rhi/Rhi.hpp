@@ -54,30 +54,34 @@ public:
 class Device : public RhiObjectBase
 {
 public:
-    virtual ~Device() noexcept                                                         = default;
-    [[nodiscard]] virtual Semaphore* createSemaphore(SemaphoreDesc&) noexcept          = 0;
-    [[nodiscard]] virtual Fence* createFence(FenceDesc&) noexcept                      = 0;
-    [[nodiscard]] virtual Queue* requestQueue(QueueDesc&) noexcept                     = 0;
-    [[nodiscard]] virtual SwapChain* createSwapChain(SwapChainDesc&) noexcept          = 0;
-    [[nodiscard]] virtual CmdPool* createCmdPool(CmdPoolDesc&) noexcept                = 0;
-    [[nodiscard]] virtual Cmd* createCmd(CmdDesc&) noexcept                            = 0;
-    [[nodiscard]] virtual Sampler* createSampler(SamplerDesc&) noexcept                = 0;
-    [[nodiscard]] virtual Texture* createTexture(TextureDesc&) noexcept                = 0;
-    [[nodiscard]] virtual Buffer* createBuffer(BufferDesc&) noexcept                   = 0;
-    [[nodiscard]] virtual RenderTarget* createRenderTarget(RenderTargetDesc&) noexcept = 0;
-    [[nodiscard]] virtual Shader* createShader(ShaderDesc&) noexcept                   = 0;
+    virtual ~Device() noexcept                                                            = default;
+    [[nodiscard]] virtual Semaphore* createSemaphore(SemaphoreDesc&) noexcept             = 0;
+    [[nodiscard]] virtual Fence* createFence(FenceDesc&) noexcept                         = 0;
+    [[nodiscard]] virtual Queue* requestQueue(QueueDesc&) noexcept                        = 0;
+    [[nodiscard]] virtual SwapChain* createSwapChain(SwapChainDesc&) noexcept             = 0;
+    [[nodiscard]] virtual CmdPool* createCmdPool(CmdPoolDesc&) noexcept                   = 0;
+    [[nodiscard]] virtual Cmd* createCmd(CmdDesc&) noexcept                               = 0;
+    [[nodiscard]] virtual Sampler* createSampler(SamplerDesc&) noexcept                   = 0;
+    [[nodiscard]] virtual Texture* createTexture(TextureDesc&) noexcept                   = 0;
+    [[nodiscard]] virtual Buffer* createBuffer(BufferDesc&) noexcept                      = 0;
+    [[nodiscard]] virtual RenderTarget* createRenderTarget(RenderTargetDesc&) noexcept    = 0;
+    [[nodiscard]] virtual Shader* createShader(ShaderDesc&) noexcept                      = 0;
+    [[nodiscard]] virtual RootSignature* createRootSignature(RootSignatureDesc&) noexcept = 0;
+    [[nodiscard]] virtual DescriptorSet* createDescriptorSet(DescriptorSetDesc&) noexcept = 0;
 
-    virtual bool destroySemaphore(Semaphore*&) noexcept                                = 0;
-    virtual bool destroyFence(Fence*&) noexcept                                        = 0;
-    virtual bool releaseQueue(Queue*&) noexcept                                        = 0;
-    virtual bool destroySwapChain(SwapChain*&) noexcept                                = 0;
-    virtual bool destroyCmdPool(CmdPool*&) noexcept                                    = 0;  // will destroy all cmds allocated from it automatically
-    virtual bool destroyCmd(Cmd*&) noexcept                                            = 0;  // destroy the cmd individually
-    virtual bool destroySampler(Sampler*&) noexcept                                    = 0;
-    virtual bool destroyTexture(Texture*&) noexcept                                    = 0;
-    virtual bool destroyBuffer(Buffer*&) noexcept                                      = 0;
-    virtual bool destroyRenderTarget(RenderTarget*&) noexcept                          = 0;
-    virtual bool destroyShader(Shader*&) noexcept                                      = 0;
+    virtual bool destroySemaphore(Semaphore*&) noexcept                                   = 0;
+    virtual bool destroyFence(Fence*&) noexcept                                           = 0;
+    virtual bool releaseQueue(Queue*&) noexcept                                           = 0;
+    virtual bool destroySwapChain(SwapChain*&) noexcept                                   = 0;
+    virtual bool destroyCmdPool(CmdPool*&) noexcept                                       = 0;  // will destroy all cmds allocated from it automatically
+    virtual bool destroyCmd(Cmd*&) noexcept                                               = 0;  // destroy the cmd individually
+    virtual bool destroySampler(Sampler*&) noexcept                                       = 0;
+    virtual bool destroyTexture(Texture*&) noexcept                                       = 0;
+    virtual bool destroyBuffer(Buffer*&) noexcept                                         = 0;
+    virtual bool destroyRenderTarget(RenderTarget*&) noexcept                             = 0;
+    virtual bool destroyShader(Shader*&) noexcept                                         = 0;
+    virtual bool destroyRootSignature(RootSignature*&) noexcept                           = 0;
+    virtual bool destroyDescriptorSet(DescriptorSet*&) noexcept                           = 0;
 };
 
 ///////////////////////////////////////////////
@@ -146,7 +150,7 @@ public:
     virtual void setScissor(u32 x, u32 y, u32 width, u32 height) noexcept                                                                     = 0;
     virtual void setStencilReferenceValue(u32 val) noexcept                                                                                   = 0;
     virtual void bindRenderTargets() noexcept                                                                                                 = 0;
-    virtual void bindDescriptorSet() noexcept                                                                                                 = 0;
+    virtual void bindDescriptorSet(u32 index, DescriptorSet* pSet) noexcept                                                                   = 0;
     virtual void bindPushConstants() noexcept                                                                                                 = 0;
     virtual void bindPipeline() noexcept                                                                                                      = 0;
     virtual void bindIndexBuffer() noexcept                                                                                                   = 0;
@@ -226,5 +230,15 @@ public:
 };
 
 bool create_pipeline_reflection(std::pmr::vector<ShaderReflection>& shaderRefls, PipelineReflection& outPipelineRefl) noexcept;
+
+///////////////////////////////////////////////
+//                    DescriptorSet
+///////////////////////////////////////////////
+class DescriptorSet : public RhiObjectBase
+{
+public:
+    virtual ~DescriptorSet() noexcept                                                 = default;
+    virtual void update(u32 index, std::pmr::vector<DescriptorData*> params) noexcept = 0;
+};
 
 }  // namespace axe::rhi

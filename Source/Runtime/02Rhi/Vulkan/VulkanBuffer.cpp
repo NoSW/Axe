@@ -48,7 +48,10 @@ bool VulkanBuffer::_create(const BufferDesc& desc) noexcept
     };
 
     VmaAllocationInfo allocInfo{};
-    AXE_CHECK(VK_SUCCEEDED(vmaCreateBuffer(_mpDevice->_mpVmaAllocator, &bufCreateInfo, &allocCreateInfo, &_mpHandle, &_mpVkAllocation, &allocInfo)));
+    if (VK_FAILED(vmaCreateBuffer(_mpDevice->_mpVmaAllocator, &bufCreateInfo, &allocCreateInfo, &_mpHandle, &_mpVkAllocation, &allocInfo)))
+    {
+        return false;
+    }
 
     // create buffer view (uniform, storage)
     const VkBufferViewCreateInfo viewCreateInfo{
@@ -72,7 +75,10 @@ bool VulkanBuffer::_create(const BufferDesc& desc) noexcept
         }
         else
         {
-            AXE_CHECK(VK_SUCCEEDED(vkCreateBufferView(_mpDevice->handle(), &viewCreateInfo, nullptr, &_mpVkUniformTexelView)));
+            if (VK_FAILED(vkCreateBufferView(_mpDevice->handle(), &viewCreateInfo, nullptr, &_mpVkUniformTexelView)))
+            {
+                return false;
+            }
         }
     }
     if (bufCreateInfo.usage & VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT)
@@ -83,7 +89,10 @@ bool VulkanBuffer::_create(const BufferDesc& desc) noexcept
         }
         else
         {
-            AXE_CHECK(VK_SUCCEEDED(vkCreateBufferView(_mpDevice->handle(), &viewCreateInfo, nullptr, &_mpVkStorageTexelView)));
+            if (VK_FAILED(vkCreateBufferView(_mpDevice->handle(), &viewCreateInfo, nullptr, &_mpVkStorageTexelView)))
+            {
+                return false;
+            }
         }
     }
 

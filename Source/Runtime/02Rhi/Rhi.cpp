@@ -31,10 +31,7 @@ void destroyBackend(Backend*& backend) noexcept
 
 bool create_pipeline_reflection(std::pmr::vector<ShaderReflection>& shaderRefls, PipelineReflection& outPipelineRefl) noexcept
 {
-    if (shaderRefls.empty())
-    {
-        return false;
-    }
+    if (shaderRefls.empty()) { return false; }
 
     auto shaderAllFlags = SHADER_STAGE_FLAG_NONE;
     for (const auto& refl : shaderRefls)
@@ -66,40 +63,23 @@ bool create_pipeline_reflection(std::pmr::vector<ShaderReflection>& shaderRefls,
             //  duplicate shader resource, we add the shader stage to the shader stage
             //  mask of that resource instead.
 
-            bool isUnique = true;
-            for (auto& uniRes : outUniqueResources)
-            {
-                isUnique = uniRes != shaderRes;
-                if (!isUnique)
-                {
-                    uniRes.mUsedShaderStage |= shaderRes.mUsedShaderStage;
-                    break;
-                }
-            }
-
-            if (isUnique)
-            {
-                outUniqueResources.push_back(shaderRes);
-            }
+            auto iter = std::find_if(outUniqueResources.begin(), outUniqueResources.end(), [&shaderRes](ShaderResource& uniRes)
+                                     { return uniRes == shaderRes; });
+            if (iter == outUniqueResources.end()) { outUniqueResources.push_back(shaderRes); }  // not found
+            else { iter->mUsedShaderStage |= shaderRes.mUsedShaderStage; }                      // fond
         }
 
         // Loop through all shader variables (constant/uniform buffer members)
         for (const auto& shaderVar : srcRefl.mShaderVariables)
         {
-            bool isUnique = true;
-            for (const auto& uniVar : outUniqueVariables)
-            {
-                isUnique = uniVar != shaderVar;
-                if (!isUnique)
-                {
-                    break;
-                }
-            }
-            if (isUnique)
+            auto iter = std::find_if(outUniqueVariables.begin(), outUniqueVariables.end(), [&shaderVar](ShaderVariable& uniVar)
+                                     { return uniVar == shaderVar; });
+            if (iter == outUniqueVariables.end())  // not found
             {
                 tmpUniqueVariableParents.push_back(&srcRefl.mShaderResources[shaderVar.mParentIndex]);
                 outUniqueVariables.push_back(shaderVar);
             }
+            else {}  // do nothing if found
         }
     }
 

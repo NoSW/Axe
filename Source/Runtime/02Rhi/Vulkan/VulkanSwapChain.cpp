@@ -18,7 +18,7 @@ namespace axe::rhi
 // Also, implementation of swapchain is dependent on OS
 bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
 {
-    AXE_CHECK(SDL_Vulkan_CreateSurface(desc.mpWindow->handle(), _mpDevice->_mpAdapter->backendHandle(), &_mpVkSurface) == SDL_TRUE);
+    if (AXE_FAILED(SDL_Vulkan_CreateSurface(desc.mpWindow->handle(), _mpDevice->_mpAdapter->backendHandle(), &_mpVkSurface) == SDL_TRUE)) { return false; }
 
     // Find best queue family
     //// Get queue family properties
@@ -205,11 +205,11 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
 
     // create render targets from this swapchain
     u32 availableImageCount = 0;
-    AXE_CHECK(VK_SUCCEEDED(vkGetSwapchainImagesKHR(_mpDevice->handle(), _mpHandle, &availableImageCount, nullptr)));
+    if (VK_FAILED(vkGetSwapchainImagesKHR(_mpDevice->handle(), _mpHandle, &availableImageCount, nullptr))) { return false; }
     AXE_CHECK(availableImageCount == desiredImageCount);
 
     std::pmr::vector<VkImage> swapchainImages(availableImageCount);
-    AXE_CHECK(VK_SUCCEEDED(vkGetSwapchainImagesKHR(_mpDevice->handle(), _mpHandle, &availableImageCount, swapchainImages.data())));
+    if (VK_FAILED(vkGetSwapchainImagesKHR(_mpDevice->handle(), _mpHandle, &availableImageCount, swapchainImages.data()))) { return false; }
 
     RenderTargetDesc renderTargetDesc = {
         .mWidth     = desc.mWidth,

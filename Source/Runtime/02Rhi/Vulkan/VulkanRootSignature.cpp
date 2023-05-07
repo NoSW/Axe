@@ -21,7 +21,7 @@ struct UpdateFrequencyLayoutInfo
 bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
 {
     // Collect all unique shader resources in the given shader reflection
-    // Resources are parsed by name (two resources named "XYZ" in two shaders will be considered the same resource)
+    // Resources are parsed by **name** (two resources named "XYZ" in two shaders will be considered the same resource)
     PipelineType pipelineType = PIPELINE_TYPE_UNDEFINED;
     std::pmr::vector<ShaderResource> addedShaderResources;
     for (const auto* shader : desc.mShaders)
@@ -30,14 +30,28 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
         PipelineReflection const* pReflection = &pShader->_mReflection;
 
         // Step1: determine pipeline type(graphics, compute, raytracing)' from reflection
-        if (pShader->_mReflection.mShaderStages & SHADER_STAGE_FLAG_COMP) { pipelineType = PIPELINE_TYPE_COMPUTE; }
-        else if (pShader->_mReflection.mShaderStages & SHADER_STAGE_FLAG_RAYTRACING) { pipelineType = PIPELINE_TYPE_RAYTRACING; }
-        else { pipelineType = PIPELINE_TYPE_GRAPHICS; }
+        if (pShader->_mReflection.mShaderStages & SHADER_STAGE_FLAG_COMP)
+        {
+            AXE_ASSERT(std::has_single_bit((u32)pShader->_mReflection.mShaderStages), "must be computer shader only");
+            pipelineType = PIPELINE_TYPE_COMPUTE;
+        }
+        else if (pShader->_mReflection.mShaderStages & SHADER_STAGE_FLAG_RAYTRACING)
+        {
+            AXE_ASSERT(std::has_single_bit((u32)pShader->_mReflection.mShaderStages), "must be raytracing shader only since we haven't subdivision it yet");
+            pipelineType = PIPELINE_TYPE_RAYTRACING;
+        }
+        else
+        {
+            AXE_ASSERT(!std::has_single_bit((u32)pShader->_mReflection.mShaderStages), "at least two shader stages");
+            pipelineType = PIPELINE_TYPE_GRAPHICS;
+        }
+        _mPipelineType = pipelineType;
 
         // Step2: collect all shader resources by name from reflection. If same binding with diff name, also be think as same one
         for (const auto& currRes : pReflection->mShaderResources)
         {
-            u32 foundIndexByName = U32_MAX, foundIndexByLocation = U32_MAX;
+            u32 foundIndexByName     = U32_MAX;
+            u32 foundIndexByLocation = U32_MAX;
             for (u32 i = 0; i < addedShaderResources.size(); ++i)
             {
                 if (addedShaderResources[i].mName == currRes.mName)
@@ -52,7 +66,7 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
                 }
             }
 
-            if (foundIndexByName == U32_MAX)  // first add
+            if (foundIndexByName == U32_MAX)  // first add if not found by name
             {
                 if (foundIndexByLocation == U32_MAX)  // if also not found by binding, we add it
                 {
@@ -63,7 +77,7 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
                     addedShaderResources[foundIndexByLocation].mUsedShaderStage |= currRes.mUsedShaderStage;
                 }
             }
-            else  // already added, we check whether conflicts
+            else  // already added, we check whether conflicts with existing one
             {
                 if (addedShaderResources[foundIndexByName].mSet != currRes.mSet ||
                     addedShaderResources[foundIndexByName].mBindingLocation != currRes.mBindingLocation)
@@ -76,38 +90,39 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
         }
     }
 
-    // Collect all unique static samplers in the given static samplers
-    std::pmr::unordered_map<std::string_view, VulkanSampler*> staticSamplerMap;  // <name, sampler>
-    AXE_ASSERT(desc.mStaticSamplerNames.size() == desc.mStaticSamplers.size(), "Static sampler name count must match static sampler count");
-    for (u32 i = 0; i < desc.mStaticSamplers.size(); ++i)
-    {
-        auto foundIter = staticSamplerMap.find(desc.mStaticSamplerNames[i]);
-        if (foundIter == staticSamplerMap.end()) { staticSamplerMap[desc.mStaticSamplerNames[i]] = static_cast<VulkanSampler*>(desc.mStaticSamplers[i]); }
-        else { AXE_ERROR("Name conflicts among static samplers, {}", desc.mStaticSamplerNames[i].data()); }
-    }
-
     // Using data parsed from reflection to init this object
-    _mPipelineType                                      = pipelineType;
-    constexpr u32 MAX_LAYOUT_COUNT                      = DESCRIPTOR_UPDATE_FREQ_COUNT;
-    UpdateFrequencyLayoutInfo Layouts[MAX_LAYOUT_COUNT] = {};
+    constexpr u32 MAX_LAYOUT_COUNT = DESCRIPTOR_UPDATE_FREQ_COUNT;
+    UpdateFrequencyLayoutInfo Layouts[MAX_LAYOUT_COUNT]{};
     _mDescriptors.resize(addedShaderResources.size());
     std::pmr::vector<VkPushConstantRange> pushConstants;
     for (u32 i = 0; i < addedShaderResources.size(); ++i)
     {
         // for short
-        auto& fromRes = addedShaderResources[i];
-        auto& toInfo  = _mDescriptors[i];
-        u32 setIndx   = fromRes.mSet;
+        ShaderResource& fromRes = addedShaderResources[i];
+        DescriptorInfo& toInfo  = _mDescriptors[i];
+        u32 setIndx             = fromRes.mSet;
 
         // Step1: Copy the binding information generated from the shader reflection into the descriptor
-        toInfo.mReg   = fromRes.mBindingLocation;
-        toInfo.mSize  = fromRes.mSize;
-        toInfo.mType  = fromRes.mType;
-        toInfo.mName  = fromRes.mName;
-        toInfo.mDim   = fromRes.mDim;
+        toInfo.mReg             = fromRes.mBindingLocation;
+        toInfo.mSize            = fromRes.mSize;
+        toInfo.mType            = fromRes.mType;
+        toInfo.mName            = fromRes.mName;
+        toInfo.mDim             = fromRes.mDim;
 
         // Step2: If descriptor is not a root constant, create a new layout binding for this descriptor and add it to the binding array
-        if (fromRes.mType != DESCRIPTOR_TYPE_ROOT_CONSTANT)
+        if (fromRes.mType == DESCRIPTOR_TYPE_ROOT_CONSTANT)  // is a root constant, just add it to the root constant array
+        {
+            AXE_INFO("Descriptor ({}) : User specified Push Constant", toInfo.mName.data());
+            toInfo.mIsRootDescriptor = true;
+            toInfo.mVkStages         = to_vk_enum(fromRes.mUsedShaderStage);
+            setIndx                  = 0;
+            toInfo.mHandleIndex      = pushConstants.size();
+            pushConstants.push_back(VkPushConstantRange{
+                .stageFlags = toInfo.mVkStages,
+                .offset     = 0,
+                .size       = toInfo.mSize});
+        }
+        else
         {
             VkDescriptorSetLayoutBinding binding{
                 .binding            = fromRes.mBindingLocation,
@@ -136,20 +151,20 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
             toInfo.mUpdateFrequency = (DescriptorUpdateFrequency)setIndx;
 
             // Find if the given descriptor is a static sampler
-            auto foundSamIter       = staticSamplerMap.find(toInfo.mName);
+            auto foundSamIter       = desc.mStaticSamplersMap.find(toInfo.mName);
 
-            if (foundSamIter != staticSamplerMap.end())
+            if (foundSamIter != desc.mStaticSamplersMap.end())
             {
                 AXE_INFO("Descriptor ({}) : User specified Static Sampler", foundSamIter->first.data());
-                binding.pImmutableSamplers = &foundSamIter->second->_mpHandle;
+                binding.pImmutableSamplers = &static_cast<VulkanSampler*>(foundSamIter->second)->_mpHandle;
             }
 
             // Set the index to an invalid value so we can use this later for error checking if user tries to update a static sampler
             // In case of Combined Image Samplers, skip invalidating the index
             // because we do not to introduce new ways to update the descriptor in the Interface
-            if (foundSamIter != staticSamplerMap.end() && toInfo.mType != DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER_VKONLY)
+            if (foundSamIter != desc.mStaticSamplersMap.end() && toInfo.mType != DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER_VKONLY)
             {
-                toInfo.mStaticSampler = true;
+                toInfo.mIsStaticSampler = true;
             }
             else
             {
@@ -181,17 +196,18 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
             }
             pPoolSize->descriptorCount += binding.descriptorCount;
         }
-        else  // is a root constant, just add it to the root constant array
+    }
+
+    // build a hash table for index descriptor by name quickly
+    for (u32 i = 0; i < _mDescriptors.size(); ++i)
+    {
+        if (_mNameHashIds.find(std::pmr::string(_mDescriptors[i].mName)) != _mNameHashIds.end())
         {
-            AXE_INFO("Descriptor ({}) : User specified Push Constant", toInfo.mName.data());
-            toInfo.mIsRootDescriptor = true;
-            toInfo.mVkStages         = to_vk_enum(fromRes.mUsedShaderStage);
-            setIndx                  = 0;
-            toInfo.mHandleIndex      = pushConstants.size();
-            pushConstants.push_back(VkPushConstantRange{
-                .stageFlags = toInfo.mVkStages,
-                .offset     = 0,
-                .size       = toInfo.mSize});
+            AXE_ERROR("Descriptor ({}) : Duplicate descriptor name found", _mDescriptors[i].mName.data());
+        }
+        else
+        {
+            _mNameHashIds[std::pmr::string(_mDescriptors[i].mName)] = i;
         }
     }
 
@@ -199,23 +215,23 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
     for (i32 layoutIndex = (i32)MAX_LAYOUT_COUNT; layoutIndex >= 0; layoutIndex--)
     {
         // for short
-        auto& layout = Layouts[layoutIndex];
+        UpdateFrequencyLayoutInfo& layout = Layouts[layoutIndex];
 
         // sort table by type (CBV/SRV/UAV) by register
         std::sort(layout.mBindings.begin(), layout.mBindings.end(),
                   [](VkDescriptorSetLayoutBinding& a, VkDescriptorSetLayoutBinding& b)
-                  { return b.descriptorType < a.descriptorType || (b.descriptorType == a.descriptorType && b.binding > a.binding); });
+                  { return b.descriptorType < a.descriptorType || (b.descriptorType == a.descriptorType && b.binding < a.binding); });  // confusion: why sort in this order?
 
-        bool isCreateLayout = !layout.mBindings.empty();
+        bool needToCreateLayout = !layout.mBindings.empty();
 
         // Check if we need to create an empty layout in case there is an empty set between two used sets
         // Example: set = 0 is used, set = 2 is used. In this case, set = 1 needs to exist even if it is empty
-        if (!isCreateLayout && layoutIndex < MAX_LAYOUT_COUNT - 1)
+        if (!needToCreateLayout && layoutIndex < MAX_LAYOUT_COUNT - 1)
         {
-            isCreateLayout = _mpDescriptorSetLayouts[layoutIndex + 1] != VK_NULL_HANDLE;
+            needToCreateLayout = _mpDescriptorSetLayouts[layoutIndex + 1] != VK_NULL_HANDLE;  // create if next set is not empty (namely, the current is a hole)
         }
 
-        if (isCreateLayout)
+        if (needToCreateLayout)
         {
             if (!layout.mBindings.empty())
             {
@@ -226,11 +242,11 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
                     .bindingCount = (u32)layout.mBindings.size(),
                     .pBindings    = layout.mBindings.data()};
 
-                AXE_CHECK(VK_SUCCEEDED(vkCreateDescriptorSetLayout(_mpDevice->handle(), &layoutInfo, nullptr, &_mpDescriptorSetLayouts[layoutIndex])));
+                if (VK_FAILED(vkCreateDescriptorSetLayout(_mpDevice->handle(), &layoutInfo, nullptr, &_mpDescriptorSetLayouts[layoutIndex]))) { return false; }
             }
             else
             {
-                _mpDescriptorSetLayouts[layoutIndex] = _mpDevice->_mpEmptyDescriptorSetLayout;
+                _mpDescriptorSetLayouts[layoutIndex] = VK_NULL_HANDLE;
             }
         }
 
@@ -280,36 +296,10 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
         .pushConstantRangeCount = (u32)pushConstants.size(),
         .pPushConstantRanges    = pushConstants.data()};
 
-    AXE_CHECK(VK_SUCCEEDED(vkCreatePipelineLayout(_mpDevice->handle(), &pipelineLayoutInfo, nullptr, &_mpPipelineLayout)));
-
-    // Update template
-    for (u32 setIndex = 0; setIndex < DESCRIPTOR_UPDATE_FREQ_COUNT; ++setIndex)
+    if (VK_FAILED(vkCreatePipelineLayout(_mpDevice->handle(), &pipelineLayoutInfo, nullptr, &_mpPipelineLayout)))
     {
-        const UpdateFrequencyLayoutInfo& layout = Layouts[setIndex];
-        if (layout.mDescriptors.empty() && _mpDescriptorSetLayouts[setIndex] != VK_NULL_HANDLE)
-        {
-            _mpEmptyDescriptorSet[setIndex] = _mpDevice->_mpEmptyDescriptorSet;
-            if (_mpDescriptorSetLayouts[setIndex] != _mpDevice->_mpEmptyDescriptorSetLayout)
-            {
-                VkDescriptorPoolCreateInfo poolCreateInfo{
-                    .sType         = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-                    .pNext         = nullptr,
-                    .flags         = 0,
-                    .maxSets       = 1,
-                    .poolSizeCount = _mPoolSizeCount[setIndex],
-                    .pPoolSizes    = _mPoolSizes[setIndex]};
-                AXE_CHECK(VK_SUCCEEDED(vkCreateDescriptorPool(_mpDevice->handle(), &poolCreateInfo, nullptr, &_mpEmptyDescriptorPool[setIndex])));
-
-                VkDescriptorSetAllocateInfo allocInfo{
-                    .sType              = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-                    .pNext              = nullptr,
-                    .descriptorPool     = _mpEmptyDescriptorPool[setIndex],
-                    .descriptorSetCount = 1,
-                    .pSetLayouts        = &_mpDescriptorSetLayouts[setIndex]};
-
-                AXE_CHECK(VK_SUCCEEDED(vkAllocateDescriptorSets(_mpDevice->handle(), &allocInfo, &_mpEmptyDescriptorSet[setIndex])));
-            }
-        }
+        AXE_ERROR("Failed to create pipeline layout");
+        return false;
     }
 
     // add dependencies tracking here
@@ -321,13 +311,9 @@ bool VulkanRootSignature::_destroy() noexcept
 {
     for (u32 i = 0; i < DESCRIPTOR_UPDATE_FREQ_COUNT; ++i)
     {
-        if (_mpDescriptorSetLayouts[i] != _mpDevice->_mpEmptyDescriptorSetLayout)
+        if (_mpDescriptorSetLayouts[i] != VK_NULL_HANDLE)
         {
             vkDestroyDescriptorSetLayout(_mpDevice->handle(), _mpDescriptorSetLayouts[i], nullptr);
-        }
-        if (_mpEmptyDescriptorPool[i] != VK_NULL_HANDLE)
-        {
-            vkDestroyDescriptorPool(_mpDevice->handle(), _mpEmptyDescriptorPool[i], nullptr);
         }
     }
 

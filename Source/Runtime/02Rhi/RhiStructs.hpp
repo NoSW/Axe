@@ -72,6 +72,7 @@ class Buffer;
 class RenderTarget;
 class Shader;
 class RootSignature;
+class DescriptorSet;
 
 struct DescBase
 {
@@ -273,10 +274,10 @@ struct RenderTargetDesc : public DescBase
 
 struct ShaderStageDesc
 {
+    ShaderStageFlag mStage = SHADER_STAGE_FLAG_NONE;
+    std::string_view mRelaFilePath;  // **relative** glsl filepath under Source/, e.g. Shaders/Basic.vert.glsl
     std::string_view mEntryPoint = "main";
-    std::string_view mFilePath;
-    ShaderStageFlag mStage     = SHADER_STAGE_FLAG_NONE;
-    ShaderStageLoadFlag mFlags = SHADER_STAGE_LOAD_FLAG_NONE;
+    ShaderStageLoadFlag mFlags   = SHADER_STAGE_LOAD_FLAG_NONE;
 };
 
 struct ShaderConstants  // only supported by Vulkan APIs
@@ -295,10 +296,16 @@ struct ShaderDesc : public DescBase
 struct RootSignatureDesc : public DescBase
 {
     std::pmr::vector<Shader*> mShaders;
-    std::pmr::vector<std::string_view> mStaticSamplerNames;
-    std::pmr::vector<Sampler*> mStaticSamplers;
+    std::pmr::unordered_map<std::string_view, Sampler*> mStaticSamplersMap;  // <unique name, pointer>
     u32 mMaxBindlessTextures  = 0;
     RootSignatureFlags mFlags = ROOT_SIGNATURE_FLAG_NONE;
+};
+
+struct DescriptorSetDesc : public DescBase
+{
+    RootSignature* mpRootSignature             = nullptr;
+    u32 mMaxSet                                = 0;  // the number of descriptor sets want to allocate
+    DescriptorUpdateFrequency mUpdateFrequency = DESCRIPTOR_UPDATE_FREQ_NONE;
 };
 
 struct DescriptorInfo
@@ -309,12 +316,46 @@ struct DescriptorInfo
     u32 mHandleIndex;
     u32 mDim              : 4;
     u32 mIsRootDescriptor : 1;
-    u32 mStaticSampler    : 1;
+    u32 mIsStaticSampler  : 1;
     u32 mUpdateFrequency  : 3;
 
     u32 mVkStages         : 8;
     u32 mVkType;
     u32 mReg;
+};
+
+struct DescriptorDataRange
+{
+    u32 mOffset;
+    u32 mSize;
+};
+
+struct DescriptorData
+{
+    std::string_view mName;                  /// Name of descriptor
+    u32 mArrayOffset             = 0;        /// Offset in array to update (starting element to update)
+    u32 mIndex                   = U32_MAX;  // Index in pRootSignature->pDescriptors array - Cache index using getDescriptorIndexFromName to avoid using string checks at runtime
+    bool mBindStencilResource    = false;    // Binds stencil only descriptor instead of color/depth
+    DescriptorDataRange* pRanges = nullptr;  // Range to bind (buffer offset, size)
+
+    /// Array of resources containing descriptor handles or constant to be used in ring buffer memory - DescriptorRange can hold only one resource type array
+    std::pmr::vector<void*> mpResources;  // (srv/uav)textures, samplers, (srv/uav/cbv)buffers, other custom resources(e.g., acceleration structure)
+
+    union
+    {
+        struct
+        {
+            u16 mUAVMipSlice;    // When binding UAV, control the mip slice to to bind for UAV (example - generating mipmaps in a compute shader)
+            bool mBindMipChain;  // Binds entire mip chain as array of UAV
+        };
+        struct
+        {
+            // Bind MTLIndirectCommandBuffer along with the MTLBuffer
+            std::string_view mICBName;
+            u32 mICBIndex;
+            bool mBindICB;
+        };
+    };
 };
 
 struct NullDescriptors

@@ -165,7 +165,7 @@ Device* VulkanAdapter::requestDevice(DeviceDesc& desc) noexcept
 
 void VulkanAdapter::releaseDevice(Device*& device) noexcept
 {
-    AXE_CHECK(device);
+    AXE_ASSERT(device != nullptr, "Cannot release nullptr device");
     auto iter = _mDevices.begin();
     for (u32 i = 0; i < _mDevices.size(); ++i)
     {

@@ -27,7 +27,7 @@ D3D12Backend::D3D12Backend(BackendDesc& desc) noexcept
     }
 #endif
 
-    AXE_CHECK(DX_SUCCEEDED(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&_mpDxgiFactory))));
+    DX_SUCCEEDED(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&_mpDxgiFactory)));
 }
 
 D3D12Backend::~D3D12Backend() noexcept
@@ -88,7 +88,7 @@ bool D3D12Backend::_addDevice() noexcept
     // select gpu
     if (_mUseWarpDevice)
     {
-        AXE_CHECK(DX_SUCCEEDED(_mpDxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&_mpActiveGPU))));
+        DX_SUCCEEDED(_mpDxgiFactory->EnumWarpAdapter(IID_PPV_ARGS(&_mpActiveGPU)));
     }
     else
     {

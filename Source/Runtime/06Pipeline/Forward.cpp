@@ -96,9 +96,19 @@ bool Forward::load(LoadFlag loadFlag) noexcept
 {
     if (loadFlag & LOAD_FLAG_SHADER)
     {
-        // addShaders();
-        // addRootSignatures();
-        // addDescriptorSets();
+        rhi::ShaderDesc shaderDesc;
+        shaderDesc.mStages.push_back(rhi::ShaderStageDesc{.mStage = rhi::SHADER_STAGE_FLAG_VERT});
+        shaderDesc.mStages.push_back(rhi::ShaderStageDesc{.mStage = rhi::SHADER_STAGE_FLAG_FRAG});
+
+        shaderDesc.mStages[0].mRelaFilePath = "Shaders/Basic.vert.glsl";
+        shaderDesc.mStages[1].mRelaFilePath = "Shaders/Basic.frag.glsl";
+        shaderDesc.mLabel                   = "Basic";
+        _mpBasicShader                      = _mpDevice->createShader(shaderDesc);
+
+        shaderDesc.mStages[0].mRelaFilePath = "Shaders/Skybox/Skybox.vert.glsl";
+        shaderDesc.mStages[1].mRelaFilePath = "Shaders/Skybox/Skybox.frag.glsl";
+        shaderDesc.mLabel                   = "Skybox";
+        _mpSkyboxShader                     = _mpDevice->createShader(shaderDesc);
     }
 
     if (loadFlag & (LOAD_FLAG_RESIZE | LOAD_FLAG_RENDER_TARGET))
@@ -113,12 +123,26 @@ bool Forward::load(LoadFlag loadFlag) noexcept
                 .rgba{1.0f, 0.8f, 0.4f, 0.0f},
             }};
         _mpSwapChain = _mpDevice->createSwapChain(swapchainDesc);
-        if (!_mpSwapChain) { return false; }
+        if (_mpSwapChain == nullptr) { return false; }
 
-        // if (!addDepthBuffer())
-        // {
-        //     return false;
-        // }
+        rhi::RenderTargetDesc depthRT{
+            .mFlags           = rhi::TEXTURE_CREATION_FLAG_ON_TILE | rhi::TEXTURE_CREATION_FLAG_VR_MULTIVIEW,
+            .mWidth           = _mWidth,
+            .mHeight          = _mHeight,
+            .mDepth           = 1,
+            .mArraySize       = 1,
+            .mMipLevels       = 0,
+            .mMSAASampleCount = rhi::MSAA_SAMPLE_COUNT_1,
+            .mFormat          = TinyImageFormat_D32_SFLOAT,
+            .mStartState      = rhi::RESOURCE_STATE_DEPTH_WRITE,
+            .mClearValue{},
+            .mSampleQuality = 0,
+            .mDescriptors   = rhi::DESCRIPTOR_TYPE_UNDEFINED,
+            .mpNativeHandle = nullptr,
+            .mpName         = "DepthBuffer",
+        };
+        _mpDepthBuffer = _mpDevice->createRenderTarget(depthRT);
+        if (_mpDepthBuffer == nullptr) { return false; }
     }
 
     if (loadFlag & (LOAD_FLAG_SHADER | LOAD_FLAG_RENDER_TARGET))
@@ -132,7 +156,6 @@ bool Forward::load(LoadFlag loadFlag) noexcept
 
 bool Forward::unload(LoadFlag loadFlag) noexcept
 {
-    bool succ = true;
     _mpGraphicsQueue->waitIdle();
 
     if (loadFlag & (LOAD_FLAG_SHADER | LOAD_FLAG_RENDER_TARGET))
@@ -142,9 +165,8 @@ bool Forward::unload(LoadFlag loadFlag) noexcept
 
     if (loadFlag & (LOAD_FLAG_RESIZE | LOAD_FLAG_RENDER_TARGET))
     {
-        succ = _mpDevice->destroySwapChain(_mpSwapChain) ? succ : false;
-
-        // succ = _mpBackend->removeRenderTarget(depthBuffer) ? succ : false;
+        _mpDevice->destroySwapChain(_mpSwapChain);
+        _mpDevice->destroyRenderTarget(_mpDepthBuffer);
     }
 
     if (loadFlag & LOAD_FLAG_SHADER)
