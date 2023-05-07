@@ -351,7 +351,7 @@ struct DescriptorData
         struct
         {
             // Bind MTLIndirectCommandBuffer along with the MTLBuffer
-            std::string_view mICBName;
+            const char* mICBName;  // TODO: type with constructor in anonymous aggregate is NOT allowed when using gcc
             u32 mICBIndex;
             bool mBindICB;
         };
