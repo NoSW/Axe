@@ -29,10 +29,10 @@ public:
 
 private:
     VulkanDevice* const _mpDevice = nullptr;
-    std::array<VkShaderModule, SHADER_STAGE_FLAG_COUNT> _mpHandles{};
-    std::array<std::string_view, SHADER_STAGE_FLAG_COUNT> _mpEntryNames;
+    std::array<VkShaderModule, (u32)ShaderStageFlag::COUNT> _mpHandles{};
+    std::array<std::string_view, (u32)ShaderStageFlag::COUNT> _mpEntryNames;
     VkSpecializationInfo* _mpSpecializationInfo = nullptr;
-    ShaderStageFlag _mStage                     = SHADER_STAGE_FLAG_NONE;
+    ShaderStageFlag _mStage                     = ShaderStageFlag::NONE;
     u32 _mNumThreadsPerGroup[3]                 = {0, 0, 0};  // only for computer shader
     PipelineReflection _mReflection{};
 };

@@ -15,14 +15,14 @@ struct UpdateFrequencyLayoutInfo
     std::pmr::vector<VkDescriptorSetLayoutBinding> bindings;  // Array of all bindings in the descriptor set
     std::pmr::vector<DescriptorInfo*> descriptorType;         // Array of all descriptors in this descriptor set
     std::pmr::vector<DescriptorInfo*> dynamicDescriptors;     // Array of all descriptors marked as dynamic in this descriptor set
-    // (applicable to DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+    // (applicable to DescriptorTypeFlag::UNIFORM_BUFFER)
 };
 
 bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
 {
     // Collect all unique shader resources in the given shader reflection
     // Resources are parsed by **name** (two resources named "XYZ" in two shaders will be considered the same resource)
-    PipelineType pipelineType = PIPELINE_TYPE_UNDEFINED;
+    PipelineType pipelineType = PipelineType::UNDEFINED;
     std::pmr::vector<ShaderResource> addedShaderResources;
     for (const auto* shader : desc.mShaders)
     {
@@ -30,20 +30,20 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
         PipelineReflection const* pReflection = &pShader->_mReflection;
 
         // Step1: determine pipeline type(graphics, compute, raytracing)' from reflection
-        if (pShader->_mReflection.shaderStages & SHADER_STAGE_FLAG_COMP)
+        if ((bool)(pShader->_mReflection.shaderStages & ShaderStageFlag::COMP))
         {
             AXE_ASSERT(std::has_single_bit((u32)pShader->_mReflection.shaderStages), "must be computer shader only");
-            pipelineType = PIPELINE_TYPE_COMPUTE;
+            pipelineType = PipelineType::COMPUTE;
         }
-        else if (pShader->_mReflection.shaderStages & SHADER_STAGE_FLAG_RAYTRACING)
+        else if ((bool)(pShader->_mReflection.shaderStages & ShaderStageFlag::RAYTRACING))
         {
             AXE_ASSERT(std::has_single_bit((u32)pShader->_mReflection.shaderStages), "must be raytracing shader only since we haven't subdivision it yet");
-            pipelineType = PIPELINE_TYPE_RAYTRACING;
+            pipelineType = PipelineType::RAYTRACING;
         }
         else
         {
             AXE_ASSERT(!std::has_single_bit((u32)pShader->_mReflection.shaderStages), "at least two shader stages");
-            pipelineType = PIPELINE_TYPE_GRAPHICS;
+            pipelineType = PipelineType::GRAPHICS;
         }
         _mPipelineType = pipelineType;
 
@@ -91,7 +91,7 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
     }
 
     // Using data parsed from reflection to init this object
-    constexpr u32 MAX_LAYOUT_COUNT = DESCRIPTOR_UPDATE_FREQ_COUNT;
+    constexpr u32 MAX_LAYOUT_COUNT = (u32)DescriptorUpdateFrequency::COUNT;
     UpdateFrequencyLayoutInfo Layouts[MAX_LAYOUT_COUNT]{};
     _mDescriptors.resize(addedShaderResources.size());
     std::pmr::vector<VkPushConstantRange> pushConstants;
@@ -105,12 +105,12 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
         // Step1: Copy the binding information generated from the shader reflection into the descriptor
         toInfo.reg              = fromRes.bindingLocation;
         toInfo.size             = fromRes.size;
-        toInfo.type             = fromRes.type;
+        toInfo.type             = (u32)fromRes.type;
         toInfo.name             = fromRes.name;
-        toInfo.dim              = fromRes.dim;
+        toInfo.dim              = (u32)fromRes.dim;
 
         // Step2: If descriptor is not a root constant, create a new layout binding for this descriptor and add it to the binding array
-        if (fromRes.type == DESCRIPTOR_TYPE_ROOT_CONSTANT)  // is a root constant, just add it to the root constant array
+        if (fromRes.type == DescriptorTypeFlag::ROOT_CONSTANT)  // is a root constant, just add it to the root constant array
         {
             AXE_INFO("Descriptor ({}) : User specified Push Constant", toInfo.name.data());
             toInfo.isRootDescriptor = true;
@@ -148,7 +148,7 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
             // record enum value of vulkan
             toInfo.type            = binding.descriptorType;
             toInfo.vkStages        = binding.stageFlags;
-            toInfo.updateFrequency = (DescriptorUpdateFrequency)setIndx;
+            toInfo.updateFrequency = setIndx;
 
             // Find if the given descriptor is a static sampler
             auto foundSamIter      = desc.mStaticSamplersMap.find(toInfo.name);
@@ -162,7 +162,7 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
             // Set the index to an invalid value so we can use this later for error checking if user tries to update a static sampler
             // In case of Combined Image Samplers, skip invalidating the index
             // because we do not to introduce new ways to update the descriptor in the Interface
-            if (foundSamIter != desc.mStaticSamplersMap.end() && toInfo.type != DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER_VKONLY)
+            if (foundSamIter != desc.mStaticSamplersMap.end() && toInfo.type != (u32)DescriptorTypeFlag::COMBINED_IMAGE_SAMPLER_VKONLY)
             {
                 toInfo.isStaticSampler = true;
             }
@@ -279,7 +279,7 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
 
     // Create pipeline layout
     std::pmr::vector<VkDescriptorSetLayout> descriptorSetLayouts;
-    for (u32 i = 0; i < DESCRIPTOR_UPDATE_FREQ_COUNT; ++i)
+    for (u32 i = 0; i < (u32)DescriptorUpdateFrequency::COUNT; ++i)
     {
         if (_mpDescriptorSetLayouts[i] != VK_NULL_HANDLE)
         {
@@ -309,7 +309,7 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
 
 bool VulkanRootSignature::_destroy() noexcept
 {
-    for (u32 i = 0; i < DESCRIPTOR_UPDATE_FREQ_COUNT; ++i)
+    for (u32 i = 0; i < (u32)DescriptorUpdateFrequency::COUNT; ++i)
     {
         if (_mpDescriptorSetLayouts[i] != VK_NULL_HANDLE)
         {

@@ -12,7 +12,7 @@ bool Forward::init(PipelineDesc& desc) noexcept
 
     // Backend
     rhi::BackendDesc backendDesc{.appName = desc.appName};
-    _mpBackend = rhi::createBackend(rhi::GRAPHICS_API_FLAG_VULKAN, backendDesc);
+    _mpBackend = rhi::createBackend(rhi::GraphicsApiFlag::VULKAN, backendDesc);
 
     // Adapter
     rhi::AdapterDesc adapterDesc{};
@@ -24,8 +24,8 @@ bool Forward::init(PipelineDesc& desc) noexcept
 
     // Queue
     rhi::QueueDesc queueDesc{
-        .type = rhi::QUEUE_TYPE_FLAG_GRAPHICS,
-        .flag = rhi::QUEUE_FLAG_NONE};
+        .type = rhi::QueueTypeFlag::GRAPHICS,
+        .flag = rhi::QueueFlag::NONE};
 
     _mpGraphicsQueue = _mpDevice->requestQueue(queueDesc);
     if (!_mpGraphicsQueue) { return false; }
@@ -94,11 +94,11 @@ bool Forward::exit() noexcept
 
 bool Forward::load(LoadFlag loadFlag) noexcept
 {
-    if (loadFlag & LOAD_FLAG_SHADER)
+    if ((bool)(loadFlag & LoadFlag::SHADER))
     {
         rhi::ShaderDesc shaderDesc;
-        shaderDesc.mStages.push_back(rhi::ShaderStageDesc{.mStage = rhi::SHADER_STAGE_FLAG_VERT});
-        shaderDesc.mStages.push_back(rhi::ShaderStageDesc{.mStage = rhi::SHADER_STAGE_FLAG_FRAG});
+        shaderDesc.mStages.push_back(rhi::ShaderStageDesc{.mStage = rhi::ShaderStageFlag::VERT});
+        shaderDesc.mStages.push_back(rhi::ShaderStageDesc{.mStage = rhi::ShaderStageFlag::FRAG});
 
         shaderDesc.mStages[0].mRelaFilePath = "Shaders/Basic.vert.glsl";
         shaderDesc.mStages[1].mRelaFilePath = "Shaders/Basic.frag.glsl";
@@ -111,7 +111,7 @@ bool Forward::load(LoadFlag loadFlag) noexcept
         _mpSkyboxShader                     = _mpDevice->createShader(shaderDesc);
     }
 
-    if (loadFlag & (LOAD_FLAG_RESIZE | LOAD_FLAG_RENDER_TARGET))
+    if ((bool)(loadFlag & (LoadFlag::RESIZE | LoadFlag::RENDER_TARGET)))
     {
         rhi::SwapChainDesc swapchainDesc{
             .pWindow         = _mpWindow,
@@ -126,18 +126,18 @@ bool Forward::load(LoadFlag loadFlag) noexcept
         if (_mpSwapChain == nullptr) { return false; }
 
         rhi::RenderTargetDesc depthRT{
-            .flags            = rhi::TEXTURE_CREATION_FLAG_ON_TILE | rhi::TEXTURE_CREATION_FLAG_VR_MULTIVIEW,
+            .flags            = rhi::TextureCreationFlags::ON_TILE | rhi::TextureCreationFlags::VR_MULTIVIEW,
             .width            = _mWidth,
             .height           = _mHeight,
             .depth            = 1,
             .arraySize        = 1,
             .mipLevels        = 0,
-            .mMSAASampleCount = rhi::MSAA_SAMPLE_COUNT_1,
+            .mMSAASampleCount = rhi::MSAASampleCount::COUNT_1,
             .format           = TinyImageFormat_D32_SFLOAT,
-            .startState       = rhi::RESOURCE_STATE_DEPTH_WRITE,
+            .startState       = rhi::ResourceStateFlags::DEPTH_WRITE,
             .clearValue{},
             .sampleQuality  = 0,
-            .descriptorType = rhi::DESCRIPTOR_TYPE_UNDEFINED,
+            .descriptorType = rhi::DescriptorTypeFlag::UNDEFINED,
             .mpNativeHandle = nullptr,
             .mpName         = "DepthBuffer",
         };
@@ -145,7 +145,7 @@ bool Forward::load(LoadFlag loadFlag) noexcept
         if (_mpDepthBuffer == nullptr) { return false; }
     }
 
-    if (loadFlag & (LOAD_FLAG_SHADER | LOAD_FLAG_RENDER_TARGET))
+    if ((bool)(loadFlag & (LoadFlag::SHADER | LoadFlag::RENDER_TARGET)))
     {
         // addPipelines();
     }
@@ -158,18 +158,18 @@ bool Forward::unload(LoadFlag loadFlag) noexcept
 {
     _mpGraphicsQueue->waitIdle();
 
-    if (loadFlag & (LOAD_FLAG_SHADER | LOAD_FLAG_RENDER_TARGET))
+    if ((bool)(loadFlag & (LoadFlag::SHADER | LoadFlag::RENDER_TARGET)))
     {
         // removePipeline();
     }
 
-    if (loadFlag & (LOAD_FLAG_RESIZE | LOAD_FLAG_RENDER_TARGET))
+    if ((bool)(loadFlag & (LoadFlag::RESIZE | LoadFlag::RENDER_TARGET)))
     {
         _mpDevice->destroySwapChain(_mpSwapChain);
         _mpDevice->destroyRenderTarget(_mpDepthBuffer);
     }
 
-    if (loadFlag & LOAD_FLAG_SHADER)
+    if ((bool)(loadFlag & LoadFlag::SHADER))
     {
         // removeDescriptorSets();
         // removeRootSignatures();
@@ -200,7 +200,7 @@ void Forward::draw() noexcept
     auto* semaphore = _mpRenderCompleteSemaphores[_mFrameIndex];
 
     // Stall if CPU is running "Swap Chain Buffer Count" frames ahead of GPU
-    if (fence->status() == rhi::FENCE_STATUS_INCOMPLETE) { fence->wait(); }
+    if (fence->status() == rhi::FenceStatus::INCOMPLETE) { fence->wait(); }
 
     // reset cmd pool for this frame
     cmdPool->reset();
@@ -212,8 +212,8 @@ void Forward::draw() noexcept
     std::vector<rhi::RenderTargetBarrier> renderTargetBarriers = {rhi::RenderTargetBarrier{
         .imageBarrier{
             .barrierInfo{
-                .currentState = rhi::RESOURCE_STATE_PRESENT,
-                .newState     = rhi::RESOURCE_STATE_RENDER_TARGET,
+                .currentState = rhi::ResourceStateFlags::PRESENT,
+                .newState     = rhi::ResourceStateFlags::RENDER_TARGET,
             },
         },
         .pRenderTarget = nullptr,

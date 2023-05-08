@@ -219,8 +219,8 @@ VulkanBackend::VulkanBackend(BackendDesc& desc) noexcept
     std::sort(_mAdapters.begin(), _mAdapters.begin() + gpuCount, [this](auto& gpu1, auto& gpu2)
               { return VulkanAdapter::isBetterGpu(*gpu1, *gpu2); });
 
-    AXE_CHECK(_mAdapters[0]->isSupportQueue(QUEUE_TYPE_FLAG_GRAPHICS), "No gpu supporting graphics queue");
-    AXE_CHECK(_mAdapters[0]->type() != ADAPTER_TYPE_CPU, "The only available GPU is type of CPU");
+    AXE_CHECK(_mAdapters[0]->isSupportQueue(QueueTypeFlag::GRAPHICS), "No gpu supporting graphics queue");
+    AXE_CHECK(_mAdapters[0]->type() != AdapterType::_CPU, "The only available GPU is type of CPU");
 }
 
 VulkanBackend::~VulkanBackend() noexcept

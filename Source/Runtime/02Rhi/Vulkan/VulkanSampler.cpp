@@ -13,7 +13,7 @@ bool VulkanSampler::_create(const SamplerDesc& desc) noexcept
 {
     // default lod values
     float minSamplerLod = 0;
-    float maxSamplerLod = desc.mipMapMode == MIPMAP_MODE_LINEAR ? VK_LOD_CLAMP_NONE : 0;
+    float maxSamplerLod = desc.mipMapMode == MipMapMode::LINEAR ? VK_LOD_CLAMP_NONE : 0;
 
     // user provided lod values
     if (desc.isSetLodRange)
@@ -52,11 +52,11 @@ bool VulkanSampler::_create(const SamplerDesc& desc) noexcept
         {
             VkFormatProperties formatProps;
             vkGetPhysicalDeviceFormatProperties(_mpDevice->_mpAdapter->handle(), format, &formatProps);
-            if (conversionDesc.chromaOffsetX == SAMPLE_LOCATION_MIDPOINT)
+            if (conversionDesc.chromaOffsetX == SampleLocation::MIDPOINT)
             {
                 AXE_ASSERT(formatProps.optimalTilingFeatures & VK_FORMAT_FEATURE_MIDPOINT_CHROMA_SAMPLES_BIT);
             }
-            if (conversionDesc.chromaOffsetX == SAMPLE_LOCATION_COSITED)
+            if (conversionDesc.chromaOffsetX == SampleLocation::COSITED)
             {
                 AXE_ASSERT(formatProps.optimalTilingFeatures & VK_FORMAT_FEATURE_COSITED_CHROMA_SAMPLES_BIT);
             }

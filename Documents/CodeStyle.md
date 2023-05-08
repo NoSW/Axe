@@ -112,16 +112,16 @@ struct Apple {
 };
 
 enum class FruitFlag {          // used for multi-element, maybe one or more flags
-    FRUIT_FLAG_APPLE  = 0,
-    FRUIT_FLAG_ORANGE = 1 << 0,
-    FRUIT_FLAG_PEAR   = 1 << 1,
-    FRUIT_FLAG_CHERRY = 1 << 2,
+    APPLE  = 0,
+    ORANGE = 1 << 0,
+    PEAR   = 1 << 1,
+    CHERRY = 1 << 2,
 };
 using FruitFlagOneBit = FruitFlag; // used for a specified element, must be one flag(namely, single bit)
 
-FruitFlag fruits = FRUIT_FLAG_APPLE | FRUIT_FLAG_ORANGE;      // OK
-FruitFlagOneBit fruit = FRUIT_FLAG_ORANGE                     // OK
-FruitFlagOneBit fruit = FRUIT_FLAG_ORANGE | FRUIT_FLAG_CHERRY // not allowed
+FruitFlag fruits = FruitFlag::APPLE | FruitFlag::ORANGE;      // OK
+FruitFlagOneBit fruit = FruitFlag::ORANGE                     // OK
+FruitFlagOneBit fruit = FruitFlag::ORANGE | FruitFlag::CHERRY // not allowed
 
 ```
 

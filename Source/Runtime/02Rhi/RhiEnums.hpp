@@ -16,30 +16,30 @@ namespace axe::rhi
 //                            enum
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-enum WaveOpsSupportFlag
+enum class WaveOpsSupportFlag
 {
-    WAVE_OPS_SUPPORT_FLAG_NONE                 = 0,
-    WAVE_OPS_SUPPORT_FLAG_BASIC_BIT            = 1 << 0,
-    WAVE_OPS_SUPPORT_FLAG_VOTE_BIT             = 1 << 1,
-    WAVE_OPS_SUPPORT_FLAG_ARITHMETIC_BIT       = 1 << 2,
-    WAVE_OPS_SUPPORT_FLAG_BALLOT_BIT           = 1 << 3,
-    WAVE_OPS_SUPPORT_FLAG_SHUFFLE_BIT          = 1 << 4,
-    WAVE_OPS_SUPPORT_FLAG_SHUFFLE_RELATIVE_BIT = 1 << 5,
-    WAVE_OPS_SUPPORT_FLAG_CLUSTERED_BIT        = 1 << 6,
-    WAVE_OPS_SUPPORT_FLAG_QUAD_BIT             = 1 << 7,
-    WAVE_OPS_SUPPORT_FLAG_PARTITIONED_BIT_NV   = 1 << 8,
-    WAVE_OPS_SUPPORT_FLAG_ALL                  = 0x7FFFFFFF
+    NONE                 = 0,
+    BASIC_BIT            = 1 << 0,
+    VOTE_BIT             = 1 << 1,
+    ARITHMETIC_BIT       = 1 << 2,
+    BALLOT_BIT           = 1 << 3,
+    SHUFFLE_BIT          = 1 << 4,
+    SHUFFLE_RELATIVE_BIT = 1 << 5,
+    CLUSTERED_BIT        = 1 << 6,
+    QUAD_BIT             = 1 << 7,
+    PARTITIONED_BIT_NV   = 1 << 8,
+    ALL                  = 0x7FFFFFFF
 };
 using WaveOpsSupportFlagOneBit = WaveOpsSupportFlag;
 
-enum GpuVender
+enum class GpuVenderId
 {
-    GPU_VENDOR_ID_NVIDIA  = 0x10DE,
-    GPU_VENDOR_ID_AMD     = 0x1002,
-    GPU_VENDOR_ID_AMD_1   = 0x1022,
-    GPU_VENDOR_ID_INTEL   = 0x163C,
-    GPU_VENDOR_ID_INTEL_1 = 0x8086,
-    GPU_VENDOR_ID_INTEL_2 = 0x8087
+    NVIDIA  = 0x10DE,
+    AMD     = 0x1002,
+    AMD_1   = 0x1022,
+    INTEL   = 0x163C,
+    INTEL_1 = 0x8086,
+    INTEL_2 = 0x8087
 };
 
 // default capability levels of the backend
@@ -58,454 +58,455 @@ enum CapabilityLevel
     MAX_GPU_VENDOR_STRING_LENGTH  = 256,  // max size for GPUVendorPreset strings
 };
 
-enum FenceStatus
+enum class FenceStatus
 {
-    FENCE_STATUS_COMPLETE = 0,
-    FENCE_STATUS_INCOMPLETE,
-    FENCE_STATUS_NOTSUBMITTED,
+    COMPLETE = 0,
+    INCOMPLETE,
+    NOTSUBMITTED,
 };
 
-enum QueueTypeFlag
+enum class QueueTypeFlag
 {
-    QUEUE_TYPE_FLAG_GRAPHICS = 0,
-    QUEUE_TYPE_FLAG_COMPUTE  = 1 << 0,
-    QUEUE_TYPE_FLAG_TRANSFER = 1 << 1,
-    QUEUE_TYPE_FLAG_COUNT,
-    QUEUE_TYPE_FLAG_MAX = QUEUE_TYPE_FLAG_COUNT
+    GRAPHICS = 0,
+    COMPUTE  = 1 << 0,
+    TRANSFER = 1 << 1,
+    COUNT,
+    UNDEFINED = COUNT
 };
 using QueueTypeOneBit = QueueTypeFlag;
 
-enum QueueFlag
+enum class QueueFlag : u32
 {
-    QUEUE_FLAG_NONE                = 0x0,
-    QUEUE_FLAG_DISABLE_GPU_TIMEOUT = 0x1,
-    QUEUE_FLAG_INIT_MICROPROFILE   = 0x2,
-    MAX_QUEUE_FLAG                 = 0xFFFFFFFF
+    NONE                = 0x0,
+    DISABLE_GPU_TIMEOUT = 0x1,
+    INIT_MICROPROFILE   = 0x2,
+    UNDEFINED           = 0xFFFFFFFF
 };
 using QueueFlagOneBit = QueueFlag;
 
-enum QueuePriority
+enum class QueuePriority
 {
-    QUEUE_PRIORITY_NORMAL,
-    QUEUE_PRIORITY_HIGH,
-    QUEUE_PRIORITY_GLOBAL_REALTIME,
-    MAX_QUEUE_PRIORITY
+    NORMAL,
+    HIGH,
+    GLOBAL_REALTIME,
+    UNDEFINED
 };
 
-enum FilterType
+enum class FilterType
 {
-    FILTER_TYPE_NEAREST = 0,
-    FILTER_TYPE_LINEAR  = 1,
+    NEAREST = 0,
+    LINEAR  = 1,
 };
 
-enum MipMapMode
+enum class MipMapMode
 {
-    MIPMAP_MODE_NEAREST = 0,
-    MIPMAP_MODE_LINEAR  = 1,
+    NEAREST = 0,
+    LINEAR  = 1,
 };
 
-enum AddressMode
+enum class AddressMode
 {
-    ADDRESS_MODE_MIRROR          = 0,
-    ADDRESS_MODE_REPEAT          = 1,
-    ADDRESS_MODE_CLAMP_TO_EDGE   = 2,
-    ADDRESS_MODE_CLAMP_TO_BORDER = 3,
+    MIRROR          = 0,
+    REPEAT          = 1,
+    CLAMP_TO_EDGE   = 2,
+    CLAMP_TO_BORDER = 3,
 };
 
-enum BlendConstant
+enum class BlendConstant
 {
-    BC_ZERO = 0,
-    BC_ONE,
-    BC_SRC_COLOR,
-    BC_ONE_MINUS_SRC_COLOR,
-    BC_DST_COLOR,
-    BC_ONE_MINUS_DST_COLOR,
-    BC_SRC_ALPHA,
-    BC_ONE_MINUS_SRC_ALPHA,
-    BC_DST_ALPHA,
-    BC_ONE_MINUS_DST_ALPHA,
-    BC_SRC_ALPHA_SATURATE,
-    BC_BLEND_FACTOR,
-    BC_ONE_MINUS_BLEND_FACTOR,
-    MAX_BLEND_CONSTANTS
+    ZERO = 0,
+    ONE,
+    SRC_COLOR,
+    ONE_MINUS_SRC_COLOR,
+    DST_COLOR,
+    ONE_MINUS_DST_COLOR,
+    SRC_ALPHA,
+    ONE_MINUS_SRC_ALPHA,
+    DST_ALPHA,
+    ONE_MINUS_DST_ALPHA,
+    SRC_ALPHA_SATURATE,
+    BLEND_FACTOR,
+    ONE_MINUS_BLEND_FACTOR,
+    UNDEFINED
 };
 
-enum BlendMode
+enum class BlendMode
 {
-    BM_ADD,
-    BM_SUBTRACT,
-    BM_REVERSE_SUBTRACT,
-    BM_MIN,
-    BM_MAX,
-    MAX_BLEND_MODES,
+    ADD,
+    SUBTRACT,
+    REVERSE_SUBTRACT,
+    MIN,
+    MAX,
+    COUNT,
+    UNDEFINED = COUNT,
 };
 
-enum BlendStateTargetsFlag
+enum class BlendStateTargetsFlag
 {
-    BLEND_STATE_TARGET_0   = 1 << 0,
-    BLEND_STATE_TARGET_1   = 1 << 1,
-    BLEND_STATE_TARGET_2   = 1 << 2,
-    BLEND_STATE_TARGET_3   = 1 << 3,
-    BLEND_STATE_TARGET_4   = 1 << 4,
-    BLEND_STATE_TARGET_5   = 1 << 5,
-    BLEND_STATE_TARGET_6   = 1 << 6,
-    BLEND_STATE_TARGET_7   = 1 << 7,
-    BLEND_STATE_TARGET_ALL = 0xFF,
+    TARGET_0   = 1 << 0,
+    TARGET_1   = 1 << 1,
+    TARGET_2   = 1 << 2,
+    TARGET_3   = 1 << 3,
+    TARGET_4   = 1 << 4,
+    TARGET_5   = 1 << 5,
+    TARGET_6   = 1 << 6,
+    TARGET_7   = 1 << 7,
+    TARGET_ALL = 0xFF,
 };
 using BlendStateTargetsFlagOneBit = BlendStateTargetsFlag;
 
-enum StencilOp
+enum class StencilOp
 {
-    STENCIL_OP_KEEP,
-    STENCIL_OP_SET_ZERO,
-    STENCIL_OP_REPLACE,
-    STENCIL_OP_INVERT,
-    STENCIL_OP_INCR,
-    STENCIL_OP_DECR,
-    STENCIL_OP_INCR_SAT,
-    STENCIL_OP_DECR_SAT,
-    MAX_STENCIL_OPS,
+    KEEP,
+    SET_ZERO,
+    REPLACE,
+    INVERT,
+    INCR,
+    DECR,
+    INCR_SAT,
+    DECR_SAT,
+    COUNT,
 };
 
-enum Channel
+enum class Channel
 {
-    CH_NONE  = 0,
-    CH_RED   = 1 << 0,
-    CH_GREEN = 1 << 1,
-    CH_BLUE  = 1 << 2,
-    CH_ALPHA = 1 << 3,
-    CH_ALL   = CH_RED | CH_GREEN | CH_BLUE | CH_ALPHA,
+    NONE  = 0,
+    RED   = 1 << 0,
+    GREEN = 1 << 1,
+    BLUE  = 1 << 2,
+    ALPHA = 1 << 3,
+    ALL   = RED | GREEN | BLUE | ALPHA,
 };
 
-enum CompareMode
+enum class CompareMode
 {
-    CMP_MODE_NEVER    = 0,
-    CMP_MODE_LESS     = 1,
-    CMP_MODE_EQUAL    = 2,
-    CMP_MODE_LEQUAL   = 3,
-    CMP_MODE_GREATER  = 4,
-    CMP_MODE_NOTEQUAL = 5,
-    CMP_MODE_GEQUAL   = 6,
-    CMP_MODE_ALWAYS   = 7,
-    CMP_MODE_COUNT    = 8
+    NEVER    = 0,
+    LESS     = 1,
+    EQUAL    = 2,
+    LEQUAL   = 3,
+    GREATER  = 4,
+    NOTEQUAL = 5,
+    GEQUAL   = 6,
+    ALWAYS   = 7,
+    COUNT    = 8
 };
 
-enum SamplerRange
+enum class SamplerRange
 {
-    SAMPLER_RANGE_FULL   = 0,
-    SAMPLER_RANGE_NARROW = 1,
+    FULL   = 0,
+    NARROW = 1,
 };
 
-enum SampleLocation
+enum class SampleLocation
 {
-    SAMPLE_LOCATION_COSITED  = 0,
-    SAMPLE_LOCATION_MIDPOINT = 1,
+    COSITED  = 0,
+    MIDPOINT = 1,
 };
 
-enum SamplerModelConversion
+enum class SamplerModelConversion
 {
-    SAMPLER_MODEL_CONVERSION_RGB_IDENTITY   = 0,
-    SAMPLER_MODEL_CONVERSION_YCBCR_IDENTITY = 1,
-    SAMPLER_MODEL_CONVERSION_YCBCR_709      = 2,
-    SAMPLER_MODEL_CONVERSION_YCBCR_601      = 3,
-    SAMPLER_MODEL_CONVERSION_YCBCR_2020     = 4,
+    RGB_IDENTITY   = 0,
+    YCBCR_IDENTITY = 1,
+    YCBCR_709      = 2,
+    YCBCR_601      = 3,
+    YCBCR_2020     = 4,
 };
 
-enum ResourceStateFlags
+enum class ResourceStateFlags
 {
-    RESOURCE_STATE_UNDEFINED                         = 0,
-    RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER        = 1 << 0,
-    RESOURCE_STATE_INDEX_BUFFER                      = 1 << 1,
-    RESOURCE_STATE_RENDER_TARGET                     = 1 << 2,
-    RESOURCE_STATE_UNORDERED_ACCESS                  = 1 << 3,
-    RESOURCE_STATE_DEPTH_WRITE                       = 1 << 4,
-    RESOURCE_STATE_DEPTH_READ                        = 1 << 5,
-    RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE         = 1 << 6,
-    RESOURCE_STATE_PIXEL_SHADER_RESOURCE             = 1 << 7,
-    RESOURCE_STATE_STREAM_OUT                        = 1 << 8,
-    RESOURCE_STATE_INDIRECT_ARGUMENT                 = 1 << 9,
-    RESOURCE_STATE_COPY_DEST                         = 1 << 10,
-    RESOURCE_STATE_COPY_SOURCE                       = 1 << 11,
-    RESOURCE_STATE_PRESENT                           = 1 << 12,
-    RESOURCE_STATE_COMMON                            = 1 << 13,
-    RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE = 1 << 14,
-    RESOURCE_STATE_SHADING_RATE_SOURCE               = 1 << 15,
-    RESOURCE_STATE_SHADER_RESOURCE                   = RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-    RESOURCE_STATE_GENERIC_READ                      = RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER | RESOURCE_STATE_INDEX_BUFFER | RESOURCE_STATE_RENDER_TARGET |
-                                  RESOURCE_STATE_PIXEL_SHADER_RESOURCE | RESOURCE_STATE_INDIRECT_ARGUMENT | RESOURCE_STATE_COPY_SOURCE,
+    UNDEFINED                         = 0,
+    VERTEX_AND_CONSTANT_BUFFER        = 1 << 0,
+    INDEX_BUFFER                      = 1 << 1,
+    RENDER_TARGET                     = 1 << 2,
+    UNORDERED_ACCESS                  = 1 << 3,
+    DEPTH_WRITE                       = 1 << 4,
+    DEPTH_READ                        = 1 << 5,
+    NON_PIXEL_SHADER_RESOURCE         = 1 << 6,
+    PIXEL_SHADER_RESOURCE             = 1 << 7,
+    STREAM_OUT                        = 1 << 8,
+    INDIRECT_ARGUMENT                 = 1 << 9,
+    COPY_DEST                         = 1 << 10,
+    COPY_SOURCE                       = 1 << 11,
+    PRESENT                           = 1 << 12,
+    COMMON                            = 1 << 13,
+    RAYTRACING_ACCELERATION_STRUCTURE = 1 << 14,
+    SHADING_RATE_SOURCE               = 1 << 15,
+    SHADER_RESOURCE                   = NON_PIXEL_SHADER_RESOURCE | PIXEL_SHADER_RESOURCE,
+    GENERICC_READ                     = VERTEX_AND_CONSTANT_BUFFER | INDEX_BUFFER | RENDER_TARGET |
+                    PIXEL_SHADER_RESOURCE | INDIRECT_ARGUMENT | COPY_SOURCE,
 };
 using ResourceStateFlagsOneBit = ResourceStateFlags;
 
-enum TextureCreationFlags
+enum class TextureCreationFlags
 {
     // Default flag (Texture will use default allocation strategy decided by the api specific allocator)
-    TEXTURE_CREATION_FLAG_NONE                      = 0,
+    NONE                      = 0,
     // Texture will allocate its own memory (COMMITTED resource)
-    TEXTURE_CREATION_FLAG_OWN_MEMORY_BIT            = 1 << 0,
+    OWN_MEMORY_BIT            = 1 << 0,
     // Texture will be allocated in memory which can be shared among multiple processes
-    TEXTURE_CREATION_FLAG_EXPORT_BIT                = 1 << 1,
+    EXPORT_BIT                = 1 << 1,
     // Texture will be allocated in memory which can be shared among multiple gpus
-    TEXTURE_CREATION_FLAG_EXPORT_ADAPTER_BIT        = 1 << 2,
+    EXPORT_ADAPTER_BIT        = 1 << 2,
     // Texture will be imported from a handle created in another process
-    TEXTURE_CREATION_FLAG_IMPORT_BIT                = 1 << 3,
+    IMPORT_BIT                = 1 << 3,
     // Use ESRAM to store this texture
-    TEXTURE_CREATION_FLAG_ESRAM                     = 1 << 4,
+    ESRAM                     = 1 << 4,
     // Use on-tile memory to store this texture
-    TEXTURE_CREATION_FLAG_ON_TILE                   = 1 << 5,
+    ON_TILE                   = 1 << 5,
     // Prevent compression meta data from generating (XBox)
-    TEXTURE_CREATION_FLAG_NO_COMPRESSION            = 1 << 6,
+    NO_COMPRESSION            = 1 << 6,
     // Force 2D instead of automatically determining dimension based on width, height, depth
-    TEXTURE_CREATION_FLAG_FORCE_2D                  = 1 << 7,
+    FORCE_2D                  = 1 << 7,
     // Force 3D instead of automatically determining dimension based on width, height, depth
-    TEXTURE_CREATION_FLAG_FORCE_3D                  = 1 << 8,
+    FORCE_3D                  = 1 << 8,
     // Display target
-    TEXTURE_CREATION_FLAG_ALLOW_DISPLAY_TARGET      = 1 << 9,
+    ALLOW_DISPLAY_TARGET      = 1 << 9,
     // Create an sRGB texture.
-    TEXTURE_CREATION_FLAG_SRGB                      = 1 << 10,
+    SRGB                      = 1 << 10,
     // Create a normal map texture
-    TEXTURE_CREATION_FLAG_NORMAL_MAP                = 1 << 11,
+    NORMAL_MAP                = 1 << 11,
     // Fast clear
-    TEXTURE_CREATION_FLAG_FAST_CLEAR                = 1 << 12,
+    FAST_CLEAR                = 1 << 12,
     // Fragment mask
-    TEXTURE_CREATION_FLAG_FRAG_MASK                 = 1 << 13,
+    FRAG_MASK                 = 1 << 13,
     // Doubles the amount of array layers of the texture when rendering VR. Also forces the texture to be a 2D Array texture.
-    TEXTURE_CREATION_FLAG_VR_MULTIVIEW              = 1 << 14,
+    VR_MULTIVIEW              = 1 << 14,
     // Binds the FFR fragment density if this texture is used as a render target.
-    TEXTURE_CREATION_FLAG_VR_FOVEATED_RENDERING     = 1 << 15,
+    VR_FOVEATED_RENDERING     = 1 << 15,
     // Creates resolve attachment for auto resolve (MSAA on tiled architecture - Resolve can be done on tile through render pass)
-    TEXTURE_CREATION_FLAG_CREATE_RESOLVE_ATTACHMENT = 1 << 16,
+    CREATE_RESOLVE_ATTACHMENT = 1 << 16,
 };
 using TextureCreationFlagsOneBit = TextureCreationFlags;
 
-enum MSAASampleCount
+enum class MSAASampleCount
 {
-    MSAA_SAMPLE_COUNT_1     = 1,
-    MSAA_SAMPLE_COUNT_2     = 2,
-    MSAA_SAMPLE_COUNT_4     = 4,
-    MSAA_SAMPLE_COUNT_8     = 8,
-    MSAA_SAMPLE_COUNT_16    = 16,
-    MSAA_SAMPLE_COUNT_COUNT = 5,
+    COUNT_1     = 1,
+    COUNT_2     = 2,
+    COUNT_4     = 4,
+    COUNT_8     = 8,
+    COUNT_16    = 16,
+    COUNT_COUNT = 5,
 };
 
-enum ResourceFlag
+enum class ResourceFlag
 {
-    RESOURCE_FLAG_UNDEFINED                         = 0,
-    RESOURCE_FLAG_VERTEX_AND_CONSTANT_BUFFER        = 1 << 0,
-    RESOURCE_FLAG_INDEX_BUFFER                      = 1 << 1,
-    RESOURCE_FLAG_RENDER_TARGET                     = 1 << 2,
-    RESOURCE_FLAG_UNORDERED_ACCESS                  = 1 << 3,
-    RESOURCE_FLAG_DEPTH_WRITE                       = 1 << 4,
-    RESOURCE_FLAG_DEPTH_READ                        = 1 << 5,
-    RESOURCE_FLAG_NON_PIXEL_SHADER_RESOURCE         = 1 << 6,
-    RESOURCE_FLAG_PIXEL_SHADER_RESOURCE             = 1 << 7,
-    RESOURCE_FLAG_STREAM_OUT                        = 1 << 8,
-    RESOURCE_FLAG_INDIRECT_ARGUMENT                 = 1 << 9,
-    RESOURCE_FLAG_COPY_DEST                         = 1 << 10,
-    RESOURCE_FLAG_COPY_SOURCE                       = 1 << 11,
-    RESOURCE_FLAG_PRESENT                           = 1 << 12,
-    RESOURCE_FLAG_COMMON                            = 1 << 13,
-    RESOURCE_FLAG_RAYTRACING_ACCELERATION_STRUCTURE = 1 << 14,
-    RESOURCE_FLAG_SHADING_RATE_SOURCE               = 1 << 15,
-    RESOURCE_FLAG_SHADER_RESOURCE                   = RESOURCE_FLAG_NON_PIXEL_SHADER_RESOURCE | RESOURCE_FLAG_PIXEL_SHADER_RESOURCE,
-    RESOURCE_FLAG_GENERIC_READ                      = RESOURCE_FLAG_VERTEX_AND_CONSTANT_BUFFER | RESOURCE_FLAG_INDEX_BUFFER |
-                                 RESOURCE_FLAG_NON_PIXEL_SHADER_RESOURCE | RESOURCE_FLAG_PIXEL_SHADER_RESOURCE |
-                                 RESOURCE_FLAG_INDIRECT_ARGUMENT | RESOURCE_FLAG_COPY_SOURCE,
+    UNDEFINED                         = 0,
+    VERTEX_AND_CONSTANT_BUFFER        = 1 << 0,
+    INDEX_BUFFER                      = 1 << 1,
+    RENDER_TARGET                     = 1 << 2,
+    UNORDERED_ACCESS                  = 1 << 3,
+    DEPTH_WRITE                       = 1 << 4,
+    DEPTH_READ                        = 1 << 5,
+    NON_PIXEL_SHADER_RESOURCE         = 1 << 6,
+    PIXEL_SHADER_RESOURCE             = 1 << 7,
+    STREAM_OUT                        = 1 << 8,
+    INDIRECT_ARGUMENT                 = 1 << 9,
+    COPY_DEST                         = 1 << 10,
+    COPY_SOURCE                       = 1 << 11,
+    PRESENT                           = 1 << 12,
+    COMMON                            = 1 << 13,
+    RAYTRACING_ACCELERATION_STRUCTURE = 1 << 14,
+    SHADING_RATE_SOURCE               = 1 << 15,
+    SHADER_RESOURCE                   = NON_PIXEL_SHADER_RESOURCE | PIXEL_SHADER_RESOURCE,
+    GENERICC_READ                     = VERTEX_AND_CONSTANT_BUFFER | INDEX_BUFFER |
+                    NON_PIXEL_SHADER_RESOURCE | PIXEL_SHADER_RESOURCE |
+                    INDIRECT_ARGUMENT | COPY_SOURCE,
 };
 using ResourceFlagOneBit = ResourceFlag;
 
-enum ResourceMemoryUsage
+enum class ResourceMemoryUsage
 {
 
-    RESOURCE_MEMORY_USAGE_UNKNOWN    = 0,  // No intended memory usage specified.
-    RESOURCE_MEMORY_USAGE_GPU_ONLY   = 1,  // Memory will be used on device only, no need to be mapped on host.
-    RESOURCE_MEMORY_USAGE_CPU_ONLY   = 2,  // Memory will be mapped on host. Could be used for transfer to device.
-    RESOURCE_MEMORY_USAGE_CPU_TO_GPU = 3,  // Memory will be used for frequent (dynamic) updates from host and reads on device.
-    RESOURCE_MEMORY_USAGE_GPU_TO_CPU = 4,  // Memory will be used for writing on device and readback on host.
-    RESOURCE_MEMORY_USAGE_COUNT,
-    RESOURCE_MEMORY_USAGE_MAX_ENUM = 0x7FFFFFFF
+    UNKNOWN    = 0,  // No intended memory usage specified.
+    GPU_ONLY   = 1,  // Memory will be used on device only, no need to be mapped on host.
+    CPU_ONLY   = 2,  // Memory will be mapped on host. Could be used for transfer to device.
+    CPU_TO_GPU = 3,  // Memory will be used for frequent (dynamic) updates from host and reads on device.
+    GPU_TO_CPU = 4,  // Memory will be used for writing on device and readback on host.
+    COUNT,
+    MAX_ENUM = 0x7FFFFFFF
 };
 
-enum BufferCreationFlags
+enum class BufferCreationFlags
 {
-    BUFFER_CREATION_FLAG_NONE                        = 1 << 0,  // Default flag (Buffer will use aliased memory, buffer will not be cpu accessible until mapBuffer is called)
-    BUFFER_CREATION_FLAG_OWN_MEMORY_BIT              = 1 << 2,  // Buffer will allocate its own memory (COMMITTED resource)
-    BUFFER_CREATION_FLAG_PERSISTENT_MAP_BIT          = 1 << 3,  // Buffer will be persistently mapped
-    BUFFER_CREATION_FLAG_ESRAM                       = 1 << 4,  // Use ESRAM to store this buffer
-    BUFFER_CREATION_FLAG_NO_DESCRIPTOR_VIEW_CREATION = 1 << 5,  // Flag to specify not to allocate descriptors for the resource
-    BUFFER_CREATION_FLAG_HOST_VISIBLE_VKONLY         = 1 << 6,  // Memory Host Flags
-    BUFFER_CREATION_FLAG_HOST_COHERENT_VKONLY        = 1 << 7,  // Memory Host Flags
+    NONE                        = 1 << 0,  // Default flag (Buffer will use aliased memory, buffer will not be cpu accessible until mapBuffer is called)
+    OWN_MEMORY_BIT              = 1 << 2,  // Buffer will allocate its own memory (COMMITTED resource)
+    PERSISTENT_MAP_BIT          = 1 << 3,  // Buffer will be persistently mapped
+    ESRAM                       = 1 << 4,  // Use ESRAM to store this buffer
+    NO_DESCRIPTOR_VIEW_CREATION = 1 << 5,  // Flag to specify not to allocate descriptors for the resource
+    HOST_VISIBLE_VKONLY         = 1 << 6,  // Memory Host Flags
+    HOST_COHERENT_VKONLY        = 1 << 7,  // Memory Host Flags
 
 };
 using BufferCreationFlagsOneBit = BufferCreationFlags;
 
-enum TextureDimension
+enum class TextureDimension
 {
-    TEXTURE_DIM_1D,
-    TEXTURE_DIM_2D,
-    TEXTURE_DIM_2DMS,
-    TEXTURE_DIM_3D,
-    TEXTURE_DIM_CUBE,
-    TEXTURE_DIM_1D_ARRAY,
-    TEXTURE_DIM_2D_ARRAY,
-    TEXTURE_DIM_2DMS_ARRAY,
-    TEXTURE_DIM_CUBE_ARRAY,
-    TEXTURE_DIM_COUNT,
-    TEXTURE_DIM_UNDEFINED,
+    DIM_1D,
+    DIM_2D,
+    DIM_2DMS,
+    DIM_3D,
+    DIM_CUBE,
+    DIM_1D_ARRAY,
+    DIM_2D_ARRAY,
+    DIM_2DMS_ARRAY,
+    DIM_CUBE_ARRAY,
+    DIM_COUNT,
+    DIM_UNDEFINED,
 
 };
 
-enum IndirectArgumentType
+enum class IndirectArgumentType
 {
-    INDIRECT_ARG_INVALID,
-    INDIRECT_DRAW,
-    INDIRECT_DRAW_INDEX,
-    INDIRECT_DISPATCH,
-    INDIRECT_VERTEX_BUFFER,
-    INDIRECT_INDEX_BUFFER,
-    INDIRECT_CONSTANT,
-    INDIRECT_CONSTANT_BUFFER_VIEW_DXONLY,   // only for dx
-    INDIRECT_SHADER_RESOURCE_VIEW_DXONLY,   // only for dx
-    INDIRECT_UNORDERED_ACCESS_VIEW_DXONLY,  // only for dx
+    INVALID,
+    DRAW,
+    DRAW_INDEX,
+    DISPATCH,
+    VERTEX_BUFFER,
+    INDEX_BUFFER,
+    CONSTANT,
+    CONSTANT_BUFFER_VIEW_DXONLY,   // only for dx
+    SHADER_RESOURCE_VIEW_DXONLY,   // only for dx
+    UNORDERED_ACCESS_VIEW_DXONLY,  // only for dx
 };
 
-enum DescriptorTypeFlag
+enum class DescriptorTypeFlag
 {
-    DESCRIPTOR_TYPE_UNDEFINED                                 = 0,
-    DESCRIPTOR_TYPE_SAMPLER                                   = 1 << 0,
-    DESCRIPTOR_TYPE_TEXTURE                                   = 1 << 1,                                // SRV Read only texture
-    DESCRIPTOR_TYPE_RW_TEXTURE                                = 1 << 2,                                /// UAV Texture
-    DESCRIPTOR_TYPE_BUFFER                                    = 1 << 3,                                // SRV Read only buffer
-    DESCRIPTOR_TYPE_BUFFER_RAW                                = (1 << 4) | DESCRIPTOR_TYPE_BUFFER,     // SRV Read only buffer
-    DESCRIPTOR_TYPE_RW_BUFFER                                 = 1 << 5,                                /// UAV Buffer
-    DESCRIPTOR_TYPE_RW_BUFFER_RAW                             = (1 << 6) | DESCRIPTOR_TYPE_RW_BUFFER,  /// UAV Buffer
-    DESCRIPTOR_TYPE_UNIFORM_BUFFER                            = 1 << 7,                                /// Uniform buffer
-    DESCRIPTOR_TYPE_ROOT_CONSTANT                             = 1 << 8,                                /// Push constant / Root constant
+    UNDEFINED                                 = 0,
+    SAMPLER                                   = 1 << 0,
+    TEXTURE                                   = 1 << 1,                // SRV Read only texture
+    RW_TEXTURE                                = 1 << 2,                /// UAV Texture
+    BUFFER                                    = 1 << 3,                // SRV Read only buffer
+    BUFFER_RAW                                = (1 << 4) | BUFFER,     // SRV Read only buffer
+    RW_BUFFER                                 = 1 << 5,                /// UAV Buffer
+    RW_BUFFER_RAW                             = (1 << 6) | RW_BUFFER,  /// UAV Buffer
+    UNIFORM_BUFFER                            = 1 << 7,                /// Uniform buffer
+    ROOT_CONSTANT                             = 1 << 8,                /// Push constant / Root constant
 
     /// IA
-    DESCRIPTOR_TYPE_VERTEX_BUFFER                             = 1 << 9,
-    DESCRIPTOR_TYPE_INDEX_BUFFER                              = 1 << 10,
-    DESCRIPTOR_TYPE_INDIRECT_BUFFER                           = 1 << 11,
+    VERTEX_BUFFER                             = 1 << 9,
+    INDEX_BUFFER                              = 1 << 10,
+    INDIRECT_BUFFER                           = 1 << 11,
 
-    DESCRIPTOR_TYPE_TEXTURE_CUBE                              = 1 << 12 | DESCRIPTOR_TYPE_TEXTURE,  /// Cubemap SRV
-    DESCRIPTOR_TYPE_RENDER_TARGET_MIP_SLICES                  = 1 << 13,                            /// RTV / DSV per mip slice
-    DESCRIPTOR_TYPE_RENDER_TARGET_ARRAY_SLICES                = 1 << 14,                            /// RTV / DSV per array slice
+    TEXTURE_CUBE                              = 1 << 12 | TEXTURE,  /// Cubemap SRV
+    RENDER_TARGET_MIP_SLICES                  = 1 << 13,            /// RTV / DSV per mip slice
+    RENDER_TARGET_ARRAY_SLICES                = 1 << 14,            /// RTV / DSV per array slice
 
     /// RTV / DSV per depth slice
-    DESCRIPTOR_TYPE_RENDER_TARGET_DEPTH_SLICES                = 1 << 15,
-    DESCRIPTOR_TYPE_RAY_TRACING                               = 1 << 16,
-    DESCRIPTOR_TYPE_INDIRECT_COMMAND_BUFFER                   = 1 << 17,
+    RENDER_TARGET_DEPTH_SLICES                = 1 << 15,
+    RAY_TRACING                               = 1 << 16,
+    INDIRECT_COMMAND_BUFFER                   = 1 << 17,
 
     /// Subpass input (only available in Vulkan)
-    DESCRIPTOR_TYPE_INPUT_ATTACHMENT_VKONLY                   = 1 << 18,
-    DESCRIPTOR_TYPE_TEXEL_BUFFER_VKONLY                       = 1 << 19,
-    DESCRIPTOR_TYPE_RW_TEXEL_BUFFER_VKONLY                    = 1 << 20,
-    DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER_VKONLY             = 1 << 21,
+    INPUT_ATTACHMENT_VKONLY                   = 1 << 18,
+    TEXEL_BUFFER_VKONLY                       = 1 << 19,
+    RW_TEXEL_BUFFER_VKONLY                    = 1 << 20,
+    COMBINED_IMAGE_SAMPLER_VKONLY             = 1 << 21,
 
     /// Khronos extension ray tracing (only available in Vulkan))
-    DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_VKONLY             = 1 << 22,
-    DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_BUILD_INPUT_VKONLY = 1 << 23,
-    DESCRIPTOR_TYPE_SHADER_DEVICE_ADDRESS_VKONLY              = 1 << 24,
-    DESCRIPTOR_TYPE_SHADER_BINDING_TABLE_VKONLY               = 1 << 25,
+    ACCELERATION_STRUCTURE_VKONLY             = 1 << 22,
+    ACCELERATION_STRUCTURE_BUILD_INPUT_VKONLY = 1 << 23,
+    SHADER_DEVICE_ADDRESS_VKONLY              = 1 << 24,
+    SHADER_BINDING_TABLE_VKONLY               = 1 << 25,
 };
 using DescriptorTypeFlagOneBit = DescriptorTypeFlag;
 
-enum ShaderStageFlag
+enum class ShaderStageFlag
 {
-    SHADER_STAGE_FLAG_NONE       = 0,
-    SHADER_STAGE_FLAG_VERT       = 1 << 0,
-    SHADER_STAGE_FLAG_TESC       = 1 << 1,
-    SHADER_STAGE_FLAG_TESE       = 1 << 2,
-    SHADER_STAGE_FLAG_GEOM       = 1 << 3,
-    SHADER_STAGE_FLAG_FRAG       = 1 << 4,
-    SHADER_STAGE_FLAG_COMP       = 1 << 5,
-    SHADER_STAGE_FLAG_RAYTRACING = 1 << 6,
-    SHADER_STAGE_FLAG_MAX        = SHADER_STAGE_FLAG_RAYTRACING + 1,
-    SHADER_STAGE_FLAG_COUNT      = 7,
+    NONE       = 0,
+    VERT       = 1 << 0,
+    TESC       = 1 << 1,
+    TESE       = 1 << 2,
+    GEOM       = 1 << 3,
+    FRAG       = 1 << 4,
+    COMP       = 1 << 5,
+    RAYTRACING = 1 << 6,
+    MAX        = RAYTRACING + 1,
+    COUNT      = 7,
 
-    SHADER_STAGE_FLAG_HULL       = SHADER_STAGE_FLAG_TESC,
-    SHADER_STAGE_FLAG_DOMAIN     = SHADER_STAGE_FLAG_TESE,
+    HULL       = TESC,
+    DOMAINN    = TESE,
 
-    SHADER_STAGE_FLAG_GRAPHICS   = SHADER_STAGE_FLAG_VERT | SHADER_STAGE_FLAG_TESC | SHADER_STAGE_FLAG_TESE | SHADER_STAGE_FLAG_GEOM | SHADER_STAGE_FLAG_FRAG,
+    GRAPHICS   = VERT | TESC | TESE | GEOM | FRAG,
 };
 using ShaderStageFlagOneBit = ShaderStageFlag;  // must be the single bit
 
-enum ShaderModel
+enum class ShaderModel
 {
     // (From) 5.1 is supported on all DX12 hardware
-    SHADER_MODEL_5_1 = 0x51,
-    SHADER_MODEL_6_0 = 0x60,
-    SHADER_MODEL_6_1 = 0x61,
-    SHADER_MODEL_6_2 = 0x62,
-    SHADER_MODEL_6_3 = 0x63,
-    SHADER_MODEL_6_4 = 0x64,
-    SHADER_MODEL_6_5 = 0x65,
-    SHADER_MODEL_6_6 = 0x66,
-    SHADER_MODEL_6_7 = 0x67,
-    SHADER_MODEL_HIGHEST
+    SM_5_1 = 0x51,
+    SM_6_0 = 0x60,
+    SM_6_1 = 0x61,
+    SM_6_2 = 0x62,
+    SM_6_3 = 0x63,
+    SM_6_4 = 0x64,
+    SM_6_5 = 0x65,
+    SM_6_6 = 0x66,
+    SM_6_7 = 0x67,
+    SM_HIGHEST
 };
 
-enum ShaderStageLoadFlag
+enum class ShaderStageLoadFlag
 {
-    SHADER_STAGE_LOAD_FLAG_NONE                  = 0,
-    SHADER_STAGE_LOAD_FLAG_ENABLE_PS_PRIMITIVEID = 1 << 0,
+    NONE                  = 0,
+    ENABLE_PS_PRIMITIVEID = 1 << 0,
 };
 using ShaderStageLoadFlagOneBit = ShaderStageLoadFlag;
 
-enum PipelineType
+enum class PipelineType
 {
-    PIPELINE_TYPE_UNDEFINED = 0,
-    PIPELINE_TYPE_COMPUTE,
-    PIPELINE_TYPE_GRAPHICS,
-    PIPELINE_TYPE_RAYTRACING,
-    PIPELINE_TYPE_COUNT,
+    UNDEFINED = 0,
+    COMPUTE,
+    GRAPHICS,
+    RAYTRACING,
+    COUNT,
 };
 
-enum DescriptorUpdateFrequency
+enum class DescriptorUpdateFrequency
 {
-    DESCRIPTOR_UPDATE_FREQ_NONE = 0,
-    DESCRIPTOR_UPDATE_FREQ_PER_FRAME,
-    DESCRIPTOR_UPDATE_FREQ_PER_BATCH,
-    DESCRIPTOR_UPDATE_FREQ_PER_DRAW,
-    DESCRIPTOR_UPDATE_FREQ_COUNT,
+    NONE = 0,
+    PER_FRAME,
+    PER_BATCH,
+    PER_DRAW,
+    COUNT,
 };
 
-enum RootSignatureFlags
+enum class RootSignatureFlags
 {
-    ROOT_SIGNATURE_FLAG_NONE      = 0,       // Default flag
-    ROOT_SIGNATURE_FLAG_LOCAL_BIT = 1 << 0,  // used mainly in raytracing shaders
+    NONE      = 0,       // Default flag
+    LOCAL_BIT = 1 << 0,  // used mainly in raytracing shaders
 };
 using RootSignatureFlagsOneBit = RootSignatureFlags;
 
-enum AdapterType
+enum class AdapterType
 {
-    ADAPTER_TYPE_OTHER          = 0,
-    ADAPTER_TYPE_INTEGRATED_GPU = 1,
-    ADAPTER_TYPE_DISCRETE_GPU   = 2,
-    ADAPTER_TYPE_VIRTUAL_GPU    = 3,
-    ADAPTER_TYPE_CPU            = 4,
-    ADAPTER_TYPE_COUNT
+    _OTHER          = 0,
+    _INTEGRATED_GPU = 1,
+    _DISCRETE_GPU   = 2,
+    _VIRTUAL_GPU    = 3,
+    _CPU            = 4,
+    _COUNT
 };
 
-enum GraphicsApiFlag
+enum class GraphicsApiFlag
 {
-    GRAPHICS_API_FLAG_NULL      = AXE_02RHI_API_FLAG_NULL,
-    GRAPHICS_API_FLAG_VULKAN    = AXE_02RHI_API_FLAG_VULKAN,
-    GRAPHICS_API_FLAG_D3D12     = AXE_02RHI_API_FLAG_D3D12,
-    GRAPHICS_API_FLAG_AVAILABLE = AXE_02RHI_API_FLAG_AVAILABLE,
+    UNDEFINED = AXE_02RHI_API_FLAG_NULL,
+    VULKAN    = AXE_02RHI_API_FLAG_VULKAN,
+    D3D12     = AXE_02RHI_API_FLAG_D3D12,
+    AVAILABLE = AXE_02RHI_API_FLAG_AVAILABLE,
 };
 using GraphicsApiFlagOneBit = GraphicsApiFlag;
 
 inline constexpr ShaderStageFlag get_shader_stage(std::string_view ext)
 {
-    if (ext == ".vert") { return SHADER_STAGE_FLAG_VERT; }
-    else if (ext == ".tesc") { return SHADER_STAGE_FLAG_TESC; }
-    else if (ext == ".tese") { return SHADER_STAGE_FLAG_TESE; }
-    else if (ext == ".geom") { return SHADER_STAGE_FLAG_GEOM; }
-    else if (ext == ".frag") { return SHADER_STAGE_FLAG_FRAG; }
-    else if (ext == ".comp") { return SHADER_STAGE_FLAG_COMP; }
+    if (ext == ".vert") { return ShaderStageFlag::VERT; }
+    else if (ext == ".tesc") { return ShaderStageFlag::TESC; }
+    else if (ext == ".tese") { return ShaderStageFlag::TESE; }
+    else if (ext == ".geom") { return ShaderStageFlag::GEOM; }
+    else if (ext == ".frag") { return ShaderStageFlag::FRAG; }
+    else if (ext == ".comp") { return ShaderStageFlag::COMP; }
     else if (ext == ".rgen" || ext == ".rmiss" || ext == ".rchit" ||
-             ext == ".rint" || ext == ".rahit" || ext == "rcall") { return SHADER_STAGE_FLAG_RAYTRACING; }
-    else { return SHADER_STAGE_FLAG_NONE; }
+             ext == ".rint" || ext == ".rahit" || ext == "rcall") { return ShaderStageFlag::RAYTRACING; }
+    else { return ShaderStageFlag::NONE; }
 };
 
 struct VertexInput
@@ -563,7 +564,7 @@ struct ShaderReflection
 struct PipelineReflection
 {
     ShaderStageFlag shaderStages;
-    std::array<std::unique_ptr<ShaderReflection>, SHADER_STAGE_FLAG_COUNT> shaderReflections{};
+    std::array<std::unique_ptr<ShaderReflection>, (u32)ShaderStageFlag::COUNT> shaderReflections{};
     std::pmr::vector<ShaderResource> shaderResources;  // unique shader resources, (we need indexing here, so use vector just fine)
     std::pmr::vector<ShaderVariable> shaderVariables;  // unique shader variables
 };

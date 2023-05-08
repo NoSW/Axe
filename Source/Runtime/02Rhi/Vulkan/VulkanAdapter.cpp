@@ -92,23 +92,23 @@ VulkanAdapter::VulkanAdapter(VulkanBackend* backend, VkPhysicalDevice handle, u8
     _mpGPUSettings.waveLaneCount                   = subgroupProps.subgroupSize;
 
     if (subgroupProps.supportedOperations & VK_SUBGROUP_FEATURE_BASIC_BIT)
-        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_BASIC_BIT;
+        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::BASIC_BIT;
     if (subgroupProps.supportedOperations & VK_SUBGROUP_FEATURE_VOTE_BIT)
-        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_VOTE_BIT;
+        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::VOTE_BIT;
     if (subgroupProps.supportedOperations & VK_SUBGROUP_FEATURE_ARITHMETIC_BIT)
-        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_ARITHMETIC_BIT;
+        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::ARITHMETIC_BIT;
     if (subgroupProps.supportedOperations & VK_SUBGROUP_FEATURE_BALLOT_BIT)
-        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_BALLOT_BIT;
+        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::BALLOT_BIT;
     if (subgroupProps.supportedOperations & VK_SUBGROUP_FEATURE_SHUFFLE_BIT)
-        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_SHUFFLE_BIT;
+        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::SHUFFLE_BIT;
     if (subgroupProps.supportedOperations & VK_SUBGROUP_FEATURE_SHUFFLE_RELATIVE_BIT)
-        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_SHUFFLE_RELATIVE_BIT;
+        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::SHUFFLE_RELATIVE_BIT;
     if (subgroupProps.supportedOperations & VK_SUBGROUP_FEATURE_CLUSTERED_BIT)
-        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_CLUSTERED_BIT;
+        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::CLUSTERED_BIT;
     if (subgroupProps.supportedOperations & VK_SUBGROUP_FEATURE_QUAD_BIT)
-        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_QUAD_BIT;
+        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::QUAD_BIT;
     if (subgroupProps.supportedOperations & VK_SUBGROUP_FEATURE_PARTITIONED_BIT_NV)
-        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_PARTITIONED_BIT_NV;
+        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::PARTITIONED_BIT_NV;
 
 #if VK_EXT_fragment_shader_interlock
     _mpGPUSettings.ROVsSupported = fsInterlockFeas.fragmentShaderPixelInterlock;
@@ -122,7 +122,7 @@ VulkanAdapter::VulkanAdapter(VulkanBackend* backend, VkPhysicalDevice handle, u8
     u32 major, minor, secondaryBranch, tertiaryBranch;
     switch (_mpProperties.properties.vendorID)
     {
-        case GpuVender::GPU_VENDOR_ID_NVIDIA:
+        case (u32)GpuVenderId::NVIDIA:
             [[likely]] major = (_mpProperties.properties.driverVersion >> 22) & 0x3ff;
             minor            = (_mpProperties.properties.driverVersion >> 14) & 0x0ff;
             secondaryBranch  = (_mpProperties.properties.driverVersion >> 6) & 0x0ff;
@@ -184,9 +184,9 @@ bool VulkanAdapter::isSupportQueue(QueueTypeFlag t) noexcept
 {
     switch (t)
     {
-        case QUEUE_TYPE_FLAG_GRAPHICS: return _mSupportGraphicsQueue;
-        case QUEUE_TYPE_FLAG_COMPUTE: return _mSupportComputeQueue;
-        case QUEUE_TYPE_FLAG_TRANSFER: return _mSupportTransferQueue;
+        case QueueTypeFlag::GRAPHICS: return _mSupportGraphicsQueue;
+        case QueueTypeFlag::COMPUTE: return _mSupportComputeQueue;
+        case QueueTypeFlag::TRANSFER: return _mSupportTransferQueue;
         default: AXE_ASSERT(false, "Invalid type"); return false;
     }
 }

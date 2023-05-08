@@ -98,7 +98,7 @@ void VulkanCmd::bindDescriptorSet(u32 index, DescriptorSet* pSet) noexcept
     if (_mpBoundPipelineLayout != pVulkanDescriptorSet->_mpRootSignature->_mpPipelineLayout)
     {
         _mpBoundPipelineLayout = pVulkanDescriptorSet->_mpRootSignature->_mpPipelineLayout;
-        for (u32 i = 0; i < DESCRIPTOR_UPDATE_FREQ_COUNT; ++i)
+        for (u32 i = 0; i < (u32)DescriptorUpdateFrequency::COUNT; ++i)
         {
             if (pVulkanDescriptorSet->_mpRootSignature->_mpDescriptorSetLayouts[i] == VK_NULL_HANDLE)
             {
@@ -153,11 +153,11 @@ void VulkanCmd::resourceBarrier(
 
     const auto findQueueFamIndexHelper = [this](const BarrierInfo& info) -> std::pair<u8, u8>
     {
-        if (info.isAcquire && info.currentState != RESOURCE_STATE_UNDEFINED)
+        if (info.isAcquire && info.currentState != ResourceStateFlags::UNDEFINED)
         {
             return {_mpDevice->_mQueueFamilyIndexes[(u32)info.queueType], (u8)_mpQueue->_mVkQueueFamilyIndex};
         }
-        else if (info.isRelease && info.currentState != RESOURCE_STATE_UNDEFINED)
+        else if (info.isRelease && info.currentState != ResourceStateFlags::UNDEFINED)
         {
             return {(u8)_mpQueue->_mVkQueueFamilyIndex, _mpDevice->_mQueueFamilyIndexes[(u32)info.queueType]};
         }
@@ -175,7 +175,7 @@ void VulkanCmd::resourceBarrier(
             auto* pBuffer                       = static_cast<VulkanBuffer*>(pTrans.pBuffer);
             auto& bufMemTrans                   = bufMemBarriers[i];
 
-            const bool isBothUA                 = pTrans.barrierInfo.currentState == RESOURCE_STATE_UNORDERED_ACCESS && pTrans.barrierInfo.newState == RESOURCE_STATE_UNORDERED_ACCESS;
+            const bool isBothUA                 = pTrans.barrierInfo.currentState == ResourceStateFlags::UNORDERED_ACCESS && pTrans.barrierInfo.newState == ResourceStateFlags::UNORDERED_ACCESS;
             auto [srcQuFamIndex, dstQuFamIndex] = findQueueFamIndexHelper(pTrans.barrierInfo);
 
             bufMemTrans.sType                   = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
@@ -196,7 +196,7 @@ void VulkanCmd::resourceBarrier(
     const auto imageBarrierHelper = [&findQueueFamIndexHelper, &srcAccessFlags, &dstAccessFlags](
                                         const ImageBarrier& pTrans, VulkanTexture* pTexture, VkImageMemoryBarrier& imgMemTrans)
     {
-        const bool isBothUA                         = pTrans.barrierInfo.currentState == RESOURCE_STATE_UNORDERED_ACCESS && pTrans.barrierInfo.newState == RESOURCE_STATE_UNORDERED_ACCESS;
+        const bool isBothUA                         = pTrans.barrierInfo.currentState == ResourceStateFlags::UNORDERED_ACCESS && pTrans.barrierInfo.newState == ResourceStateFlags::UNORDERED_ACCESS;
         auto [srcQuFamIndex, dstQuFamIndex]         = findQueueFamIndexHelper(pTrans.barrierInfo);
         imgMemTrans.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         imgMemTrans.pNext                           = nullptr;

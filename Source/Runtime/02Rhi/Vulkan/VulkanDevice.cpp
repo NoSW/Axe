@@ -145,7 +145,7 @@ bool VulkanDevice::_createLogicalDevice(const DeviceDesc& desc) noexcept
         }
     }
 
-    for (u8 i = 0; i < QUEUE_TYPE_FLAG_COUNT; ++i)
+    for (u8 i = 0; i < (u32)QueueTypeFlag::COUNT; ++i)
     {
         u8 dontCareOutput1, dontCareOutput2;
         queryAvailableQueueIndex((QueueTypeFlag)i, _mQueueFamilyIndexes[i], dontCareOutput1, dontCareOutput2);
@@ -228,49 +228,49 @@ void VulkanDevice::_createDefaultResource() noexcept
         texDesc.pNativeHandle          = nullptr;
         texDesc.pName                  = "Dummy Texture";
         texDesc.clearValue.rgba        = {0.0, 0.0, 0.0, 0.0};
-        texDesc.flags                  = TEXTURE_CREATION_FLAG_NONE;
+        texDesc.flags                  = TextureCreationFlags::NONE;
         texDesc.mipLevels              = 1;
         texDesc.sampleQuality          = 0;
         texDesc.format                 = TinyImageFormat_R8G8B8A8_UNORM;
-        texDesc.startState             = RESOURCE_STATE_COMMON;
+        texDesc.startState             = ResourceStateFlags::COMMON;
 
         ///// 1D, 2D, 3D
         const auto createTextureHelper = [this, &texDesc](MSAASampleCount sampleCount, u32 arraySize, u32 width, u32 height, u32 depth, TextureDimension dim)
         {
-            texDesc.width                                   = width;
-            texDesc.height                                  = height;
-            texDesc.depth                                   = depth;
-            texDesc.arraySize                               = arraySize;
-            texDesc.sampleCount                             = sampleCount;
+            texDesc.width                                        = width;
+            texDesc.height                                       = height;
+            texDesc.depth                                        = depth;
+            texDesc.arraySize                                    = arraySize;
+            texDesc.sampleCount                                  = sampleCount;
 
-            texDesc.descriptorType                          = DESCRIPTOR_TYPE_TEXTURE;
-            this->_mNullDescriptors.pDefaultTextureSRV[dim] = this->createTexture(texDesc);
+            texDesc.descriptorType                               = DescriptorTypeFlag::TEXTURE;
+            this->_mNullDescriptors.pDefaultTextureSRV[(u32)dim] = this->createTexture(texDesc);
 
-            if (sampleCount == MSAA_SAMPLE_COUNT_1)
+            if (sampleCount == MSAASampleCount::COUNT_1)
             {
-                texDesc.descriptorType                          = DESCRIPTOR_TYPE_RW_TEXTURE;
-                this->_mNullDescriptors.pDefaultTextureUAV[dim] = this->createTexture(texDesc);
+                texDesc.descriptorType                               = DescriptorTypeFlag::RW_TEXTURE;
+                this->_mNullDescriptors.pDefaultTextureUAV[(u32)dim] = this->createTexture(texDesc);
             }
         };
-        createTextureHelper(MSAA_SAMPLE_COUNT_1, 1, 1, 1, 1, TEXTURE_DIM_1D);
-        createTextureHelper(MSAA_SAMPLE_COUNT_1, 2, 1, 1, 1, TEXTURE_DIM_1D_ARRAY);
-        createTextureHelper(MSAA_SAMPLE_COUNT_1, 1, 2, 2, 1, TEXTURE_DIM_2D);
-        createTextureHelper(MSAA_SAMPLE_COUNT_1, 2, 2, 2, 1, TEXTURE_DIM_2D_ARRAY);
-        createTextureHelper(MSAA_SAMPLE_COUNT_4, 1, 2, 2, 1, TEXTURE_DIM_2DMS);
-        createTextureHelper(MSAA_SAMPLE_COUNT_4, 2, 2, 2, 1, TEXTURE_DIM_2DMS_ARRAY);
-        createTextureHelper(MSAA_SAMPLE_COUNT_1, 1, 2, 2, 2, TEXTURE_DIM_3D);
+        createTextureHelper(MSAASampleCount::COUNT_1, 1, 1, 1, 1, TextureDimension::DIM_1D);
+        createTextureHelper(MSAASampleCount::COUNT_1, 2, 1, 1, 1, TextureDimension::DIM_1D_ARRAY);
+        createTextureHelper(MSAASampleCount::COUNT_1, 1, 2, 2, 1, TextureDimension::DIM_2D);
+        createTextureHelper(MSAASampleCount::COUNT_1, 2, 2, 2, 1, TextureDimension::DIM_2D_ARRAY);
+        createTextureHelper(MSAASampleCount::COUNT_4, 1, 2, 2, 1, TextureDimension::DIM_2DMS);
+        createTextureHelper(MSAASampleCount::COUNT_4, 2, 2, 2, 1, TextureDimension::DIM_2DMS_ARRAY);
+        createTextureHelper(MSAASampleCount::COUNT_1, 1, 2, 2, 2, TextureDimension::DIM_3D);
 
         ///// cube
-        texDesc.width                                                      = 2;
-        texDesc.height                                                     = 2;
-        texDesc.depth                                                      = 1;
-        texDesc.sampleCount                                                = MSAA_SAMPLE_COUNT_1;
-        texDesc.descriptorType                                             = DESCRIPTOR_TYPE_TEXTURE_CUBE;
+        texDesc.width                                                                     = 2;
+        texDesc.height                                                                    = 2;
+        texDesc.depth                                                                     = 1;
+        texDesc.sampleCount                                                               = MSAASampleCount::COUNT_1;
+        texDesc.descriptorType                                                            = DescriptorTypeFlag::TEXTURE_CUBE;
 
-        texDesc.arraySize                                                  = 6;
-        this->_mNullDescriptors.pDefaultTextureSRV[TEXTURE_DIM_CUBE]       = this->createTexture(texDesc);
-        texDesc.arraySize                                                  = 12;
-        this->_mNullDescriptors.pDefaultTextureSRV[TEXTURE_DIM_CUBE_ARRAY] = this->createTexture(texDesc);
+        texDesc.arraySize                                                                 = 6;
+        this->_mNullDescriptors.pDefaultTextureSRV[(u32)TextureDimension::DIM_CUBE]       = this->createTexture(texDesc);
+        texDesc.arraySize                                                                 = 12;
+        this->_mNullDescriptors.pDefaultTextureSRV[(u32)TextureDimension::DIM_CUBE_ARRAY] = this->createTexture(texDesc);
 
         //// Buffer
         BufferDesc bufDesc{
@@ -281,18 +281,18 @@ void VulkanDevice::_createDefaultResource() noexcept
             .structStride       = sizeof(u32),
             .name               = "Dummy Buffer",
             .alignment          = 0,
-            .memoryUsage        = RESOURCE_MEMORY_USAGE_GPU_ONLY,
-            .flags              = BUFFER_CREATION_FLAG_NONE,
-            .queueType          = QUEUE_TYPE_FLAG_MAX,
-            .startState         = RESOURCE_STATE_COMMON,
-            .ICBDrawType        = INDIRECT_ARG_INVALID,
+            .memoryUsage        = ResourceMemoryUsage::GPU_ONLY,
+            .flags              = BufferCreationFlags::NONE,
+            .queueType          = QueueTypeFlag::UNDEFINED,
+            .startState         = ResourceStateFlags::COMMON,
+            .ICBDrawType        = IndirectArgumentType::INVALID,
             .ICBMaxCommandCount = 0,
             .format             = TinyImageFormat_R32_UINT,
         };
 
-        bufDesc.descriptorType              = DESCRIPTOR_TYPE_BUFFER | DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        bufDesc.descriptorType              = DescriptorTypeFlag::BUFFER | DescriptorTypeFlag::UNIFORM_BUFFER;
         _mNullDescriptors.pDefaultBufferSRV = this->createBuffer(bufDesc);
-        bufDesc.descriptorType              = DESCRIPTOR_TYPE_RW_BUFFER;
+        bufDesc.descriptorType              = DescriptorTypeFlag::RW_BUFFER;
         _mNullDescriptors.pDefaultBufferUAV = this->createBuffer(bufDesc);
     }
 
@@ -323,15 +323,15 @@ void VulkanDevice::_createDefaultResource() noexcept
 
     // TODO: mutex _mNullDescriptors.mInitialTransitionMutex
 
-    for (uint32_t dim = 0; dim < TEXTURE_DIM_COUNT; ++dim)
+    for (uint32_t dim = 0; dim < (u32)TextureDimension::DIM_COUNT; ++dim)
     {
         if (_mNullDescriptors.pDefaultTextureSRV[dim])
         {
-            this->initial_transition(_mNullDescriptors.pDefaultTextureSRV[dim], RESOURCE_STATE_SHADER_RESOURCE);
+            this->initial_transition(_mNullDescriptors.pDefaultTextureSRV[dim], ResourceStateFlags::SHADER_RESOURCE);
         }
         if (_mNullDescriptors.pDefaultTextureUAV[dim])
         {
-            this->initial_transition(_mNullDescriptors.pDefaultTextureUAV[dim], RESOURCE_STATE_UNORDERED_ACCESS);
+            this->initial_transition(_mNullDescriptors.pDefaultTextureUAV[dim], ResourceStateFlags::UNORDERED_ACCESS);
         }
     }
 
@@ -429,9 +429,9 @@ bool VulkanDevice::queryAvailableQueueIndex(QueueTypeFlag quType, u8& outQuFamIn
     const auto allSupportedVkQueueFlags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT | VK_QUEUE_COMPUTE_BIT;
     switch (quType)
     {
-        case QUEUE_TYPE_FLAG_GRAPHICS: requiredFlagBit = VK_QUEUE_GRAPHICS_BIT; break;
-        case QUEUE_TYPE_FLAG_TRANSFER: requiredFlagBit = VK_QUEUE_TRANSFER_BIT; break;
-        case QUEUE_TYPE_FLAG_COMPUTE: requiredFlagBit = VK_QUEUE_COMPUTE_BIT; break;
+        case QueueTypeFlag::GRAPHICS: requiredFlagBit = VK_QUEUE_GRAPHICS_BIT; break;
+        case QueueTypeFlag::TRANSFER: requiredFlagBit = VK_QUEUE_TRANSFER_BIT; break;
+        case QueueTypeFlag::COMPUTE: requiredFlagBit = VK_QUEUE_COMPUTE_BIT; break;
         default: AXE_ERROR("Unsupported queue type {}", reflection::enum_name(quType)); break;
     }
 
@@ -503,7 +503,7 @@ void VulkanDevice::initial_transition(Texture* pTexture, ResourceStateFlags star
 
     TextureBarrier texBarrier;
     texBarrier.pTexture                              = pTexture;
-    texBarrier.imageBarrier.barrierInfo.currentState = RESOURCE_STATE_UNDEFINED,
+    texBarrier.imageBarrier.barrierInfo.currentState = ResourceStateFlags::UNDEFINED,
     texBarrier.imageBarrier.barrierInfo.newState     = startState;
     std::pmr::vector<TextureBarrier> texBarriers{texBarrier};
     _mNullDescriptors.pInitialTransitionCmd->resourceBarrier(&texBarriers, nullptr, nullptr);

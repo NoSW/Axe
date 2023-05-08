@@ -218,9 +218,9 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
         .arraySize = 1};
     renderTargetDesc.format           = TinyImageFormat_FromVkFormat((TinyImageFormat_VkFormat)desiredSurfaceFormat.format);
     renderTargetDesc.clearValue       = desc.colorClearValue;
-    renderTargetDesc.mMSAASampleCount = MSAA_SAMPLE_COUNT_1;
+    renderTargetDesc.mMSAASampleCount = MSAASampleCount::COUNT_1;
     renderTargetDesc.sampleQuality    = 0;
-    renderTargetDesc.startState       = RESOURCE_STATE_PRESENT;
+    renderTargetDesc.startState       = ResourceStateFlags::PRESENT;
 
     // Populate the vk_image field and add the Vulkan texture objects
     for (u32 i = 0; i < swapchainImages.size(); ++i)

@@ -27,7 +27,7 @@ inline constexpr float VK_DEVICE_MEM_PRIORITY_LOWEST  = 0.0f;
 struct DeterminePipelineStageOption
 {
     VkAccessFlags mAccessFlags;
-    QueueTypeFlag queueType : 5 = QUEUE_TYPE_FLAG_MAX;
+    QueueTypeFlag queueType : 5 = QueueTypeFlag::UNDEFINED;
     u8 supportGeomShader    : 1 = 0;
     u8 supportTeseShader    : 1 = 0;
     u8 supportRayTracing    : 1 = 0;

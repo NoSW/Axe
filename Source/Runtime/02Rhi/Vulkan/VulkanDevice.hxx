@@ -161,7 +161,7 @@ private:
                                           VK_QUEUE_TRANSFER_BIT | VK_QUEUE_SPARSE_BINDING_BIT | VK_QUEUE_PROTECTED_BIT | VK_QUEUE_VIDEO_DECODE_BIT_KHR | VK_QUEUE_OPTICAL_FLOW_BIT_NV;
 
     // supporting status
-    ShaderModel _mShaderModel                         = SHADER_MODEL_6_7;
+    ShaderModel _mShaderModel                         = ShaderModel::SM_6_7;
     u32 _mExternalMemoryExtension : 1                 = 0;
     u32 _mRaytracingSupported     : 1                 = 0;
 
@@ -185,7 +185,7 @@ private:
     };
 
     std::array<QueueInfo, MAX_QUEUE_FLAG> _mQueueInfos;  // <familyIndex, count>
-    std::array<u8, QUEUE_TYPE_FLAG_COUNT> _mQueueFamilyIndexes{U8_MAX, U8_MAX, U8_MAX};
+    std::array<u8, (u32)QueueTypeFlag::COUNT> _mQueueFamilyIndexes{U8_MAX, U8_MAX, U8_MAX};
 };
 
 }  // namespace axe::rhi

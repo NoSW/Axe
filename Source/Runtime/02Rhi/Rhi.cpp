@@ -15,8 +15,8 @@ Backend* createBackend(GraphicsApiFlag api, BackendDesc& desc) noexcept
 {
     switch (api)
     {
-        case GRAPHICS_API_FLAG_VULKAN: return new VulkanBackend(desc);
-        case GRAPHICS_API_FLAG_D3D12: return nullptr;
+        case GraphicsApiFlag::VULKAN: return new VulkanBackend(desc);
+        case GraphicsApiFlag::D3D12: return nullptr;
         default:
             AXE_ERROR("Unrecognized graphics api")
             return nullptr;
@@ -33,11 +33,11 @@ bool create_pipeline_reflection(std::pmr::vector<ShaderReflection>& shaderRefls,
 {
     if (shaderRefls.empty()) { return false; }
 
-    auto shaderAllFlags = SHADER_STAGE_FLAG_NONE;
+    auto shaderAllFlags = ShaderStageFlag::NONE;
     for (const auto& refl : shaderRefls)
     {
         AXE_ASSERT(std::has_single_bit((u32)refl.shaderStage));
-        if (shaderAllFlags & refl.shaderStage)
+        if ((bool)(shaderAllFlags & refl.shaderStage))
         {
             AXE_ERROR("Duplicate shader stage ({}) was detected in shader reflection array.", reflection::enum_name(refl.shaderStage));
             return false;

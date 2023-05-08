@@ -15,12 +15,12 @@ struct PipelineDesc
     std::string_view appName;
 };
 
-enum LoadFlag
+enum class LoadFlag : u32
 {
-    LOAD_FLAG_RESIZE        = 0x1,
-    LOAD_FLAG_SHADER        = 0x2,
-    LOAD_FLAG_RENDER_TARGET = 0x4,
-    LOAD_FLAG_ALL           = 0xffffffff
+    RESIZE        = 1 << 0,
+    SHADER        = 1 << 1,
+    RENDER_TARGET = 1 << 2,
+    ALL           = 0xffffffff
 };
 using LoadFlagOneBit = LoadFlag;
 

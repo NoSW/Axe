@@ -59,13 +59,13 @@ u32 get_memory_type(u32 typeBits, const VkPhysicalDeviceMemoryProperties& memory
 bool VulkanTexture::_create(const TextureDesc& desc) noexcept
 {
     // args check
-    if (desc.sampleCount > MSAA_SAMPLE_COUNT_1 && desc.mipLevels > 1)
+    if (desc.sampleCount > MSAASampleCount::COUNT_1 && desc.mipLevels > 1)
     {
         AXE_ASSERT(false, "Cannot create a multisampled texture with mipmaps");
         return false;
     }
 
-    if (desc.pNativeHandle && !(desc.flags & TEXTURE_CREATION_FLAG_IMPORT_BIT))
+    if (desc.pNativeHandle && !(desc.flags & TextureCreationFlags::IMPORT_BIT))
     {
         _mOwnsImage = false;
         _mpHandle   = static_cast<VkImage>(const_cast<void*>(desc.pNativeHandle));
@@ -76,18 +76,18 @@ bool VulkanTexture::_create(const TextureDesc& desc) noexcept
     }
 
     VkImageUsageFlags additionalFlags = 0;
-    if (desc.startState & RESOURCE_STATE_RENDER_TARGET)
+    if ((bool)(desc.startState & ResourceStateFlags::RENDER_TARGET))
         additionalFlags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-    else if (desc.startState & RESOURCE_STATE_DEPTH_WRITE)
+    else if ((bool)(desc.startState & ResourceStateFlags::DEPTH_WRITE))
         additionalFlags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
     VkImageType imageType = VK_IMAGE_TYPE_MAX_ENUM;
-    if (desc.flags & TEXTURE_CREATION_FLAG_FORCE_2D)
+    if ((bool)(desc.flags & TextureCreationFlags::FORCE_2D))
     {
         AXE_ASSERT(desc.depth == 1);
         imageType = VK_IMAGE_TYPE_2D;
     }
-    else if (desc.flags & TEXTURE_CREATION_FLAG_FORCE_3D)
+    else if ((bool)(desc.flags & TextureCreationFlags::FORCE_3D))
     {
         imageType = VK_IMAGE_TYPE_3D;
     }
@@ -99,7 +99,7 @@ bool VulkanTexture::_create(const TextureDesc& desc) noexcept
     }
 
     DescriptorTypeFlag descriptorType = desc.descriptorType;
-    bool cubemapRequired              = (DESCRIPTOR_TYPE_TEXTURE_CUBE == (descriptorType & DESCRIPTOR_TYPE_TEXTURE_CUBE));
+    bool cubemapRequired              = (DescriptorTypeFlag::TEXTURE_CUBE == (descriptorType & DescriptorTypeFlag::TEXTURE_CUBE));
 
     const bool isPlanarFormat         = TinyImageFormat_IsPlanar(desc.format);
     const u32 numOfPlanes             = TinyImageFormat_NumOfPlanes(desc.format);
@@ -160,10 +160,13 @@ bool VulkanTexture::_create(const TextureDesc& desc) noexcept
         AXE_ASSERT(formatFeatureFlags, "Format is not supported for GPU local images (i.e. not host visible images)");
 
         VmaAllocationCreateInfo memReqs{};
-        if (desc.flags & TEXTURE_CREATION_FLAG_OWN_MEMORY_BIT) { memReqs.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT; }
+        if ((bool)(desc.flags & TextureCreationFlags::OWN_MEMORY_BIT))
+        {
+            memReqs.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT;
+        }
         memReqs.usage = (VmaMemoryUsage)VMA_MEMORY_USAGE_GPU_ONLY;
 
-        if (_mpDevice->_mExternalMemoryExtension && desc.flags & TEXTURE_CREATION_FLAG_IMPORT_BIT)
+        if ((bool)(_mpDevice->_mExternalMemoryExtension && ((bool)(desc.flags & TextureCreationFlags::IMPORT_BIT))))
         {
             VkExternalMemoryImageCreateInfoKHR externalInfo{
                 .sType       = VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO_KHR,
@@ -193,7 +196,7 @@ bool VulkanTexture::_create(const TextureDesc& desc) noexcept
 #endif
             createInfo.pNext = &externalInfo;
         }
-        else if (_mpDevice->_mExternalMemoryExtension && desc.flags & TEXTURE_CREATION_FLAG_EXPORT_BIT)
+        else if (_mpDevice->_mExternalMemoryExtension && (bool)(desc.flags & TextureCreationFlags::EXPORT_BIT))
         {
             VkExportMemoryAllocateInfoKHR exportMemoryInfo{
                 .sType       = VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO_KHR,
@@ -209,7 +212,7 @@ bool VulkanTexture::_create(const TextureDesc& desc) noexcept
         }
 
         // If lazy allocation is requested, check if the hardware supports it
-        bool lazyAllocation = desc.flags & TEXTURE_CREATION_FLAG_ON_TILE;
+        bool lazyAllocation = (bool)(desc.flags & TextureCreationFlags::ON_TILE);
         if (lazyAllocation)
         {
             u32 memoryTypeIndex                 = 0;
@@ -325,16 +328,16 @@ bool VulkanTexture::_create(const TextureDesc& desc) noexcept
         srvDesc.pNext = nullptr; /* desc.pVkSamplerYcbcrConversionInfo*/
     }
 
-    if (descriptorType & DESCRIPTOR_TYPE_TEXTURE)
+    if ((bool)(descriptorType & DescriptorTypeFlag::TEXTURE))
     {
         if (VK_FAILED(vkCreateImageView(_mpDevice->handle(), &srvDesc, nullptr, &_mpVkSRVDescriptor))) { return false; }
     }
-    if ((TinyImageFormat_HasStencil(desc.format)) && (descriptorType & DESCRIPTOR_TYPE_TEXTURE))
+    if ((TinyImageFormat_HasStencil(desc.format)) && (bool)(descriptorType & DescriptorTypeFlag::TEXTURE))
     {
         srvDesc.subresourceRange.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT;
         if (VK_FAILED(vkCreateImageView(_mpDevice->handle(), &srvDesc, nullptr, &_mpVkSRVStencilDescriptor))) { return false; }
     }
-    if (descriptorType & DESCRIPTOR_TYPE_RW_TEXTURE)
+    if ((bool)(descriptorType & DescriptorTypeFlag::RW_TEXTURE))
     {
         VkImageViewCreateInfo uavDesc = srvDesc;
         // NOTE : We dont support imageCube, imageCubeArray for consistency with other APIs
@@ -356,10 +359,10 @@ bool VulkanTexture::_create(const TextureDesc& desc) noexcept
     _mHeight            = desc.height;
     _mDepth             = desc.depth;
     _mMipLevels         = desc.mipLevels;
-    _mUav               = desc.descriptorType & DESCRIPTOR_TYPE_RW_TEXTURE;
+    _mUav               = (bool)(desc.descriptorType & DescriptorTypeFlag::RW_TEXTURE);
     _mArraySizeMinusOne = desc.arraySize - 1;
     _mFormat            = desc.format;
-    _mSampleCount       = desc.sampleCount;
+    _mSampleCount       = (u32)desc.sampleCount;
 
     return true;
 }

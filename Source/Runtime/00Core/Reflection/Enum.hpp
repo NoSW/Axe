@@ -52,6 +52,12 @@ constexpr static std::string_view enum_name(E value)
 
 using namespace magic_enum::bitwise_operators;
 
+template <T_Enum E>
+constexpr bool operator!(E rhs) noexcept
+{
+    return static_cast<bool>(!static_cast<std::underlying_type_t<E>>(rhs));
+}
+
 namespace std
 {
 

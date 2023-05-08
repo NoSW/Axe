@@ -31,7 +31,7 @@ i32 MainLoop(i32 argc, char** argv, app::App* app)
         AXE_ASSERT(succ);
     }
     {
-        bool succ = app->mpPipeline->load(pipeline::LOAD_FLAG_ALL);
+        bool succ = app->mpPipeline->load(pipeline::LoadFlag::ALL);
         AXE_ASSERT(succ);
     }
     /* init app */
@@ -48,13 +48,13 @@ i32 MainLoop(i32 argc, char** argv, app::App* app)
         {
             if (app->pWindow->isResized())
             {
-                if (!app->mpPipeline->unload(pipeline::LOAD_FLAG_RESIZE))
+                if (!app->mpPipeline->unload(pipeline::LoadFlag::RESIZE))
                 {
                     AXE_ERROR("Failed to unload pipeline");
                     return 1;
                 };
 
-                if (!app->mpPipeline->load(pipeline::LOAD_FLAG_RESIZE))
+                if (!app->mpPipeline->load(pipeline::LoadFlag::RESIZE))
                 {
                     AXE_ERROR("Failed to load pipeline");
                     return 1;
@@ -94,7 +94,7 @@ i32 MainLoop(i32 argc, char** argv, app::App* app)
 
     /* exit backend */
     {
-        bool succ = app->mpPipeline->unload(pipeline::LoadFlag::LOAD_FLAG_ALL);
+        bool succ = app->mpPipeline->unload(pipeline::LoadFlag::ALL);
         AXE_ASSERT(succ);
         app->mpPipeline->exit();
     }

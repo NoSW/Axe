@@ -58,11 +58,11 @@ FenceStatus VulkanFence::status() noexcept
             // fences always have to be reset before they can be used again
             vkResetFences(_mpDevice->handle(), 1, &_mpHandle);
             _mSubmitted = false;
-            return FENCE_STATUS_COMPLETE;
+            return FenceStatus::COMPLETE;
         }
-        else { return FENCE_STATUS_INCOMPLETE; }
+        else { return FenceStatus::INCOMPLETE; }
     }
-    else { return FENCE_STATUS_NOTSUBMITTED; }
+    else { return FenceStatus::NOTSUBMITTED; }
 }
 
 }  // namespace axe::rhi

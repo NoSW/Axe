@@ -41,11 +41,11 @@ private:
     VkQueue _mpHandle             = VK_NULL_HANDLE;
     VulkanDevice* const _mpDevice = nullptr;
     thread::Mutex* _mpSubmitMutex = nullptr;
-    u32 _mFlags                   = QUEUE_FLAG_NONE;
+    u32 _mFlags                   = (u32)QueueFlag::NONE;
     float _mTimestampPeriod       = 0.0f;
     u32 _mVkQueueFamilyIndex : 8  = U8_MAX;
     u32 _mVkQueueIndex       : 8  = U8_MAX;
-    u32 _mType               : 3  = QUEUE_TYPE_FLAG_MAX;
+    u32 _mType               : 3  = (u32)QueueTypeFlag::UNDEFINED;
 };
 
 }  // namespace axe::rhi

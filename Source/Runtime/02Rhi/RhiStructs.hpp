@@ -37,7 +37,7 @@ struct GPUSettings
     u32 maxVertexInputBindings             = 0;
     u32 maxRootSignatureDWORDS             = 0;
     u32 waveLaneCount                      = 0;
-    WaveOpsSupportFlag waveOpsSupportFlags = WAVE_OPS_SUPPORT_FLAG_NONE;
+    WaveOpsSupportFlag waveOpsSupportFlags = WaveOpsSupportFlag::NONE;
     GPUVendorPreset gpuVendorPreset;
 
     // ShadingRate m_shadingRates;  // Variable Rate Shading
@@ -94,7 +94,7 @@ struct AdapterDesc : public DescBase
 struct DeviceDesc : public DescBase
 {
     bool isRequestAllAvailableQueues = true;
-    ShaderModel shaderModel          = SHADER_MODEL_6_7;
+    ShaderModel shaderModel          = ShaderModel::SM_6_7;
 };
 
 struct SemaphoreDesc : public DescBase
@@ -108,9 +108,9 @@ struct FenceDesc : public DescBase
 
 struct QueueDesc : public DescBase
 {
-    QueueTypeFlag type     = QUEUE_TYPE_FLAG_GRAPHICS;
-    QueueFlag flag         = QUEUE_FLAG_NONE;
-    QueuePriority priority = QUEUE_PRIORITY_NORMAL;
+    QueueTypeFlag type     = QueueTypeFlag::GRAPHICS;
+    QueueFlag flag         = QueueFlag::NONE;
+    QueuePriority priority = QueuePriority::NORMAL;
 };
 
 struct QueueSubmitDesc : public DescBase
@@ -173,27 +173,27 @@ struct CmdDesc : public DescBase
 
 struct SamplerDesc : public DescBase
 {
-    FilterType minFilter    = FILTER_TYPE_LINEAR;
-    FilterType magFilter    = FILTER_TYPE_LINEAR;
-    MipMapMode mipMapMode   = MIPMAP_MODE_LINEAR;
-    AddressMode addressU    = ADDRESS_MODE_REPEAT;
-    AddressMode addressV    = ADDRESS_MODE_REPEAT;
-    AddressMode addressW    = ADDRESS_MODE_REPEAT;
+    FilterType minFilter    = FilterType::LINEAR;
+    FilterType magFilter    = FilterType::LINEAR;
+    MipMapMode mipMapMode   = MipMapMode::LINEAR;
+    AddressMode addressU    = AddressMode::REPEAT;
+    AddressMode addressV    = AddressMode::REPEAT;
+    AddressMode addressW    = AddressMode::REPEAT;
     float mipLodBias        = 0.0f;
     float minLod            = 0.0f;
     float maxLod            = 0.0f;
     float maxAnisotropy     = 0.0f;
     bool isSetLodRange      = false;
-    CompareMode compareFunc = CMP_MODE_NEVER;
+    CompareMode compareFunc = CompareMode::NEVER;
 
     struct
     {
         TinyImageFormat format             = TinyImageFormat_UNDEFINED;
-        SamplerModelConversion model       = SAMPLER_MODEL_CONVERSION_RGB_IDENTITY;
-        SamplerRange range                 = SAMPLER_RANGE_FULL;
-        SampleLocation chromaOffsetX       = SAMPLE_LOCATION_COSITED;
-        SampleLocation chromaOffsetY       = SAMPLE_LOCATION_COSITED;
-        FilterType chromaFilter            = FILTER_TYPE_LINEAR;
+        SamplerModelConversion model       = SamplerModelConversion::RGB_IDENTITY;
+        SamplerRange range                 = SamplerRange::FULL;
+        SampleLocation chromaOffsetX       = SampleLocation::COSITED;
+        SampleLocation chromaOffsetY       = SampleLocation::COSITED;
+        FilterType chromaFilter            = FilterType::LINEAR;
         bool isForceExplicitReconstruction = false;
     } samplerConversionDesc;
 };
@@ -207,17 +207,17 @@ struct TextureDesc : public DescBase
     //     VkSamplerYcbcrConversionInfo* pVkSamplerYcbcrConversionInfo;
     // #endif
 
-    TextureCreationFlags flags        = TEXTURE_CREATION_FLAG_NONE;  // decides memory allocation strategy, sharing access,...
+    TextureCreationFlags flags        = TextureCreationFlags::NONE;  // decides memory allocation strategy, sharing access,...
     u32 width                         = 0;
     u32 height                        = 0;
     u32 depth                         = 0;  // Should be 1 if not a type is not TEXTURE_TYPE_3D)
     u32 arraySize                     = 0;  // Should be 1 if texture is not a texture array or cubemap
     u32 mipLevels                     = 0;  // number of mipmap levels
-    MSAASampleCount sampleCount       = MSAA_SAMPLE_COUNT_1;
+    MSAASampleCount sampleCount       = MSAASampleCount::COUNT_1;
     u32 sampleQuality                 = 0;  // The valid range is between zero and the value appropriate for sampleCount
     TinyImageFormat format            = TinyImageFormat_UNDEFINED;
-    ResourceStateFlags startState     = RESOURCE_STATE_UNDEFINED;   // What state will the texture get created in
-    DescriptorTypeFlag descriptorType = DESCRIPTOR_TYPE_UNDEFINED;  // Descriptor creation
+    ResourceStateFlags startState     = ResourceStateFlags::UNDEFINED;  // What state will the texture get created in
+    DescriptorTypeFlag descriptorType = DescriptorTypeFlag::UNDEFINED;  // Descriptor creation
 };
 
 struct BufferDesc : public DescBase
@@ -237,47 +237,47 @@ struct BufferDesc : public DescBase
     /// Alignment
     u32 alignment                     = 0;
     /// Decides which memory heap buffer will use (default, upload, readback)
-    ResourceMemoryUsage memoryUsage   = RESOURCE_MEMORY_USAGE_UNKNOWN;
+    ResourceMemoryUsage memoryUsage   = ResourceMemoryUsage::UNKNOWN;
     /// Creation flags of the buffer
-    BufferCreationFlags flags         = BUFFER_CREATION_FLAG_NONE;
+    BufferCreationFlags flags         = BufferCreationFlags::NONE;
     /// What type of queue the buffer is owned by
-    QueueTypeFlag queueType           = QUEUE_TYPE_FLAG_MAX;
+    QueueTypeFlag queueType           = QueueTypeFlag::UNDEFINED;
     /// What state will the buffer get created in
-    ResourceStateFlags startState     = RESOURCE_STATE_UNDEFINED;
+    ResourceStateFlags startState     = ResourceStateFlags::UNDEFINED;
     /// ICB draw type
-    IndirectArgumentType ICBDrawType  = INDIRECT_ARG_INVALID;
+    IndirectArgumentType ICBDrawType  = IndirectArgumentType::INVALID;
     /// ICB max vertex buffers slots count
     u32 ICBMaxCommandCount            = 0;
     /// Format of the buffer (applicable to typed storage buffers (Buffer<T>)
     TinyImageFormat format            = TinyImageFormat_UNDEFINED;
     /// Flags specifying the suitable usage of this buffer (Uniform buffer, Vertex Buffer, Index Buffer,...)
-    DescriptorTypeFlag descriptorType = DESCRIPTOR_TYPE_UNDEFINED;
+    DescriptorTypeFlag descriptorType = DescriptorTypeFlag::UNDEFINED;
 };
 
 struct RenderTargetDesc : public DescBase
 {
-    TextureCreationFlags flags       = TEXTURE_CREATION_FLAG_NONE;  // decides memory allocation strategy, sharing access,...
+    TextureCreationFlags flags       = TextureCreationFlags::NONE;  // decides memory allocation strategy, sharing access,...
     u32 width                        = 0;
     u32 height                       = 0;
     u32 depth                        = 1;  // (Should be 1 if not a type is not TEXTURE_TYPE_3D)
     u32 arraySize                    = 1;  // Texture array size (Should be 1 if texture is not a texture array or cubemap)
     u32 mipLevels                    = 0;  // Number of mip levels
-    MSAASampleCount mMSAASampleCount = MSAA_SAMPLE_COUNT_1;
-    TinyImageFormat format           = TinyImageFormat_UNDEFINED;   // Internal image format
-    ResourceStateFlags startState    = RESOURCE_STATE_UNDEFINED;    // What flag will the texture get created in
-    ClearValue clearValue{.rgba = {0, 0, 0, 0}};                    // Optimized clear value (recommended to use this same value when clearing the RenderTarget)
-    u32 sampleQuality                 = 1;                          // The image quality level. The higher the quality, the lower the performance. The valid range is between zero and the value appropriate for sampleCount
-    DescriptorTypeFlag descriptorType = DESCRIPTOR_TYPE_UNDEFINED;  // Descriptor creation
+    MSAASampleCount mMSAASampleCount = MSAASampleCount::COUNT_1;
+    TinyImageFormat format           = TinyImageFormat_UNDEFINED;       // Internal image format
+    ResourceStateFlags startState    = ResourceStateFlags::UNDEFINED;   // What flag will the texture get created in
+    ClearValue clearValue{.rgba = {0, 0, 0, 0}};                        // Optimized clear value (recommended to use this same value when clearing the RenderTarget)
+    u32 sampleQuality                 = 1;                              // The image quality level. The higher the quality, the lower the performance. The valid range is between zero and the value appropriate for sampleCount
+    DescriptorTypeFlag descriptorType = DescriptorTypeFlag::UNDEFINED;  // Descriptor creation
     const void* mpNativeHandle        = nullptr;
     const char* mpName                = "Untitled";  // Debug name used in gpu profile
 };
 
 struct ShaderStageDesc
 {
-    ShaderStageFlagOneBit mStage = SHADER_STAGE_FLAG_NONE;
+    ShaderStageFlagOneBit mStage = ShaderStageFlag::NONE;
     std::string_view mRelaFilePath;  // **relative** glsl filepath under Source/, e.g. Shaders/Basic.vert.glsl
     std::string_view mEntryPoint = "main";
-    ShaderStageLoadFlag flags    = SHADER_STAGE_LOAD_FLAG_NONE;
+    ShaderStageLoadFlag flags    = ShaderStageLoadFlag::NONE;
 };
 
 struct ShaderConstants  // only supported by Vulkan APIs
@@ -290,7 +290,7 @@ struct ShaderDesc : public DescBase
 {
     std::pmr::vector<ShaderStageDesc> mStages;
     std::pmr::vector<ShaderConstants> mConstants;
-    ShaderModel mShaderMode = SHADER_MODEL_6_7;
+    ShaderModel mShaderMode = ShaderModel::SM_6_7;
 };
 
 struct RootSignatureDesc : public DescBase
@@ -298,14 +298,14 @@ struct RootSignatureDesc : public DescBase
     std::pmr::vector<Shader*> mShaders;
     std::pmr::unordered_map<std::string_view, Sampler*> mStaticSamplersMap;  // <unique name, pointer>
     u32 mMaxBindlessTextures = 0;
-    RootSignatureFlags flags = ROOT_SIGNATURE_FLAG_NONE;
+    RootSignatureFlags flags = RootSignatureFlags::NONE;
 };
 
 struct DescriptorSetDesc : public DescBase
 {
     RootSignature* mpRootSignature            = nullptr;
     u32 mMaxSet                               = 0;  // the number of descriptor sets want to allocate
-    DescriptorUpdateFrequency updateFrequency = DESCRIPTOR_UPDATE_FREQ_NONE;
+    DescriptorUpdateFrequency updateFrequency = DescriptorUpdateFrequency::NONE;
 };
 
 struct DescriptorInfo
@@ -360,8 +360,8 @@ struct DescriptorData
 
 struct NullDescriptors
 {
-    std::array<Texture*, TEXTURE_DIM_COUNT> pDefaultTextureSRV{};
-    std::array<Texture*, TEXTURE_DIM_COUNT> pDefaultTextureUAV{};
+    std::array<Texture*, (u32)TextureDimension::DIM_COUNT> pDefaultTextureSRV{};
+    std::array<Texture*, (u32)TextureDimension::DIM_COUNT> pDefaultTextureUAV{};
     Buffer* pDefaultBufferSRV          = nullptr;
     Buffer* pDefaultBufferUAV          = nullptr;
     Sampler* pDefaultSampler           = nullptr;
@@ -382,28 +382,28 @@ struct BlendStateDesc
 {
     struct
     {
-        BlendConstant srcFactor      = BC_ONE;
-        BlendConstant dstFactor      = BC_ZERO;
-        BlendConstant srcAlphaFactor = BC_ONE;
-        BlendConstant dstAlphaFactor = BC_ZERO;
-        BlendMode blendMode          = BM_ADD;
-        BlendMode blendAlphaMode     = BM_ADD;
-        i32 mask                     = CH_ALL;
+        BlendConstant srcFactor      = BlendConstant::ONE;
+        BlendConstant dstFactor      = BlendConstant::ZERO;
+        BlendConstant srcAlphaFactor = BlendConstant::ONE;
+        BlendConstant dstAlphaFactor = BlendConstant::ZERO;
+        BlendMode blendMode          = BlendMode::ADD;
+        BlendMode blendAlphaMode     = BlendMode::ADD;
+        Channel mask                 = Channel::ALL;
     } perRenderTarget[MAX_RENDER_TARGET_ATTACHMENTS];
 
-    u8 attachmentCount                     = 0;                       /// The render target attachment to set the blend state for.
-    BlendStateTargetsFlag renderTargetMask = BLEND_STATE_TARGET_ALL;  /// Mask that identifies the render targets affected by the blend state.
-    bool isAlphaToCoverage                 = false;                   /// Set whether alpha to coverage should be enabled.
-    bool isIndependentBlend                = false;                   /// Set whether each render target has an unique blend function.
-                                                                      /// When false the blend function in slot 0 will be used for all render targets.
+    u8 attachmentCount                     = 0;                                  /// The render target attachment to set the blend state for.
+    BlendStateTargetsFlag renderTargetMask = BlendStateTargetsFlag::TARGET_ALL;  /// Mask that identifies the render targets affected by the blend state.
+    bool isAlphaToCoverage                 = false;                              /// Set whether alpha to coverage should be enabled.
+    bool isIndependentBlend                = false;                              /// Set whether each render target has an unique blend function.
+                                                                                 /// When false the blend function in slot 0 will be used for all render targets.
 };
 
 // Barrier
 
 struct BarrierInfo
 {
-    ResourceStateFlags currentState = RESOURCE_STATE_UNDEFINED;
-    ResourceStateFlags newState     = RESOURCE_STATE_UNDEFINED;
+    ResourceStateFlags currentState = ResourceStateFlags::UNDEFINED;
+    ResourceStateFlags newState     = ResourceStateFlags::UNDEFINED;
     u8 isBeginOnly : 1              = 0;
     u8 isEndOnly   : 1              = 0;
     u8 isAcquire   : 1              = 0;

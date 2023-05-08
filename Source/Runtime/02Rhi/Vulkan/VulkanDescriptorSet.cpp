@@ -11,7 +11,7 @@ bool VulkanDescriptorSet::_create(DescriptorSetDesc& desc) noexcept
 {
     // check if requested updateFreq is registered in RootSignature
     u8 updateFreq = (u8)desc.updateFrequency;
-    AXE_ASSERT(updateFreq < (u8)DESCRIPTOR_UPDATE_FREQ_COUNT);
+    AXE_ASSERT(updateFreq < (u8)DescriptorUpdateFrequency::COUNT);
     VulkanRootSignature* pRootSignature = (VulkanRootSignature*)desc.mpRootSignature;
 
     if (pRootSignature[updateFreq]._mpDescriptorSetLayouts[updateFreq] == VK_NULL_HANDLE)
@@ -101,9 +101,9 @@ bool VulkanDescriptorSet::_create(DescriptorSetDesc& desc) noexcept
                 }
             };
 
-            switch (descriptorInfo.type)
+            switch ((DescriptorTypeFlag)descriptorInfo.type)
             {
-                case DESCRIPTOR_TYPE_SAMPLER:
+                case DescriptorTypeFlag::SAMPLER:
                 {
                     u32 appendCount = getAppendCount(samplerInfos.size(), descriptorInfo.size);
                     for (u32 i = 0; i < appendCount; ++i)
@@ -113,7 +113,7 @@ bool VulkanDescriptorSet::_create(DescriptorSetDesc& desc) noexcept
                     updateHelper(samplerInfos.data(), nullptr, nullptr);
                 }
                 break;
-                case DESCRIPTOR_TYPE_TEXTURE:
+                case DescriptorTypeFlag::TEXTURE:
                 {
                     std::pmr::vector<VkDescriptorImageInfo> imageInfos(
                         descriptorInfo.size,
@@ -124,7 +124,7 @@ bool VulkanDescriptorSet::_create(DescriptorSetDesc& desc) noexcept
                     updateHelper(imageInfos.data(), nullptr, nullptr);
                 };
                 break;
-                case DESCRIPTOR_TYPE_RW_TEXTURE:
+                case DescriptorTypeFlag::RW_TEXTURE:
                 {
                     std::pmr::vector<VkDescriptorImageInfo> imageInfos(
                         descriptorInfo.size,
@@ -135,11 +135,11 @@ bool VulkanDescriptorSet::_create(DescriptorSetDesc& desc) noexcept
                     updateHelper(imageInfos.data(), nullptr, nullptr);
                 }
                 break;
-                case DESCRIPTOR_TYPE_BUFFER:
-                case DESCRIPTOR_TYPE_BUFFER_RAW:
-                case DESCRIPTOR_TYPE_RW_BUFFER:
-                case DESCRIPTOR_TYPE_RW_BUFFER_RAW:
-                case DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+                case DescriptorTypeFlag::BUFFER:
+                case DescriptorTypeFlag::BUFFER_RAW:
+                case DescriptorTypeFlag::RW_BUFFER:
+                case DescriptorTypeFlag::RW_BUFFER_RAW:
+                case DescriptorTypeFlag::UNIFORM_BUFFER:
                 {
                     u32 appendCount = getAppendCount(bufferInfos.size(), descriptorInfo.size);
                     for (u32 i = 0; i < appendCount; ++i)
@@ -149,7 +149,7 @@ bool VulkanDescriptorSet::_create(DescriptorSetDesc& desc) noexcept
                     updateHelper(nullptr, bufferInfos.data(), nullptr);
                 }
                 break;
-                case DESCRIPTOR_TYPE_TEXEL_BUFFER_VKONLY:
+                case DescriptorTypeFlag::TEXEL_BUFFER_VKONLY:
                 {
                     u32 appendCount = getAppendCount(bufferViewInfos.size(), descriptorInfo.size);
                     for (u32 i = 0; i < appendCount; ++i)
@@ -159,7 +159,7 @@ bool VulkanDescriptorSet::_create(DescriptorSetDesc& desc) noexcept
                     updateHelper(nullptr, nullptr, bufferViewInfos.data());
                 }
                 break;
-                case DESCRIPTOR_TYPE_RW_TEXEL_BUFFER_VKONLY:
+                case DescriptorTypeFlag::RW_TEXEL_BUFFER_VKONLY:
                 {
                     u32 appendCount = getAppendCount(bufferViewRawInfos.size(), descriptorInfo.size);
                     for (u32 i = 0; i < appendCount; ++i)
@@ -241,9 +241,9 @@ void VulkanDescriptorSet::update(u32 index, std::pmr::vector<DescriptorData*> pa
             vkUpdateDescriptorSets(_mpDevice->handle(), 1, &writeSet, 0, nullptr);
         };
 
-        switch (pFoundDescriptorInfo->type)
+        switch ((DescriptorTypeFlag)pFoundDescriptorInfo->type)
         {
-            case DESCRIPTOR_TYPE_SAMPLER:
+            case DescriptorTypeFlag::SAMPLER:
             {
                 if (pFoundDescriptorInfo->isStaticSampler)
                 {
@@ -260,7 +260,7 @@ void VulkanDescriptorSet::update(u32 index, std::pmr::vector<DescriptorData*> pa
                 updateHelper(imageInfos.data(), nullptr, nullptr, pParam->pResources.size());
                 break;
             }
-            case DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER_VKONLY:
+            case DescriptorTypeFlag::COMBINED_IMAGE_SAMPLER_VKONLY:
             {
                 std::pmr::vector<VkDescriptorImageInfo> imageInfos;
                 imageInfos.reserve(pParam->pResources.size());
@@ -274,7 +274,7 @@ void VulkanDescriptorSet::update(u32 index, std::pmr::vector<DescriptorData*> pa
                 updateHelper(imageInfos.data(), nullptr, nullptr, pParam->pResources.size());
                 break;
             }
-            case DESCRIPTOR_TYPE_TEXTURE:
+            case DescriptorTypeFlag::TEXTURE:
             {
                 std::pmr::vector<VkDescriptorImageInfo> imageInfos;
                 imageInfos.reserve(pParam->pResources.size());
@@ -288,7 +288,7 @@ void VulkanDescriptorSet::update(u32 index, std::pmr::vector<DescriptorData*> pa
                 updateHelper(imageInfos.data(), nullptr, nullptr, pParam->pResources.size());
                 break;
             }
-            case DESCRIPTOR_TYPE_RW_TEXTURE:
+            case DescriptorTypeFlag::RW_TEXTURE:
             {
                 std::pmr::vector<VkDescriptorImageInfo> imageInfos;
 
@@ -325,7 +325,7 @@ void VulkanDescriptorSet::update(u32 index, std::pmr::vector<DescriptorData*> pa
                 }
                 break;
             }
-            case DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+            case DescriptorTypeFlag::UNIFORM_BUFFER:
             {
                 if (pFoundDescriptorInfo->isRootDescriptor)
                 {
@@ -333,10 +333,10 @@ void VulkanDescriptorSet::update(u32 index, std::pmr::vector<DescriptorData*> pa
                     break;
                 }
             }
-            case DESCRIPTOR_TYPE_BUFFER:
-            case DESCRIPTOR_TYPE_BUFFER_RAW:
-            case DESCRIPTOR_TYPE_RW_BUFFER:
-            case DESCRIPTOR_TYPE_RW_BUFFER_RAW:
+            case DescriptorTypeFlag::BUFFER:
+            case DescriptorTypeFlag::BUFFER_RAW:
+            case DescriptorTypeFlag::RW_BUFFER:
+            case DescriptorTypeFlag::RW_BUFFER_RAW:
             {
                 std::pmr::vector<VkDescriptorBufferInfo> bufferInfos;
                 bufferInfos.reserve(pParam->pResources.size());
@@ -346,7 +346,7 @@ void VulkanDescriptorSet::update(u32 index, std::pmr::vector<DescriptorData*> pa
                     VkDeviceSize offset = pParam->pRanges ? pParam->pRanges[i].offset : ((VulkanBuffer*)pResource)->_mOffset;
                     VkDeviceSize range  = pParam->pRanges ? pParam->pRanges[i].size : VK_WHOLE_SIZE;
 
-                    u32 maxRange        = DESCRIPTOR_TYPE_UNIFORM_BUFFER == pFoundDescriptorInfo->type ?
+                    u32 maxRange        = (u32)DescriptorTypeFlag::UNIFORM_BUFFER == pFoundDescriptorInfo->type ?
                                               _mpDevice->_mpAdapter->maxUniformBufferRange() :
                                               _mpDevice->_mpAdapter->maxStorageBufferRange();
                     if (range == 0 || range > maxRange)
@@ -362,7 +362,7 @@ void VulkanDescriptorSet::update(u32 index, std::pmr::vector<DescriptorData*> pa
                 updateHelper(nullptr, bufferInfos.data(), nullptr, pParam->pResources.size());
                 break;
             }
-            case DESCRIPTOR_TYPE_TEXEL_BUFFER_VKONLY:
+            case DescriptorTypeFlag::TEXEL_BUFFER_VKONLY:
             {
                 std::pmr::vector<VkBufferView> bufferViews;
                 bufferViews.reserve(pParam->pResources.size());
@@ -370,7 +370,7 @@ void VulkanDescriptorSet::update(u32 index, std::pmr::vector<DescriptorData*> pa
                 updateHelper(nullptr, nullptr, bufferViews.data(), pParam->pResources.size());
                 break;
             }
-            case DESCRIPTOR_TYPE_RW_TEXEL_BUFFER_VKONLY:
+            case DescriptorTypeFlag::RW_TEXEL_BUFFER_VKONLY:
             {
                 std::pmr::vector<VkBufferView> bufferViews;
                 bufferViews.reserve(pParam->pResources.size());
@@ -378,7 +378,7 @@ void VulkanDescriptorSet::update(u32 index, std::pmr::vector<DescriptorData*> pa
                 updateHelper(nullptr, nullptr, bufferViews.data(), pParam->pResources.size());
                 break;
             }
-            case DESCRIPTOR_TYPE_RAY_TRACING:
+            case DescriptorTypeFlag::RAY_TRACING:
             {
                 AXE_ERROR("Unsupported");
                 break;

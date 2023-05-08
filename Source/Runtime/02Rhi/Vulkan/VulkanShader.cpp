@@ -18,16 +18,16 @@ static TextureDimension to_TextureDimension(spirv_cross::SPIRType::ImageType ima
 {
     switch (imageType.dim)
     {
-        case spv::Dim::Dim1D: return imageType.arrayed ? TEXTURE_DIM_1D_ARRAY : TEXTURE_DIM_1D;
+        case spv::Dim::Dim1D: return imageType.arrayed ? TextureDimension::DIM_1D_ARRAY : TextureDimension::DIM_1D;
         case spv::Dim::Dim2D: return imageType.ms ?
-                                         (imageType.arrayed ? TEXTURE_DIM_2DMS_ARRAY : TEXTURE_DIM_2DMS) :
-                                         (imageType.arrayed ? TEXTURE_DIM_2D_ARRAY : TEXTURE_DIM_2D);
-        case spv::Dim::Dim3D: return TEXTURE_DIM_3D;
-        case spv::Dim::DimCube: return imageType.arrayed ? TEXTURE_DIM_CUBE_ARRAY : TEXTURE_DIM_CUBE;
-        case spv::Dim::DimRect: return TEXTURE_DIM_UNDEFINED;
-        case spv::Dim::DimBuffer: return TEXTURE_DIM_UNDEFINED;
-        case spv::Dim::DimSubpassData: return TEXTURE_DIM_UNDEFINED;
-        default: AXE_ERROR("Unknown texture dim"); return TEXTURE_DIM_UNDEFINED;
+                                         (imageType.arrayed ? TextureDimension::DIM_2DMS_ARRAY : TextureDimension::DIM_2DMS) :
+                                         (imageType.arrayed ? TextureDimension::DIM_2D_ARRAY : TextureDimension::DIM_2D);
+        case spv::Dim::Dim3D: return TextureDimension::DIM_3D;
+        case spv::Dim::DimCube: return imageType.arrayed ? TextureDimension::DIM_CUBE_ARRAY : TextureDimension::DIM_CUBE;
+        case spv::Dim::DimRect: return TextureDimension::DIM_UNDEFINED;
+        case spv::Dim::DimBuffer: return TextureDimension::DIM_UNDEFINED;
+        case spv::Dim::DimSubpassData: return TextureDimension::DIM_UNDEFINED;
+        default: AXE_ERROR("Unknown texture dim"); return TextureDimension::DIM_UNDEFINED;
     }
 }
 
@@ -50,18 +50,18 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
     spv::ExecutionModel executionModel = compiler.get_execution_model();
     switch (executionModel)
     {
-        case spv::ExecutionModel::ExecutionModelVertex: AXE_ASSERT(shaderStage & SHADER_STAGE_FLAG_VERT); break;
-        case spv::ExecutionModel::ExecutionModelFragment: AXE_ASSERT(shaderStage & SHADER_STAGE_FLAG_FRAG); break;
-        case spv::ExecutionModel::ExecutionModelGLCompute: AXE_ASSERT(shaderStage & SHADER_STAGE_FLAG_COMP); break;
-        case spv::ExecutionModel::ExecutionModelTessellationControl: AXE_ASSERT(shaderStage & SHADER_STAGE_FLAG_TESC); break;
-        case spv::ExecutionModel::ExecutionModelTessellationEvaluation: AXE_ASSERT(shaderStage & SHADER_STAGE_FLAG_TESE); break;
-        case spv::ExecutionModel::ExecutionModelGeometry: AXE_ASSERT(shaderStage & SHADER_STAGE_FLAG_GEOM); break;
+        case spv::ExecutionModel::ExecutionModelVertex: AXE_ASSERT(shaderStage & ShaderStageFlag::VERT); break;
+        case spv::ExecutionModel::ExecutionModelFragment: AXE_ASSERT(shaderStage & ShaderStageFlag::FRAG); break;
+        case spv::ExecutionModel::ExecutionModelGLCompute: AXE_ASSERT(shaderStage & ShaderStageFlag::COMP); break;
+        case spv::ExecutionModel::ExecutionModelTessellationControl: AXE_ASSERT(shaderStage & ShaderStageFlag::TESC); break;
+        case spv::ExecutionModel::ExecutionModelTessellationEvaluation: AXE_ASSERT(shaderStage & ShaderStageFlag::TESE); break;
+        case spv::ExecutionModel::ExecutionModelGeometry: AXE_ASSERT(shaderStage & ShaderStageFlag::GEOM); break;
         case spv::ExecutionModel::ExecutionModelRayGenerationNV:
         case spv::ExecutionModel::ExecutionModelIntersectionNV:
         case spv::ExecutionModel::ExecutionModelAnyHitNV:
         case spv::ExecutionModel::ExecutionModelClosestHitNV:
         case spv::ExecutionModel::ExecutionModelMissNV:
-        case spv::ExecutionModel::ExecutionModelCallableNV: AXE_ASSERT(shaderStage & SHADER_STAGE_FLAG_RAYTRACING); break;
+        case spv::ExecutionModel::ExecutionModelCallableNV: AXE_ASSERT(shaderStage & ShaderStageFlag::RAYTRACING); break;
         case spv::ExecutionModel::ExecutionModelTaskNV: AXE_ASSERT("Not support task shader yet"); break;
         case spv::ExecutionModel::ExecutionModelMeshNV: AXE_ASSERT("Not support mesh shader yet"); break;
         default: AXE_ERROR("Unknown shader stage"); return false;
@@ -69,19 +69,19 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
 
     // special info for specified shader stage
     std::pmr::vector<VertexInput> vertexInputs;
-    if (shaderStage & SHADER_STAGE_FLAG_COMP)
+    if ((bool)(shaderStage & ShaderStageFlag::COMP))
     {
         spirv_cross::SPIREntryPoint& entryPointInfo = compiler.get_entry_point(entryPoint.data(), executionModel);
         outReflection.numThreadsPerGroup[0]         = entryPointInfo.workgroup_size.x;
         outReflection.numThreadsPerGroup[1]         = entryPointInfo.workgroup_size.y;
         outReflection.numThreadsPerGroup[2]         = entryPointInfo.workgroup_size.z;
     }
-    else if (shaderStage & SHADER_STAGE_FLAG_TESC)
+    else if ((bool)(shaderStage & ShaderStageFlag::TESC))
     {
         spirv_cross::SPIREntryPoint entryPointInfo = compiler.get_entry_point(entryPoint.data(), executionModel);
         outReflection.numControlPoint              = entryPointInfo.output_vertices;
     }
-    else if (shaderStage & SHADER_STAGE_FLAG_VERT)  // we dont care about inputs except for vertex shader
+    else if ((bool)(shaderStage & ShaderStageFlag::VERT))  // we dont care about inputs except for vertex shader
     {
         for (const auto& input : allResources.stage_inputs)
         {
@@ -109,13 +109,13 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
             spirv_cross::SPIRType type = compiler.get_type(res.type_id);
             if (type.image.dim == spv::Dim::DimBuffer)
             {
-                if (descriptorType == DESCRIPTOR_TYPE_TEXTURE)
+                if (descriptorType == DescriptorTypeFlag::TEXTURE)
                 {
-                    descriptorType = DESCRIPTOR_TYPE_TEXEL_BUFFER_VKONLY;
+                    descriptorType = DescriptorTypeFlag::TEXEL_BUFFER_VKONLY;
                 }
-                else if (descriptorType == DESCRIPTOR_TYPE_RW_TEXTURE)
+                else if (descriptorType == DescriptorTypeFlag::RW_TEXTURE)
                 {
-                    descriptorType = DESCRIPTOR_TYPE_RW_TEXEL_BUFFER_VKONLY;
+                    descriptorType = DescriptorTypeFlag::RW_TEXEL_BUFFER_VKONLY;
                 }
             }
 
@@ -124,7 +124,7 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
                 .usedShaderStage = shaderStage,
                 .dim             = to_TextureDimension(type.image),
                 .type            = descriptorType,
-                .mSet            = descriptorType == DESCRIPTOR_TYPE_UNDEFINED ?
+                .mSet            = descriptorType == DescriptorTypeFlag::UNDEFINED ?
                                        U32_MAX :
                                        compiler.get_decoration(res.id, spv::DecorationDescriptorSet),
                 .bindingLocation = compiler.get_decoration(res.id, spv::DecorationBinding),
@@ -146,16 +146,16 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
         }
     };
 
-    extractShaderResource(allResources.storage_buffers, DESCRIPTOR_TYPE_RW_BUFFER);
-    extractShaderResource(allResources.stage_outputs, DESCRIPTOR_TYPE_UNDEFINED);
+    extractShaderResource(allResources.storage_buffers, DescriptorTypeFlag::RW_BUFFER);
+    extractShaderResource(allResources.stage_outputs, DescriptorTypeFlag::UNDEFINED);
     // extractShaderResource(allResources.subpass_inputs, ); // not use
-    extractShaderResource(allResources.storage_images, DESCRIPTOR_TYPE_RW_TEXTURE);
-    extractShaderResource(allResources.sampled_images, DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER_VKONLY);
+    extractShaderResource(allResources.storage_images, DescriptorTypeFlag::RW_TEXTURE);
+    extractShaderResource(allResources.sampled_images, DescriptorTypeFlag::COMBINED_IMAGE_SAMPLER_VKONLY);
     // extractShaderResource(allResources.atomic_counters, ); // not usable in vulkan
-    extractShaderResource(allResources.acceleration_structures, DESCRIPTOR_TYPE_RAY_TRACING);
+    extractShaderResource(allResources.acceleration_structures, DescriptorTypeFlag::RAY_TRACING);
     // extractShaderResource(allResources.shader_record_buffers, ); // TODO
-    extractShaderResource(allResources.separate_images, DESCRIPTOR_TYPE_TEXTURE);
-    extractShaderResource(allResources.separate_samplers, DESCRIPTOR_TYPE_SAMPLER);
+    extractShaderResource(allResources.separate_images, DescriptorTypeFlag::TEXTURE);
+    extractShaderResource(allResources.separate_samplers, DescriptorTypeFlag::SAMPLER);
     // extractShaderResource(allResources.builtin_inputs, ); // not use
     // extractShaderResource(allResources.builtin_outputs, ); // not use
 
@@ -170,7 +170,7 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
             .name            = res.name,
             .usedShaderStage = shaderStage,
             .dim             = to_TextureDimension(type.image),
-            .type            = DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .type            = DescriptorTypeFlag::UNIFORM_BUFFER,
             .mSet            = compiler.get_decoration(res.id, spv::DecorationDescriptorSet),
             .bindingLocation = compiler.get_decoration(res.id, spv::DecorationBinding),
             .size            = type.array.size() ? type.array[0] : 1});
@@ -188,8 +188,8 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
         shaderResources.push_back(ShaderResource{
             .name            = res.name,
             .usedShaderStage = shaderStage,
-            .dim             = TEXTURE_DIM_UNDEFINED,
-            .type            = DESCRIPTOR_TYPE_ROOT_CONSTANT,
+            .dim             = TextureDimension::DIM_UNDEFINED,
+            .type            = DescriptorTypeFlag::ROOT_CONSTANT,
             .mSet            = U32_MAX,
             .bindingLocation = U32_MAX,
             .size            = (u32)compiler.get_declared_struct_size(type)});

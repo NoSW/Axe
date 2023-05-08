@@ -18,7 +18,7 @@ bool VulkanQueue::_create(const QueueDesc& desc) noexcept
     _mTimestampPeriod    = _mpDevice->_mpAdapter->requestGPUSettings().timestampPeriod;
     _mVkQueueFamilyIndex = quFamIndex;
     _mVkQueueIndex       = quIndex;
-    _mType               = desc.type;
+    _mType               = (u32)desc.type;
     _mFlags              = quFlag;
 
     vkGetDeviceQueue(_mpDevice->handle(), _mVkQueueFamilyIndex, _mVkQueueIndex, &_mpHandle);

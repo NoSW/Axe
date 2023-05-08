@@ -35,7 +35,7 @@ private:
     // common data
     std::pmr::vector<DescriptorInfo> _mDescriptors;
     std::pmr::unordered_map<std::pmr::string, u32> _mNameHashIds;
-    PipelineType _mPipelineType        = PIPELINE_TYPE_UNDEFINED;
+    PipelineType _mPipelineType        = PipelineType::UNDEFINED;
 
     // descriptor set management:
     //   - experienced based: free lists of fixed descriptor set pools
@@ -56,10 +56,10 @@ private:
     //              (using a thread-safe ring buffer (allocating N descriptor sets in one go) may alleviate it)
 
     VkPipelineLayout _mpPipelineLayout = VK_NULL_HANDLE;
-    VkDescriptorSetLayout _mpDescriptorSetLayouts[DESCRIPTOR_UPDATE_FREQ_COUNT]{};                         // layout for each set
-    u8 _mDynamicDescriptorCounts[DESCRIPTOR_UPDATE_FREQ_COUNT]{};                                          // current count of descriptor for each set
-    VkDescriptorPoolSize _mPoolSizes[DESCRIPTOR_UPDATE_FREQ_COUNT][MAX_DESCRIPTOR_POOL_SIZE_ARRAY_COUNT];  // <set id, pool id>
-    u8 _mPoolSizeCount[DESCRIPTOR_UPDATE_FREQ_COUNT]{};                                                    // current count of descriptor pool for each set
+    VkDescriptorSetLayout _mpDescriptorSetLayouts[(u32)DescriptorUpdateFrequency::COUNT]{};                         // layout for each set
+    u8 _mDynamicDescriptorCounts[(u32)DescriptorUpdateFrequency::COUNT]{};                                          // current count of descriptor for each set
+    VkDescriptorPoolSize _mPoolSizes[(u32)DescriptorUpdateFrequency::COUNT][MAX_DESCRIPTOR_POOL_SIZE_ARRAY_COUNT];  // <set id, pool id>
+    u8 _mPoolSizeCount[(u32)DescriptorUpdateFrequency::COUNT]{};                                                    // current count of descriptor pool for each set
 };
 
 }  // namespace axe::rhi

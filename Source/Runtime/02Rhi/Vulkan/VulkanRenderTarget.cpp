@@ -11,7 +11,7 @@ namespace axe::rhi
 bool VulkanRenderTarget::_create(const RenderTargetDesc& desc) noexcept
 {
     const bool isDepth = TinyImageFormat_IsDepthOnly(desc.format) || TinyImageFormat_IsDepthAndStencil(desc.format);
-    AXE_ASSERT(!((isDepth) && (desc.descriptorType & DESCRIPTOR_TYPE_RW_TEXTURE)) && "Cannot use depth stencil as UAV");
+    AXE_ASSERT(!((isDepth) && ((bool)(desc.descriptorType & DescriptorTypeFlag::RW_TEXTURE))) && "Cannot use depth stencil as UAV");
 
     _mMipLevels = std::max(1u, desc.mipLevels);  // clamp mipLevels
     TextureDesc texDesc{
@@ -27,26 +27,26 @@ bool VulkanRenderTarget::_create(const RenderTargetDesc& desc) noexcept
         .sampleCount    = desc.mMSAASampleCount,
         .sampleQuality  = desc.sampleQuality,
         .format         = desc.format,
-        .startState     = isDepth ? RESOURCE_STATE_RENDER_TARGET : RESOURCE_STATE_DEPTH_WRITE,
+        .startState     = isDepth ? ResourceStateFlags::RENDER_TARGET : ResourceStateFlags::DEPTH_WRITE,
         .descriptorType = desc.descriptorType,
 
     };
 
     // Create SRV by default for a render target unless this is on tile texture where SRV is not supported
-    if (!((u32)desc.descriptorType & (u32)TEXTURE_CREATION_FLAG_ON_TILE))
+    if (!((u32)desc.descriptorType & (u32)TextureCreationFlags::ON_TILE))
     {
-        texDesc.descriptorType |= DESCRIPTOR_TYPE_TEXTURE;
+        texDesc.descriptorType |= DescriptorTypeFlag::TEXTURE;
     }
     else
     {
-        if (desc.descriptorType & DESCRIPTOR_TYPE_TEXTURE ||
-            desc.descriptorType & DESCRIPTOR_TYPE_RW_TEXTURE)
+        if ((bool)(desc.descriptorType & DescriptorTypeFlag::TEXTURE) ||
+            (bool)(desc.descriptorType & DescriptorTypeFlag::RW_TEXTURE))
         {
-            AXE_WARN("On tile textures do not support DESCRIPTOR_TYPE_TEXTURE or DESCRIPTOR_TYPE_RW_TEXTURE");
+            AXE_WARN("On tile textures do not support DescriptorTypeFlag::TEXTURE or DescriptorTypeFlag::RW_TEXTURE");
         }
         // On tile textures do not support SRV/UAV as there is no backing memory
         // You can only read these textures as input attachments inside same render pass
-        texDesc.descriptorType |= (~(DESCRIPTOR_TYPE_TEXTURE | DESCRIPTOR_TYPE_RW_TEXTURE));
+        texDesc.descriptorType |= (~(DescriptorTypeFlag::TEXTURE | DescriptorTypeFlag::RW_TEXTURE));
     }
 
     if (isDepth)
@@ -111,7 +111,7 @@ bool VulkanRenderTarget::_create(const RenderTargetDesc& desc) noexcept
 
     if (VK_FAILED(vkCreateImageView(_mpDevice->handle(), &rtvCreateInfo, nullptr, &_mpVkDescriptor))) { return false; }
 
-    const bool isTexture = desc.descriptorType & DESCRIPTOR_TYPE_TEXTURE || desc.descriptorType & DESCRIPTOR_TYPE_RW_TEXTURE;
+    const bool isTexture = ((bool)(desc.descriptorType & DescriptorTypeFlag::TEXTURE) || ((bool)(desc.descriptorType & DescriptorTypeFlag::RW_TEXTURE)));
     for (u32 i = 0; i < _mMipLevels; ++i)
     {
         rtvCreateInfo.subresourceRange.baseMipLevel = i;
