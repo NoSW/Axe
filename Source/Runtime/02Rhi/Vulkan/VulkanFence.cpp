@@ -13,7 +13,7 @@ bool VulkanFence::_create(const FenceDesc& desc) noexcept
     VkFenceCreateInfo createInfo{
         .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
         .pNext = nullptr,
-        .flags = (VkFenceCreateFlags)(desc.mIsSignaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0)};
+        .flags = (VkFenceCreateFlags)(desc.isSignaled ? VK_FENCE_CREATE_SIGNALED_BIT : 0)};
 
     auto result = vkCreateFence(_mpDevice->handle(), &createInfo, nullptr, &_mpHandle);
     if (VK_FAILED(result)) { AXE_ERROR("Failed to create VulkanFence due to {}", string_VkResult(result)); }

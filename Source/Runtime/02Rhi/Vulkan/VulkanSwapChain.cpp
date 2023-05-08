@@ -18,7 +18,7 @@ namespace axe::rhi
 // Also, implementation of swapchain is dependent on OS
 bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
 {
-    if (AXE_FAILED(SDL_Vulkan_CreateSurface(desc.mpWindow->handle(), _mpDevice->_mpAdapter->backendHandle(), &_mpVkSurface) == SDL_TRUE)) { return false; }
+    if (AXE_FAILED(SDL_Vulkan_CreateSurface(desc.pWindow->handle(), _mpDevice->_mpAdapter->backendHandle(), &_mpVkSurface) == SDL_TRUE)) { return false; }
 
     // Find best queue family
     //// Get queue family properties
@@ -43,7 +43,7 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
                 firstAvailablePresentQuFamIndex = i;
             }
 
-            if (firstDedicatedPresentQuFamIndex == U32_MAX && ((VulkanQueue*)desc.mpPresentQueue)->_mVkQueueFamilyIndex != i)
+            if (firstDedicatedPresentQuFamIndex == U32_MAX && ((VulkanQueue*)desc.pPresentQueue)->_mVkQueueFamilyIndex != i)
             {
                 firstDedicatedPresentQuFamIndex = i;
                 break;
@@ -67,7 +67,7 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
     }
 
     VkQueue presentQueueHandle = VK_NULL_HANDLE;
-    if (finalPresentQuFamIndex != ((VulkanQueue*)desc.mpPresentQueue)->_mVkQueueFamilyIndex)
+    if (finalPresentQuFamIndex != ((VulkanQueue*)desc.pPresentQueue)->_mVkQueueFamilyIndex)
     {
         vkGetDeviceQueue(_mpDevice->handle(), finalPresentQuFamIndex, 0, &_mpPresentQueueHandle);
     }
@@ -81,15 +81,15 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
         return false;
     }
     // Capabilities -> image count
-    u32 desiredImageCount = desc.mImageCount == 0 ? std::min(surfaceCapabilities.minImageCount + 1, surfaceCapabilities.maxImageCount) : desc.mImageCount;
-    if (desc.mImageCount < surfaceCapabilities.minImageCount)
+    u32 desiredImageCount = desc.imageCount == 0 ? std::min(surfaceCapabilities.minImageCount + 1, surfaceCapabilities.maxImageCount) : desc.imageCount;
+    if (desc.imageCount < surfaceCapabilities.minImageCount)
     {
-        AXE_WARN("Requested image count({}) in swapchain is less than minImageCount({})", desc.mImageCount, surfaceCapabilities.minImageCount);
+        AXE_WARN("Requested image count({}) in swapchain is less than minImageCount({})", desc.imageCount, surfaceCapabilities.minImageCount);
         desiredImageCount = surfaceCapabilities.minImageCount;
     }
-    if (desc.mImageCount > surfaceCapabilities.maxImageCount)
+    if (desc.imageCount > surfaceCapabilities.maxImageCount)
     {
-        AXE_WARN("Requested image count({}) in swapchain is greater than minImageCount({})", desc.mImageCount, surfaceCapabilities.maxImageCount);
+        AXE_WARN("Requested image count({}) in swapchain is greater than minImageCount({})", desc.imageCount, surfaceCapabilities.maxImageCount);
         desiredImageCount = surfaceCapabilities.maxImageCount;
     }
 
@@ -97,7 +97,7 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
     auto desiredSwapchainExtent = surfaceCapabilities.currentExtent;
     if (surfaceCapabilities.currentExtent.width == -1)
     {
-        desiredSwapchainExtent        = {desc.mWidth, desc.mHeight};
+        desiredSwapchainExtent        = {desc.width, desc.height};
         desiredSwapchainExtent.width  = std::clamp(desiredSwapchainExtent.width, surfaceCapabilities.minImageExtent.width, surfaceCapabilities.maxImageExtent.width);
         desiredSwapchainExtent.height = std::clamp(desiredSwapchainExtent.height, surfaceCapabilities.minImageExtent.height, surfaceCapabilities.maxImageExtent.height);
     }
@@ -136,8 +136,8 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
         if (format.format == hdrSurfaceFormat.format && format.colorSpace == hdrSurfaceFormat.colorSpace) { isHDRSupported = true; }
         if (format.format == sRGBSurfaceFormat.format && format.colorSpace == sRGBSurfaceFormat.colorSpace) { isSRGBSupported = true; }
     }
-    bool useSRGB = !desc.mUseHDR || (desc.mUseHDR && !isHDRSupported);
-    if (desc.mUseHDR && !isHDRSupported) { AXE_WARN("Presentation surface doesn't support hdr format, using sRGB instead"); }
+    bool useSRGB = !desc.useHDR || (desc.useHDR && !isHDRSupported);
+    if (desc.useHDR && !isHDRSupported) { AXE_WARN("Presentation surface doesn't support hdr format, using sRGB instead"); }
     if (useSRGB && !isSRGBSupported) { AXE_WARN("Presentation surface doesn't support sRGB format, but use it anyway"); }
     auto desiredSurfaceFormat = useSRGB ? sRGBSurfaceFormat : hdrSurfaceFormat;
 
@@ -212,15 +212,15 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
     if (VK_FAILED(vkGetSwapchainImagesKHR(_mpDevice->handle(), _mpHandle, &availableImageCount, swapchainImages.data()))) { return false; }
 
     RenderTargetDesc renderTargetDesc = {
-        .mWidth     = desc.mWidth,
-        .mHeight    = desc.mHeight,
-        .mDepth     = 1,
-        .mArraySize = 1};
-    renderTargetDesc.mFormat          = TinyImageFormat_FromVkFormat((TinyImageFormat_VkFormat)desiredSurfaceFormat.format);
-    renderTargetDesc.mClearValue      = desc.mColorClearValue;
+        .width     = desc.width,
+        .height    = desc.height,
+        .depth     = 1,
+        .arraySize = 1};
+    renderTargetDesc.format           = TinyImageFormat_FromVkFormat((TinyImageFormat_VkFormat)desiredSurfaceFormat.format);
+    renderTargetDesc.clearValue       = desc.colorClearValue;
     renderTargetDesc.mMSAASampleCount = MSAA_SAMPLE_COUNT_1;
-    renderTargetDesc.mSampleQuality   = 0;
-    renderTargetDesc.mStartState      = RESOURCE_STATE_PRESENT;
+    renderTargetDesc.sampleQuality    = 0;
+    renderTargetDesc.startState       = RESOURCE_STATE_PRESENT;
 
     // Populate the vk_image field and add the Vulkan texture objects
     for (u32 i = 0; i < swapchainImages.size(); ++i)
@@ -234,7 +234,7 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
 
     // populate this object
     _mpPresentQueueHandle     = presentQueueHandle;
-    _mEnableVsync             = desc.mEnableVsync;
+    _mEnableVsync             = desc.enableVsync;
     _mImageCount              = availableImageCount;
     _mVkSwapchainFormat       = desiredSurfaceFormat.format;
     _mPresentQueueFamilyIndex = finalPresentQuFamIndex;
@@ -243,7 +243,7 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
 
 bool VulkanSwapChain::_destroy() noexcept
 {
-    // for (uint32_t i = 0; i < pSwapChain->mImageCount; ++i)
+    // for (uint32_t i = 0; i < pSwapChain->imageCount; ++i)
     // {
     //     removeRenderTarget(pDevice, pSwapChain->ppRenderTargets[i]);
     // }

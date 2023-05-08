@@ -40,58 +40,88 @@ NOTE:
 ### CXX Code
 
 ```c++
-#define AXE_TEST 1                  // MACRO, all upper-cases and with prefix AXE_
-constexpr auto APP_NAME = "Hello"; // constant evaluated at compile-time, all upper-cases
+#define AXE_TEST 1                     // MACRO, all upper-cases and with prefix AXE_
+constexpr auto APP_NAME = "Hello";     // constant evaluated at compile-time, all upper-cases
 
-class FruitVendor                         // Type, upper-case camel
+class FruitVendor                      // Type, upper-case camel
 {
 private:
-    int _mBestIndex;                // `_` refers to private
-    const int BEST_INDEX = 1; 
-    static int _msBestIndex;        // `m` refers to member
-    static const  int BEST_INDEX = 1; // `s` refers to static
-    int* _mpBestIndex;              // `p` refers to pointer
+    int _mBestIndex;                   // `_` refers to private, `m` refers to member
+    int _m_bestIndex                   // is also OK
+
+    const int BEST_INDEX = 1;          // for constant, all upper-cases is enough
+
+    static  int _s_currentIndex = 1;   // `s` refers to static
+    static  int _sCurrentIndex = 1;    // is also OK
+    static  int _msCurrentIndex = 1;   // is also OK
+
+    int* _mpBestIndex;                 // `p` refers to pointer
+    int* _mp_bestIndex;                // is also OK
 
 public:
     int mIndex;
+    int m_index;
 
 private:
-        int _getValue();        // (static) member function uses lower-case camel
+        int _getValue();               // (static) member function uses lower-case camel
         static int _getDate();
     public:
         int getValue();
         static int getDate();
 private:
-    // constant
-    const int MAX_NUM = 16;
 
-    // scalar
     char _mChar;
+    char _m_char;
+
     struct Pair { int x, y; };
     Pair _mPair;
+    Pair m_pair;
 
-    // ref
-    Parent* _mpParent;
+    Parent* _mpParent;                // raw pointer refer to a reference
+    Parent* _mp_parent;               // is also OK
 
-    // resource handle(has ownership)
-    std::unique_ptr<Image> _mpImage;
+    
+    std::unique_ptr<Image> _mpImage;  // resource handle(has ownership)
+    std::unique_ptr<Image> _mp_image; // is also OK
+    
     typedef Allocator_T* Allocator;
-    Allocator _mpAllocatorHandle;
+    Allocator _mpAllocatorHandle;     // raw pointer from external library
+                                      // refer to resource handle(has ownership)
+    Allocator _mp_allocatorHandle;    // is also OK
 
-    // resource will be release automatically
-    std::vector<u32> _mIndices;
+    std::vector<u32> _mIndices;       // resource will be release automatically
+    std::vector<u32> _m_indices;      // is also OK
 };
 
-static int gsCount;             // `g` refer to global
-const int MAX_NUM = 10;
-int gArray[MAX_NUM];
+static int gs_count;        // `g` refer to global
+static int gsCount;         // is also OK
 
-void eval_sum(int* pData) {     // common function uses lower-snake naming
-    int x;
-    static int sY;
-    const float PI = 3.14f;
-    int* pPos = nullptr;  
-}
+const int MAX_NUM = 10;     // for constant, all upper-cases is enough
+
+int gArray[MAX_NUM];        // `g` refer to global
+int g_array[MAX_NUM];       // is also OK
+
+void foo_func() {}          // common function uses lower-snake naming
+static void foo_func() {}   // OK
+static void _foo_func() {}  // OK
+
+struct Apple {
+    int vendorId;           // not mVendorId since struct just a aggregation of
+                            // variables and no complex encapsulation or functionality
+    const char* pName;
+};
+
+enum class FruitFlag {          // used for multi-element, maybe one or more flags
+    FRUIT_FLAG_APPLE  = 0,
+    FRUIT_FLAG_ORANGE = 1 << 0,
+    FRUIT_FLAG_PEAR   = 1 << 1,
+    FRUIT_FLAG_CHERRY = 1 << 2,
+};
+using FruitFlagOneBit = FruitFlag; // used for a specified element, must be one flag(namely, single bit)
+
+FruitFlag fruits = FRUIT_FLAG_APPLE | FRUIT_FLAG_ORANGE;      // OK
+FruitFlagOneBit fruit = FRUIT_FLAG_ORANGE                     // OK
+FruitFlagOneBit fruit = FRUIT_FLAG_ORANGE | FRUIT_FLAG_CHERRY // not allowed
 
 ```
 

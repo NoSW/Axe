@@ -116,7 +116,7 @@ bool VulkanDevice::_createLogicalDevice(const DeviceDesc& desc) noexcept
         u32 quCount = quFamProp2[i].queueFamilyProperties.queueCount;
         if (quCount > 0)
         {
-            quCount              = desc.mRequestAllAvailableQueues ? quCount : 1;
+            quCount              = desc.isRequestAllAvailableQueues ? quCount : 1;
             u32 queueFamilyFlags = quFamProp2[i].queueFamilyProperties.queueFlags;
             if (quCount > MAX_QUEUE_COUNT)
             {
@@ -141,14 +141,14 @@ bool VulkanDevice::_createLogicalDevice(const DeviceDesc& desc) noexcept
                      quCount, quFamProp2[i].queueFamilyProperties.queueCount);
 
             _mQueueInfos[queueFamilyFlags] = QueueInfo{
-                .mAvailableCount = quCount, .mUsedCount = 0, .mFamilyIndex = (u8)i};
+                .availableCount = quCount, .usedCount = 0, .familyIndex = (u8)i};
         }
     }
 
-    for (u8 i = 0; i < QUEUE_TYPE_COUNT; ++i)
+    for (u8 i = 0; i < QUEUE_TYPE_FLAG_COUNT; ++i)
     {
         u8 dontCareOutput1, dontCareOutput2;
-        queryAvailableQueueIndex((QueueType)i, _mQueueFamilyIndexes[i], dontCareOutput1, dontCareOutput2);
+        queryAvailableQueueIndex((QueueTypeFlag)i, _mQueueFamilyIndexes[i], dontCareOutput1, dontCareOutput2);
     }
 
     // create a logical device
@@ -227,29 +227,29 @@ void VulkanDevice::_createDefaultResource() noexcept
         TextureDesc texDesc{};
         texDesc.pNativeHandle          = nullptr;
         texDesc.pName                  = "Dummy Texture";
-        texDesc.mClearValue.rgba       = {0.0, 0.0, 0.0, 0.0};
-        texDesc.mFlags                 = TEXTURE_CREATION_FLAG_NONE;
-        texDesc.mMipLevels             = 1;
-        texDesc.mSampleQuality         = 0;
-        texDesc.mFormat                = TinyImageFormat_R8G8B8A8_UNORM;
-        texDesc.mStartState            = RESOURCE_STATE_COMMON;
+        texDesc.clearValue.rgba        = {0.0, 0.0, 0.0, 0.0};
+        texDesc.flags                  = TEXTURE_CREATION_FLAG_NONE;
+        texDesc.mipLevels              = 1;
+        texDesc.sampleQuality          = 0;
+        texDesc.format                 = TinyImageFormat_R8G8B8A8_UNORM;
+        texDesc.startState             = RESOURCE_STATE_COMMON;
 
         ///// 1D, 2D, 3D
         const auto createTextureHelper = [this, &texDesc](MSAASampleCount sampleCount, u32 arraySize, u32 width, u32 height, u32 depth, TextureDimension dim)
         {
-            texDesc.mWidth                                   = width;
-            texDesc.mHeight                                  = height;
-            texDesc.mDepth                                   = depth;
-            texDesc.mArraySize                               = arraySize;
-            texDesc.mSampleCount                             = sampleCount;
+            texDesc.width                                   = width;
+            texDesc.height                                  = height;
+            texDesc.depth                                   = depth;
+            texDesc.arraySize                               = arraySize;
+            texDesc.sampleCount                             = sampleCount;
 
-            texDesc.mDescriptors                             = DESCRIPTOR_TYPE_TEXTURE;
-            this->_mNullDescriptors.mpDefaultTextureSRV[dim] = this->createTexture(texDesc);
+            texDesc.descriptorType                          = DESCRIPTOR_TYPE_TEXTURE;
+            this->_mNullDescriptors.pDefaultTextureSRV[dim] = this->createTexture(texDesc);
 
             if (sampleCount == MSAA_SAMPLE_COUNT_1)
             {
-                texDesc.mDescriptors                             = DESCRIPTOR_TYPE_RW_TEXTURE;
-                this->_mNullDescriptors.mpDefaultTextureUAV[dim] = this->createTexture(texDesc);
+                texDesc.descriptorType                          = DESCRIPTOR_TYPE_RW_TEXTURE;
+                this->_mNullDescriptors.pDefaultTextureUAV[dim] = this->createTexture(texDesc);
             }
         };
         createTextureHelper(MSAA_SAMPLE_COUNT_1, 1, 1, 1, 1, TEXTURE_DIM_1D);
@@ -261,77 +261,77 @@ void VulkanDevice::_createDefaultResource() noexcept
         createTextureHelper(MSAA_SAMPLE_COUNT_1, 1, 2, 2, 2, TEXTURE_DIM_3D);
 
         ///// cube
-        texDesc.mWidth                                                      = 2;
-        texDesc.mHeight                                                     = 2;
-        texDesc.mDepth                                                      = 1;
-        texDesc.mSampleCount                                                = MSAA_SAMPLE_COUNT_1;
-        texDesc.mDescriptors                                                = DESCRIPTOR_TYPE_TEXTURE_CUBE;
+        texDesc.width                                                      = 2;
+        texDesc.height                                                     = 2;
+        texDesc.depth                                                      = 1;
+        texDesc.sampleCount                                                = MSAA_SAMPLE_COUNT_1;
+        texDesc.descriptorType                                             = DESCRIPTOR_TYPE_TEXTURE_CUBE;
 
-        texDesc.mArraySize                                                  = 6;
-        this->_mNullDescriptors.mpDefaultTextureSRV[TEXTURE_DIM_CUBE]       = this->createTexture(texDesc);
-        texDesc.mArraySize                                                  = 12;
-        this->_mNullDescriptors.mpDefaultTextureSRV[TEXTURE_DIM_CUBE_ARRAY] = this->createTexture(texDesc);
+        texDesc.arraySize                                                  = 6;
+        this->_mNullDescriptors.pDefaultTextureSRV[TEXTURE_DIM_CUBE]       = this->createTexture(texDesc);
+        texDesc.arraySize                                                  = 12;
+        this->_mNullDescriptors.pDefaultTextureSRV[TEXTURE_DIM_CUBE_ARRAY] = this->createTexture(texDesc);
 
         //// Buffer
         BufferDesc bufDesc{
-            .mSize               = sizeof(u32),
-            .mpCounterBuffer     = nullptr,
-            .mFirstElement       = 0,
-            .mElementCount       = 1,
-            .mStructStride       = sizeof(u32),
-            .mName               = "Dummy Buffer",
-            .mAlignment          = 0,
-            .mMemoryUsage        = RESOURCE_MEMORY_USAGE_GPU_ONLY,
-            .mFlags              = BUFFER_CREATION_FLAG_NONE,
-            .mQueueType          = QUEUE_TYPE_MAX,
-            .mStartState         = RESOURCE_STATE_COMMON,
-            .mICBDrawType        = INDIRECT_ARG_INVALID,
-            .mICBMaxCommandCount = 0,
-            .mFormat             = TinyImageFormat_R32_UINT,
+            .size               = sizeof(u32),
+            .pCounterBuffer     = nullptr,
+            .firstElement       = 0,
+            .elementCount       = 1,
+            .structStride       = sizeof(u32),
+            .name               = "Dummy Buffer",
+            .alignment          = 0,
+            .memoryUsage        = RESOURCE_MEMORY_USAGE_GPU_ONLY,
+            .flags              = BUFFER_CREATION_FLAG_NONE,
+            .queueType          = QUEUE_TYPE_FLAG_MAX,
+            .startState         = RESOURCE_STATE_COMMON,
+            .ICBDrawType        = INDIRECT_ARG_INVALID,
+            .ICBMaxCommandCount = 0,
+            .format             = TinyImageFormat_R32_UINT,
         };
 
-        bufDesc.mDescriptors                 = DESCRIPTOR_TYPE_BUFFER | DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        _mNullDescriptors.mpDefaultBufferSRV = this->createBuffer(bufDesc);
-        bufDesc.mDescriptors                 = DESCRIPTOR_TYPE_RW_BUFFER;
-        _mNullDescriptors.mpDefaultBufferUAV = this->createBuffer(bufDesc);
+        bufDesc.descriptorType              = DESCRIPTOR_TYPE_BUFFER | DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        _mNullDescriptors.pDefaultBufferSRV = this->createBuffer(bufDesc);
+        bufDesc.descriptorType              = DESCRIPTOR_TYPE_RW_BUFFER;
+        _mNullDescriptors.pDefaultBufferUAV = this->createBuffer(bufDesc);
     }
 
     // TODO: mutex _mNullDescriptors.mSubmitMutex
     /// sampler
     SamplerDesc sampleDesc{};
-    _mNullDescriptors.mpDefaultSampler = this->createSampler(sampleDesc);
+    _mNullDescriptors.pDefaultSampler = this->createSampler(sampleDesc);
 
     // command buffer to transition resources to the correct state
     QueueDesc queueDesc{};
     auto* pQueue = this->requestQueue(queueDesc);
 
     CmdPoolDesc cmdPoolDesc{};
-    cmdPoolDesc.mpUsedForQueue = (Queue*)pQueue;
-    auto* pCmdPool             = this->createCmdPool(cmdPoolDesc);
+    cmdPoolDesc.pUsedForQueue = (Queue*)pQueue;
+    auto* pCmdPool            = this->createCmdPool(cmdPoolDesc);
 
     CmdDesc cmdDesc{};
-    cmdDesc.mpCmdPool = pCmdPool;
-    auto* pCmd        = this->createCmd(cmdDesc);
+    cmdDesc.pCmdPool = pCmdPool;
+    auto* pCmd       = this->createCmd(cmdDesc);
 
     FenceDesc fenceDesc{};
-    auto* pFence                                 = this->createFence(fenceDesc);
+    auto* pFence                                = this->createFence(fenceDesc);
 
-    _mNullDescriptors.mpInitialTransitionQueue   = pQueue;
-    _mNullDescriptors.mpInitialTransitionCmdPool = pCmdPool;
-    _mNullDescriptors.mpInitialTransitionCmd     = pCmd;
-    _mNullDescriptors.mpInitialTransitionFence   = pFence;
+    _mNullDescriptors.pInitialTransitionQueue   = pQueue;
+    _mNullDescriptors.pInitialTransitionCmdPool = pCmdPool;
+    _mNullDescriptors.pInitialTransitionCmd     = pCmd;
+    _mNullDescriptors.pInitialTransitionFence   = pFence;
 
     // TODO: mutex _mNullDescriptors.mInitialTransitionMutex
 
     for (uint32_t dim = 0; dim < TEXTURE_DIM_COUNT; ++dim)
     {
-        if (_mNullDescriptors.mpDefaultTextureSRV[dim])
+        if (_mNullDescriptors.pDefaultTextureSRV[dim])
         {
-            this->initial_transition(_mNullDescriptors.mpDefaultTextureSRV[dim], RESOURCE_STATE_SHADER_RESOURCE);
+            this->initial_transition(_mNullDescriptors.pDefaultTextureSRV[dim], RESOURCE_STATE_SHADER_RESOURCE);
         }
-        if (_mNullDescriptors.mpDefaultTextureUAV[dim])
+        if (_mNullDescriptors.pDefaultTextureUAV[dim])
         {
-            this->initial_transition(_mNullDescriptors.mpDefaultTextureUAV[dim], RESOURCE_STATE_UNORDERED_ACCESS);
+            this->initial_transition(_mNullDescriptors.pDefaultTextureUAV[dim], RESOURCE_STATE_UNORDERED_ACCESS);
         }
     }
 
@@ -376,19 +376,19 @@ void VulkanDevice::_destroyDefaultResource() noexcept
     vkDestroyDescriptorSetLayout(_mpHandle, _mpEmptyDescriptorSetLayout, &g_VkAllocationCallbacks);
     vkDestroyDescriptorPool(_mpHandle, _mpEmptyDescriptorPool, &g_VkAllocationCallbacks);
 
-    for (Texture* pTex : _mNullDescriptors.mpDefaultTextureSRV) { destroyTexture(pTex); }
-    for (Texture* pTex : _mNullDescriptors.mpDefaultTextureUAV) { destroyTexture(pTex); }
-    destroyBuffer(_mNullDescriptors.mpDefaultBufferSRV);
-    destroyBuffer(_mNullDescriptors.mpDefaultBufferUAV);
-    destroySampler(_mNullDescriptors.mpDefaultSampler);
-    destroyFence(_mNullDescriptors.mpInitialTransitionFence);
-    releaseQueue(_mNullDescriptors.mpInitialTransitionQueue);
-    destroyCmd(_mNullDescriptors.mpInitialTransitionCmd);
-    destroyCmdPool(_mNullDescriptors.mpInitialTransitionCmdPool);
+    for (Texture* pTex : _mNullDescriptors.pDefaultTextureSRV) { destroyTexture(pTex); }
+    for (Texture* pTex : _mNullDescriptors.pDefaultTextureUAV) { destroyTexture(pTex); }
+    destroyBuffer(_mNullDescriptors.pDefaultBufferSRV);
+    destroyBuffer(_mNullDescriptors.pDefaultBufferUAV);
+    destroySampler(_mNullDescriptors.pDefaultSampler);
+    destroyFence(_mNullDescriptors.pInitialTransitionFence);
+    releaseQueue(_mNullDescriptors.pInitialTransitionQueue);
+    destroyCmd(_mNullDescriptors.pInitialTransitionCmd);
+    destroyCmdPool(_mNullDescriptors.pInitialTransitionCmdPool);
 }
 
 VulkanDevice::VulkanDevice(VulkanAdapter* pAdapter, DeviceDesc& desc) noexcept
-    : _mpAdapter(pAdapter), _mShaderModel(desc.mShaderModel)
+    : _mpAdapter(pAdapter), _mShaderModel(desc.shaderModel)
 {
     if (_createLogicalDevice(desc))
     {
@@ -414,13 +414,13 @@ VulkanDevice::~VulkanDevice() noexcept
     }
 }
 
-void VulkanDevice::requestQueueIndex(QueueType quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) noexcept
+void VulkanDevice::requestQueueIndex(QueueTypeFlag quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) noexcept
 {
     bool isConsume = queryAvailableQueueIndex(quType, outQuFamIndex, outQuIndex, outFlag);
-    if (isConsume) { _mQueueInfos[outFlag].mUsedCount++; }
+    if (isConsume) { _mQueueInfos[outFlag].usedCount++; }
 }
 
-bool VulkanDevice::queryAvailableQueueIndex(QueueType quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) const noexcept
+bool VulkanDevice::queryAvailableQueueIndex(QueueTypeFlag quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) const noexcept
 {
     bool found                   = false;
     bool willConsumeDedicatedOne = false;
@@ -429,9 +429,9 @@ bool VulkanDevice::queryAvailableQueueIndex(QueueType quType, u8& outQuFamIndex,
     const auto allSupportedVkQueueFlags = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT | VK_QUEUE_COMPUTE_BIT;
     switch (quType)
     {
-        case QUEUE_TYPE_GRAPHICS: requiredFlagBit = VK_QUEUE_GRAPHICS_BIT; break;
-        case QUEUE_TYPE_TRANSFER: requiredFlagBit = VK_QUEUE_TRANSFER_BIT; break;
-        case QUEUE_TYPE_COMPUTE: requiredFlagBit = VK_QUEUE_COMPUTE_BIT; break;
+        case QUEUE_TYPE_FLAG_GRAPHICS: requiredFlagBit = VK_QUEUE_GRAPHICS_BIT; break;
+        case QUEUE_TYPE_FLAG_TRANSFER: requiredFlagBit = VK_QUEUE_TRANSFER_BIT; break;
+        case QUEUE_TYPE_FLAG_COMPUTE: requiredFlagBit = VK_QUEUE_COMPUTE_BIT; break;
         default: AXE_ERROR("Unsupported queue type {}", reflection::enum_name(quType)); break;
     }
 
@@ -440,13 +440,13 @@ bool VulkanDevice::queryAvailableQueueIndex(QueueType quType, u8& outQuFamIndex,
     for (u32 flag = 0; flag < _mQueueInfos.size(); ++flag)
     {
         auto& info = _mQueueInfos[flag];
-        if ((requiredFlagBit & flag) && info.mUsedCount < info.mAvailableCount)
+        if ((requiredFlagBit & flag) && info.usedCount < info.availableCount)
         {
             u32 curTypeCount = std::popcount(flag & allSupportedVkQueueFlags);
             if (requiredFlagBit & VK_QUEUE_GRAPHICS_BIT)
             {
                 minSupportTypeCount     = curTypeCount;
-                quFamIndex              = info.mFamilyIndex;
+                quFamIndex              = info.familyIndex;
                 quIndex                 = 0;
                 willConsumeDedicatedOne = false;
                 outFlag                 = flag;
@@ -457,8 +457,8 @@ bool VulkanDevice::queryAvailableQueueIndex(QueueType quType, u8& outQuFamIndex,
             if (minSupportTypeCount > curTypeCount)
             {
                 minSupportTypeCount     = curTypeCount;
-                quFamIndex              = info.mFamilyIndex;
-                quIndex                 = info.mUsedCount;
+                quFamIndex              = info.familyIndex;
+                quIndex                 = info.usedCount;
                 willConsumeDedicatedOne = true;
                 outFlag                 = flag;
                 found                   = true;
@@ -473,7 +473,7 @@ bool VulkanDevice::queryAvailableQueueIndex(QueueType quType, u8& outQuFamIndex,
     {
         for (u32 flag = 0; flag < _mQueueInfos.size(); ++flag)
         {
-            if (_mQueueInfos[flag].mFamilyIndex == 0)
+            if (_mQueueInfos[flag].familyIndex == 0)
             {
                 outFlag = flag;
                 break;
@@ -487,34 +487,34 @@ bool VulkanDevice::queryAvailableQueueIndex(QueueType quType, u8& outQuFamIndex,
     {
         AXE_INFO("Found queue of {} (familyIndex={}, flag={}, isDedicated={}, queueIndex={}/{})",
                  reflection::enum_name(quType), quFamIndex, outFlag, (bool)(minSupportTypeCount == 1),
-                 quIndex, _mQueueInfos[outFlag].mAvailableCount);
+                 quIndex, _mQueueInfos[outFlag].availableCount);
     }
     outQuFamIndex = quFamIndex;
     outQuIndex    = quIndex;
     return willConsumeDedicatedOne;
 }
 
-void VulkanDevice::initial_transition(Texture* pTexture, ResourceState startState) noexcept
+void VulkanDevice::initial_transition(Texture* pTexture, ResourceStateFlags startState) noexcept
 {
     // TODO acquire_mutex()
-    _mNullDescriptors.mpInitialTransitionCmdPool->reset();
+    _mNullDescriptors.pInitialTransitionCmdPool->reset();
 
-    _mNullDescriptors.mpInitialTransitionCmd->begin();
+    _mNullDescriptors.pInitialTransitionCmd->begin();
 
     TextureBarrier texBarrier;
-    texBarrier.mpTexture                                = pTexture;
-    texBarrier.mImageBarrier.mBarrierInfo.mCurrentState = RESOURCE_STATE_UNDEFINED,
-    texBarrier.mImageBarrier.mBarrierInfo.mNewState     = startState;
+    texBarrier.pTexture                              = pTexture;
+    texBarrier.imageBarrier.barrierInfo.currentState = RESOURCE_STATE_UNDEFINED,
+    texBarrier.imageBarrier.barrierInfo.newState     = startState;
     std::pmr::vector<TextureBarrier> texBarriers{texBarrier};
-    _mNullDescriptors.mpInitialTransitionCmd->resourceBarrier(&texBarriers, nullptr, nullptr);
+    _mNullDescriptors.pInitialTransitionCmd->resourceBarrier(&texBarriers, nullptr, nullptr);
 
-    _mNullDescriptors.mpInitialTransitionCmd->end();
+    _mNullDescriptors.pInitialTransitionCmd->end();
 
     QueueSubmitDesc submitDesc;
-    submitDesc.mCmds.push_back(_mNullDescriptors.mpInitialTransitionCmd);
-    submitDesc.mpSignalFence = _mNullDescriptors.mpInitialTransitionFence;
-    _mNullDescriptors.mpInitialTransitionQueue->submit(submitDesc);
-    _mNullDescriptors.mpInitialTransitionFence->wait();
+    submitDesc.cmds.push_back(_mNullDescriptors.pInitialTransitionCmd);
+    submitDesc.pSignalFence = _mNullDescriptors.pInitialTransitionFence;
+    _mNullDescriptors.pInitialTransitionQueue->submit(submitDesc);
+    _mNullDescriptors.pInitialTransitionFence->wait();
     // TODO: release mutex
 }
 

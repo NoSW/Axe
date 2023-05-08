@@ -6,13 +6,13 @@ namespace axe::pipeline
 
 bool Forward::init(PipelineDesc& desc) noexcept
 {
-    _mWidth   = desc.mpWindow->width();
-    _mHeight  = desc.mpWindow->height();
-    _mpWindow = desc.mpWindow;
+    _mWidth   = desc.pWindow->width();
+    _mHeight  = desc.pWindow->height();
+    _mpWindow = desc.pWindow;
 
     // Backend
-    rhi::BackendDesc backendDesc{.mAppName = desc.mAppName};
-    _mpBackend = rhi::createBackend(rhi::GRAPHICS_API_VULKAN, backendDesc);
+    rhi::BackendDesc backendDesc{.appName = desc.appName};
+    _mpBackend = rhi::createBackend(rhi::GRAPHICS_API_FLAG_VULKAN, backendDesc);
 
     // Adapter
     rhi::AdapterDesc adapterDesc{};
@@ -24,8 +24,8 @@ bool Forward::init(PipelineDesc& desc) noexcept
 
     // Queue
     rhi::QueueDesc queueDesc{
-        .mType = rhi::QUEUE_TYPE_GRAPHICS,
-        .mFlag = rhi::QUEUE_FLAG_NONE};
+        .type = rhi::QUEUE_TYPE_FLAG_GRAPHICS,
+        .flag = rhi::QUEUE_FLAG_NONE};
 
     _mpGraphicsQueue = _mpDevice->requestQueue(queueDesc);
     if (!_mpGraphicsQueue) { return false; }
@@ -33,20 +33,20 @@ bool Forward::init(PipelineDesc& desc) noexcept
     for (u32 i = 0; i < _IMAGE_COUNT; ++i)
     {
         // CmdPool
-        rhi::CmdPoolDesc cmdPoolDesc{.mpUsedForQueue = _mpGraphicsQueue};
+        rhi::CmdPoolDesc cmdPoolDesc{.pUsedForQueue = _mpGraphicsQueue};
         _mpCmdPools[i] = _mpDevice->createCmdPool(cmdPoolDesc);
         if (!_mpCmdPools[i]) { return false; }
 
         //  Cmd
         rhi::CmdDesc cmdDesc{
-            .mpCmdPool  = _mpCmdPools[i],
-            .mCmdCount  = 1,
-            .mSecondary = false};
+            .pCmdPool    = _mpCmdPools[i],
+            .cmdCount    = 1,
+            .isSecondary = false};
         _mpCmds[i] = _mpDevice->createCmd(cmdDesc);
         if (!_mpCmds[i]) { return false; }
 
         // Fence
-        rhi::FenceDesc fenceDesc{.mIsSignaled = false};
+        rhi::FenceDesc fenceDesc{.isSignaled = false};
         _mpRenderCompleteFences[i] = _mpDevice->createFence(fenceDesc);
         if (!_mpRenderCompleteFences[i]) { return false; }
 
@@ -102,42 +102,42 @@ bool Forward::load(LoadFlag loadFlag) noexcept
 
         shaderDesc.mStages[0].mRelaFilePath = "Shaders/Basic.vert.glsl";
         shaderDesc.mStages[1].mRelaFilePath = "Shaders/Basic.frag.glsl";
-        shaderDesc.mLabel                   = "Basic";
+        shaderDesc.label                    = "Basic";
         _mpBasicShader                      = _mpDevice->createShader(shaderDesc);
 
         shaderDesc.mStages[0].mRelaFilePath = "Shaders/Skybox/Skybox.vert.glsl";
         shaderDesc.mStages[1].mRelaFilePath = "Shaders/Skybox/Skybox.frag.glsl";
-        shaderDesc.mLabel                   = "Skybox";
+        shaderDesc.label                    = "Skybox";
         _mpSkyboxShader                     = _mpDevice->createShader(shaderDesc);
     }
 
     if (loadFlag & (LOAD_FLAG_RESIZE | LOAD_FLAG_RENDER_TARGET))
     {
         rhi::SwapChainDesc swapchainDesc{
-            .mpWindow         = _mpWindow,
-            .mpPresentQueue   = _mpGraphicsQueue,
-            .mImageCount      = _IMAGE_COUNT,
-            .mWidth           = _mWidth,
-            .mHeight          = _mHeight,
-            .mColorClearValue = rhi::ClearValue{
+            .pWindow         = _mpWindow,
+            .pPresentQueue   = _mpGraphicsQueue,
+            .imageCount      = _IMAGE_COUNT,
+            .width           = _mWidth,
+            .height          = _mHeight,
+            .colorClearValue = rhi::ClearValue{
                 .rgba{1.0f, 0.8f, 0.4f, 0.0f},
             }};
         _mpSwapChain = _mpDevice->createSwapChain(swapchainDesc);
         if (_mpSwapChain == nullptr) { return false; }
 
         rhi::RenderTargetDesc depthRT{
-            .mFlags           = rhi::TEXTURE_CREATION_FLAG_ON_TILE | rhi::TEXTURE_CREATION_FLAG_VR_MULTIVIEW,
-            .mWidth           = _mWidth,
-            .mHeight          = _mHeight,
-            .mDepth           = 1,
-            .mArraySize       = 1,
-            .mMipLevels       = 0,
+            .flags            = rhi::TEXTURE_CREATION_FLAG_ON_TILE | rhi::TEXTURE_CREATION_FLAG_VR_MULTIVIEW,
+            .width            = _mWidth,
+            .height           = _mHeight,
+            .depth            = 1,
+            .arraySize        = 1,
+            .mipLevels        = 0,
             .mMSAASampleCount = rhi::MSAA_SAMPLE_COUNT_1,
-            .mFormat          = TinyImageFormat_D32_SFLOAT,
-            .mStartState      = rhi::RESOURCE_STATE_DEPTH_WRITE,
-            .mClearValue{},
-            .mSampleQuality = 0,
-            .mDescriptors   = rhi::DESCRIPTOR_TYPE_UNDEFINED,
+            .format           = TinyImageFormat_D32_SFLOAT,
+            .startState       = rhi::RESOURCE_STATE_DEPTH_WRITE,
+            .clearValue{},
+            .sampleQuality  = 0,
+            .descriptorType = rhi::DESCRIPTOR_TYPE_UNDEFINED,
             .mpNativeHandle = nullptr,
             .mpName         = "DepthBuffer",
         };
@@ -210,30 +210,30 @@ void Forward::draw() noexcept
 
     // record the screen cleaning command
     std::vector<rhi::RenderTargetBarrier> renderTargetBarriers = {rhi::RenderTargetBarrier{
-        .mImageBarrier{
-            .mBarrierInfo{
-                .mCurrentState = rhi::RESOURCE_STATE_PRESENT,
-                .mNewState     = rhi::RESOURCE_STATE_RENDER_TARGET,
+        .imageBarrier{
+            .barrierInfo{
+                .currentState = rhi::RESOURCE_STATE_PRESENT,
+                .newState     = rhi::RESOURCE_STATE_RENDER_TARGET,
             },
         },
-        .mpRenderTarget = nullptr,
+        .pRenderTarget = nullptr,
     }};
     cmd->setViewport(0, 0, _mWidth, _mHeight, 0.0, 1.0);
     cmd->setScissor(0, 0, _mWidth, _mHeight);
     cmd->end();
 
     // submit
-    rhi::QueueSubmitDesc quSubmitDesc{.mSubmitDone = false};
-    quSubmitDesc.mCmds.push_back(cmd);
-    quSubmitDesc.mSignalSemaphores.push_back(semaphore);
-    quSubmitDesc.mWaitSemaphores.push_back(_mpImageAcquiredSemaphore);
-    quSubmitDesc.mpSignalFence = fence;
+    rhi::QueueSubmitDesc quSubmitDesc{.isSubmitDone = false};
+    quSubmitDesc.cmds.push_back(cmd);
+    quSubmitDesc.signalSemaphores.push_back(semaphore);
+    quSubmitDesc.waitSemaphores.push_back(_mpImageAcquiredSemaphore);
+    quSubmitDesc.pSignalFence = fence;
     _mpGraphicsQueue->submit(quSubmitDesc);
 
     // present
-    rhi::QueuePresentDesc quPresentDesc{.mSubmitDone = true};
-    quPresentDesc.mWaitSemaphores.push_back(_mpImageAcquiredSemaphore);
-    quPresentDesc.mpSwapChain = _mpSwapChain;
+    rhi::QueuePresentDesc quPresentDesc{.isSubmitDone = true};
+    quPresentDesc.waitSemaphores.push_back(_mpImageAcquiredSemaphore);
+    quPresentDesc.pSwapChain = _mpSwapChain;
     _mpGraphicsQueue->present(quPresentDesc);
 }
 

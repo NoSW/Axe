@@ -12,13 +12,13 @@ namespace axe::rhi
 bool VulkanQueue::_create(const QueueDesc& desc) noexcept
 {
     u8 quFamIndex = U8_MAX, quIndex = U8_MAX, quFlag = 0;
-    _mpDevice->requestQueueIndex(desc.mType, quFamIndex, quIndex, quFlag);
+    _mpDevice->requestQueueIndex(desc.type, quFamIndex, quIndex, quFlag);
 
     _mpSubmitMutex       = /* TODO */ nullptr;
-    _mTimestampPeriod    = _mpDevice->_mpAdapter->requestGPUSettings().mTimestampPeriod;
+    _mTimestampPeriod    = _mpDevice->_mpAdapter->requestGPUSettings().timestampPeriod;
     _mVkQueueFamilyIndex = quFamIndex;
     _mVkQueueIndex       = quIndex;
-    _mType               = desc.mType;
+    _mType               = desc.type;
     _mFlags              = quFlag;
 
     vkGetDeviceQueue(_mpDevice->handle(), _mVkQueueFamilyIndex, _mVkQueueIndex, &_mpHandle);
@@ -30,17 +30,17 @@ bool VulkanQueue::_destroy() noexcept
     AXE_ASSERT(_mpDevice);
     AXE_ASSERT(_mpHandle);
 
-    --_mpDevice->_mQueueInfos[_mFlags].mUsedCount;
+    --_mpDevice->_mQueueInfos[_mFlags].usedCount;
     _mpHandle = VK_NULL_HANDLE;
     return true;
 }
 
 void VulkanQueue::submit(QueueSubmitDesc& desc) noexcept
 {
-    AXE_ASSERT(!desc.mCmds.empty());
+    AXE_ASSERT(!desc.cmds.empty());
 
     std::vector<VkSemaphore> waitVkSemaphores;
-    for (const auto* item : desc.mWaitSemaphores)
+    for (const auto* item : desc.waitSemaphores)
     {
         auto* p = (VulkanSemaphore*)item;
         if (p->_mSignaled)
@@ -52,7 +52,7 @@ void VulkanQueue::submit(QueueSubmitDesc& desc) noexcept
     std::vector<VkPipelineStageFlags> waitMasks(waitVkSemaphores.size(), VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
 
     std::vector<VkSemaphore> signalVkSemaphores;
-    for (const auto* item : desc.mSignalSemaphores)
+    for (const auto* item : desc.signalSemaphores)
     {
         auto* p = (VulkanSemaphore*)item;
         if (!p->_mSignaled)
@@ -63,7 +63,7 @@ void VulkanQueue::submit(QueueSubmitDesc& desc) noexcept
     }
 
     std::vector<VkCommandBuffer> cmdBufs;
-    for (const auto* item : desc.mCmds)
+    for (const auto* item : desc.cmds)
     {
         auto* p = (VulkanCmd*)item;
         cmdBufs.push_back(p->handle());
@@ -84,7 +84,7 @@ void VulkanQueue::submit(QueueSubmitDesc& desc) noexcept
     //  TODO: add lock to make sure multiple threads dont use the same queue simultaneously
     // Many setups have just one queue family and one queue. In this case, async compute, async transfer doesn't exist and we end up using
     // the same queue for all three operations
-    auto* pFence = desc.mpSignalFence ? ((VulkanFence*)desc.mpSignalFence) : nullptr;
+    auto* pFence = desc.pSignalFence ? ((VulkanFence*)desc.pSignalFence) : nullptr;
     auto result  = vkQueueSubmit(_mpHandle, 1, &submitInfo, pFence ? pFence->handle() : VK_NULL_HANDLE);
     if (VK_FAILED(result))
     {
@@ -98,10 +98,10 @@ void VulkanQueue::submit(QueueSubmitDesc& desc) noexcept
 
 void VulkanQueue::present(QueuePresentDesc& desc) noexcept
 {
-    AXE_ASSERT(desc.mpSwapChain);
-    auto* pSwapchain = static_cast<VulkanSwapChain*>(desc.mpSwapChain);
+    AXE_ASSERT(desc.pSwapChain);
+    auto* pSwapchain = static_cast<VulkanSwapChain*>(desc.pSwapChain);
     std::pmr::vector<VkSemaphore> signaledVkSemaphores;
-    for (const auto* item : desc.mWaitSemaphores)
+    for (const auto* item : desc.waitSemaphores)
     {
         auto* p = (VulkanSemaphore*)(item);
         if (p->_mSignaled)
@@ -111,7 +111,7 @@ void VulkanQueue::present(QueuePresentDesc& desc) noexcept
         }
     }
 
-    u32 presentIndex = desc.mIndex;
+    u32 presentIndex = desc.index;
     VkPresentInfoKHR presentInfo{
         .sType              = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
         .pNext              = nullptr,

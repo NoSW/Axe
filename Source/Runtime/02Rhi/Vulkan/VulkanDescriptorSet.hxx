@@ -11,9 +11,9 @@ class VulkanCmd;
 
 struct DynamicUniformData
 {
-    VkBuffer mpBuffer = VK_NULL_HANDLE;
-    u32 mOffset       = 0;
-    u32 mSize         = 0;
+    VkBuffer pBuffer = VK_NULL_HANDLE;
+    u32 offset       = 0;
+    u32 size         = 0;
 };
 
 class VulkanDescriptorSet final : public DescriptorSet

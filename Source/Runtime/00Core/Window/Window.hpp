@@ -9,7 +9,7 @@ namespace axe::window
 {
 struct WindowDesc
 {
-    std::string_view mTitle = "Untitled";
+    std::string_view title = "Untitled";
 };
 
 class Window final

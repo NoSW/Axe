@@ -10,48 +10,48 @@ namespace axe::rhi
 
 bool VulkanRenderTarget::_create(const RenderTargetDesc& desc) noexcept
 {
-    const bool isDepth = TinyImageFormat_IsDepthOnly(desc.mFormat) || TinyImageFormat_IsDepthAndStencil(desc.mFormat);
-    AXE_ASSERT(!((isDepth) && (desc.mDescriptors & DESCRIPTOR_TYPE_RW_TEXTURE)) && "Cannot use depth stencil as UAV");
+    const bool isDepth = TinyImageFormat_IsDepthOnly(desc.format) || TinyImageFormat_IsDepthAndStencil(desc.format);
+    AXE_ASSERT(!((isDepth) && (desc.descriptorType & DESCRIPTOR_TYPE_RW_TEXTURE)) && "Cannot use depth stencil as UAV");
 
-    _mMipLevels = std::max(1u, desc.mMipLevels);  // clamp mipLevels
+    _mMipLevels = std::max(1u, desc.mipLevels);  // clamp mipLevels
     TextureDesc texDesc{
         .pNativeHandle  = desc.mpNativeHandle,
         .pName          = desc.mpName,
-        .mClearValue    = desc.mClearValue,
-        .mFlags         = desc.mFlags,
-        .mWidth         = desc.mWidth,
-        .mHeight        = desc.mHeight,
-        .mDepth         = desc.mDepth,
-        .mArraySize     = desc.mArraySize,
-        .mMipLevels     = _mMipLevels,
-        .mSampleCount   = desc.mMSAASampleCount,
-        .mSampleQuality = desc.mSampleQuality,
-        .mFormat        = desc.mFormat,
-        .mStartState    = isDepth ? RESOURCE_STATE_RENDER_TARGET : RESOURCE_STATE_DEPTH_WRITE,
-        .mDescriptors   = desc.mDescriptors,
+        .clearValue     = desc.clearValue,
+        .flags          = desc.flags,
+        .width          = desc.width,
+        .height         = desc.height,
+        .depth          = desc.depth,
+        .arraySize      = desc.arraySize,
+        .mipLevels      = _mMipLevels,
+        .sampleCount    = desc.mMSAASampleCount,
+        .sampleQuality  = desc.sampleQuality,
+        .format         = desc.format,
+        .startState     = isDepth ? RESOURCE_STATE_RENDER_TARGET : RESOURCE_STATE_DEPTH_WRITE,
+        .descriptorType = desc.descriptorType,
 
     };
 
     // Create SRV by default for a render target unless this is on tile texture where SRV is not supported
-    if (!((u32)desc.mDescriptors & (u32)TEXTURE_CREATION_FLAG_ON_TILE))
+    if (!((u32)desc.descriptorType & (u32)TEXTURE_CREATION_FLAG_ON_TILE))
     {
-        texDesc.mDescriptors |= DESCRIPTOR_TYPE_TEXTURE;
+        texDesc.descriptorType |= DESCRIPTOR_TYPE_TEXTURE;
     }
     else
     {
-        if (desc.mDescriptors & DESCRIPTOR_TYPE_TEXTURE ||
-            desc.mDescriptors & DESCRIPTOR_TYPE_RW_TEXTURE)
+        if (desc.descriptorType & DESCRIPTOR_TYPE_TEXTURE ||
+            desc.descriptorType & DESCRIPTOR_TYPE_RW_TEXTURE)
         {
             AXE_WARN("On tile textures do not support DESCRIPTOR_TYPE_TEXTURE or DESCRIPTOR_TYPE_RW_TEXTURE");
         }
         // On tile textures do not support SRV/UAV as there is no backing memory
         // You can only read these textures as input attachments inside same render pass
-        texDesc.mDescriptors |= (~(DESCRIPTOR_TYPE_TEXTURE | DESCRIPTOR_TYPE_RW_TEXTURE));
+        texDesc.descriptorType |= (~(DESCRIPTOR_TYPE_TEXTURE | DESCRIPTOR_TYPE_RW_TEXTURE));
     }
 
     if (isDepth)
     {
-        const auto depthStencilFormat = to_vk_enum(desc.mFormat);
+        const auto depthStencilFormat = to_vk_enum(desc.format);
         if (depthStencilFormat != VK_FORMAT_UNDEFINED)
         {
             VkImageFormatProperties2 formatProperties{};
@@ -68,8 +68,8 @@ bool VulkanRenderTarget::_create(const RenderTargetDesc& desc) noexcept
             auto result = vkGetPhysicalDeviceImageFormatProperties2(_mpDevice->_mpAdapter->handle(), &formatInfo, &formatProperties);
             if (VK_FAILED(result))
             {
-                texDesc.mFormat |= TinyImageFormat_D16_UNORM;
-                AXE_WARN("Depth stencil format ({}) not supported. Falling back to D16 format", reflection::enum_name(desc.mFormat));
+                texDesc.format |= TinyImageFormat_D16_UNORM;
+                AXE_WARN("Depth stencil format ({}) not supported. Falling back to D16 format", reflection::enum_name(desc.format));
             }
         }
     }
@@ -81,10 +81,10 @@ bool VulkanRenderTarget::_create(const RenderTargetDesc& desc) noexcept
         return false;
     }
 
-    const u32 depthArraySize = desc.mArraySize * desc.mDepth;
-    const auto format        = to_vk_enum(texDesc.mFormat);
-    const auto viewType      = (VkImageViewType)(desc.mHeight > 1 ? (depthArraySize > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D) :
-                                                                    (depthArraySize > 1 ? VK_IMAGE_VIEW_TYPE_1D_ARRAY : VK_IMAGE_VIEW_TYPE_1D));
+    const u32 depthArraySize = desc.arraySize * desc.depth;
+    const auto format        = to_vk_enum(texDesc.format);
+    const auto viewType      = (VkImageViewType)(desc.height > 1 ? (depthArraySize > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D) :
+                                                                   (depthArraySize > 1 ? VK_IMAGE_VIEW_TYPE_1D_ARRAY : VK_IMAGE_VIEW_TYPE_1D));
     VkImageViewCreateInfo rtvCreateInfo{
         .sType    = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .pNext    = nullptr,
@@ -111,7 +111,7 @@ bool VulkanRenderTarget::_create(const RenderTargetDesc& desc) noexcept
 
     if (VK_FAILED(vkCreateImageView(_mpDevice->handle(), &rtvCreateInfo, nullptr, &_mpVkDescriptor))) { return false; }
 
-    const bool isTexture = desc.mDescriptors & DESCRIPTOR_TYPE_TEXTURE || desc.mDescriptors & DESCRIPTOR_TYPE_RW_TEXTURE;
+    const bool isTexture = desc.descriptorType & DESCRIPTOR_TYPE_TEXTURE || desc.descriptorType & DESCRIPTOR_TYPE_RW_TEXTURE;
     for (u32 i = 0; i < _mMipLevels; ++i)
     {
         rtvCreateInfo.subresourceRange.baseMipLevel = i;
@@ -135,19 +135,19 @@ bool VulkanRenderTarget::_create(const RenderTargetDesc& desc) noexcept
     //
     static std::atomic<u32> sRenderTargetIdCounter = 0;
     _mId                                           = sRenderTargetIdCounter++;
-    _mWidth                                        = desc.mWidth;
-    _mHeight                                       = desc.mHeight;
-    _mArraySize                                    = desc.mArraySize;
-    _mDepth                                        = desc.mDepth;
-    _mSampleQuality                                = desc.mSampleQuality;
+    _mWidth                                        = desc.width;
+    _mHeight                                       = desc.height;
+    _mArraySize                                    = desc.arraySize;
+    _mDepth                                        = desc.depth;
+    _mSampleQuality                                = desc.sampleQuality;
     _mSampleCount                                  = desc.mMSAASampleCount;
-    _mFormat                                       = desc.mFormat;
-    _mClearValue                                   = desc.mClearValue;
+    _mFormat                                       = desc.format;
+    _mClearValue                                   = desc.clearValue;
 
     // Unlike DX12, Vulkan textures start in undefined layout.
     // To keep in line with DX12, we transition them to the specified layout manually so app code doesn't
     // have to worry about this Render targets wont be created during runtime so this overhead will be minimal
-    _mpDevice->initial_transition((Texture*)_mpTexture, desc.mStartState);
+    _mpDevice->initial_transition((Texture*)_mpTexture, desc.startState);
 
     return true;
 }

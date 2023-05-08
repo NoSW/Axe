@@ -22,12 +22,12 @@ with open(join(PJ_ROOT, "Source", "Generated", "ShaderHeader.inl"), "w") as f:
         "{\n"
         "    struct ShaderByteItem\n"
         "    {\n"
-        "        uint8_t* mpData     = nullptr;\n"
-        "        uint32_t mByteCount = 0;\n"
+        "        uint8_t* pData     = nullptr;\n"
+        "        uint32_t byteCount = 0;\n"
         "    };\n"
         "\n"
-        "    ShaderByteItem mSpv;\n"
-        "    ShaderByteItem mDxil;\n"
+        "    ShaderByteItem spv;\n"
+        "    ShaderByteItem dxil;\n"
         "};\n\n"
     )
 
@@ -37,5 +37,5 @@ with open(join(PJ_ROOT, "Source", "Generated", "ShaderHeader.inl"), "w") as f:
             original_fn = rela_path = relpath(join(root, filename), join(generate_dir, "Spv")).replace(os.path.sep, "/")[:-6] + ".glsl"
             variable_name = filename[:-6].replace(".", "_")
             dxil_bytes = f"(uint8_t*)DXIL_{variable_name}, sizeof(DXIL{variable_name})" if exists(join(root, filename).replace("Spv", "Dxil").replace(".spv", ".dxil")) else ""
-            f.write("    {" + f"\"{original_fn}\", " + "ShaderByte{ .mSpv{ " + f"(uint8_t*)SPV_{variable_name}, sizeof(SPV_{variable_name})" + "}, .mDxil{" + f"{dxil_bytes}" + "}}},\n")
+            f.write("    {" + f"\"{original_fn}\", " + "ShaderByte{ .spv{ " + f"(uint8_t*)SPV_{variable_name}, sizeof(SPV_{variable_name})" + "}, .dxil{" + f"{dxil_bytes}" + "}}},\n")
     f.write("};\n")

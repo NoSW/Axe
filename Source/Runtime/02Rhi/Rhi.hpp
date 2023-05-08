@@ -28,7 +28,7 @@ public:
     virtual void releaseAdapter(Adapter*&) noexcept        = 0;
 };
 
-AXE_PUBLIC Backend* createBackend(GraphicsApi, BackendDesc&) noexcept;
+AXE_PUBLIC Backend* createBackend(GraphicsApiFlag, BackendDesc&) noexcept;
 AXE_PUBLIC void destroyBackend(Backend*&) noexcept;
 
 ///////////////////////////////////////////////

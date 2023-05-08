@@ -10,14 +10,14 @@ namespace axe::rhi
 {
 bool VulkanBuffer::_create(const BufferDesc& desc) noexcept
 {
-    AXE_ASSERT(desc.mSize);
+    AXE_ASSERT(desc.size);
 
     // Align the buffer size to multiples of the dynamic uniform buffer minimum size
 
-    u64 allocSize = desc.mSize;
-    if (desc.mDescriptors & DESCRIPTOR_TYPE_UNIFORM_BUFFER)
+    u64 allocSize = desc.size;
+    if (desc.descriptorType & DESCRIPTOR_TYPE_UNIFORM_BUFFER)
     {
-        allocSize = math::round_up(allocSize, _mpDevice->_mpAdapter->requestGPUSettings().mUniformBufferAlignment);
+        allocSize = math::round_up(allocSize, _mpDevice->_mpAdapter->requestGPUSettings().uniformBufferAlignment);
     }
 
     VkBufferCreateInfo bufCreateInfo{
@@ -25,10 +25,10 @@ bool VulkanBuffer::_create(const BufferDesc& desc) noexcept
         .pNext = nullptr,
         .flags = 0,
         .size  = allocSize,
-        .usage = to_buffer_usage(desc.mDescriptors, desc.mFormat != TinyImageFormat_UNDEFINED) |
+        .usage = to_buffer_usage(desc.descriptorType, desc.format != TinyImageFormat_UNDEFINED) |
 
                  // Buffer can be used as dest in a transfer command (Uploading data to a storage buffer, Readback query data)
-                 ((desc.mMemoryUsage == RESOURCE_MEMORY_USAGE_GPU_ONLY || desc.mMemoryUsage == RESOURCE_MEMORY_USAGE_GPU_TO_CPU) ? VK_BUFFER_USAGE_TRANSFER_DST_BIT : 0),
+                 ((desc.memoryUsage == RESOURCE_MEMORY_USAGE_GPU_ONLY || desc.memoryUsage == RESOURCE_MEMORY_USAGE_GPU_TO_CPU) ? VK_BUFFER_USAGE_TRANSFER_DST_BIT : 0),
         .sharingMode           = VK_SHARING_MODE_EXCLUSIVE,
         .queueFamilyIndexCount = 0,
         .pQueueFamilyIndices   = nullptr
@@ -37,12 +37,12 @@ bool VulkanBuffer::_create(const BufferDesc& desc) noexcept
 
     VmaAllocationCreateInfo allocCreateInfo{
         .flags          = 0,
-        .usage          = (VmaMemoryUsage)desc.mMemoryUsage,
-        .requiredFlags  = (VkMemoryPropertyFlags)((desc.mFlags & BUFFER_CREATION_FLAG_OWN_MEMORY_BIT ? VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT : 0) |
-                                                 (desc.mFlags & BUFFER_CREATION_FLAG_PERSISTENT_MAP_BIT ? VMA_ALLOCATION_CREATE_MAPPED_BIT : 0)),
+        .usage          = (VmaMemoryUsage)desc.memoryUsage,
+        .requiredFlags  = (VkMemoryPropertyFlags)((desc.flags & BUFFER_CREATION_FLAG_OWN_MEMORY_BIT ? VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT : 0) |
+                                                 (desc.flags & BUFFER_CREATION_FLAG_PERSISTENT_MAP_BIT ? VMA_ALLOCATION_CREATE_MAPPED_BIT : 0)),
         .preferredFlags = 0,
-        .memoryTypeBits = (VkMemoryPropertyFlags)((desc.mFlags & BUFFER_CREATION_FLAG_HOST_VISIBLE_VKONLY ? VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT : 0) |
-                                                  (desc.mFlags & BUFFER_CREATION_FLAG_HOST_COHERENT_VKONLY ? VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : 0)),
+        .memoryTypeBits = (VkMemoryPropertyFlags)((desc.flags & BUFFER_CREATION_FLAG_HOST_VISIBLE_VKONLY ? VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT : 0) |
+                                                  (desc.flags & BUFFER_CREATION_FLAG_HOST_COHERENT_VKONLY ? VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : 0)),
         .pool           = nullptr,
         .pUserData      = nullptr,
         .priority       = 0,  // ignored
@@ -60,9 +60,9 @@ bool VulkanBuffer::_create(const BufferDesc& desc) noexcept
         .pNext  = nullptr,
         .flags  = 0,
         .buffer = _mpHandle,
-        .format = to_vk_enum(desc.mFormat),
-        .offset = desc.mStructStride * desc.mFirstElement,
-        .range  = desc.mStructStride * desc.mElementCount,
+        .format = to_vk_enum(desc.format),
+        .offset = desc.structStride * desc.firstElement,
+        .range  = desc.structStride * desc.elementCount,
     };
 
     VkFormatProperties formatProps{};
@@ -72,7 +72,7 @@ bool VulkanBuffer::_create(const BufferDesc& desc) noexcept
     {
         if (!(formatProps.bufferFeatures & VK_FORMAT_FEATURE_UNIFORM_TEXEL_BUFFER_BIT))
         {
-            AXE_WARN("Failed to create uniform texel buffer view for format {}", reflection::enum_name(desc.mFormat));
+            AXE_WARN("Failed to create uniform texel buffer view for format {}", reflection::enum_name(desc.format));
         }
         else
         {
@@ -86,7 +86,7 @@ bool VulkanBuffer::_create(const BufferDesc& desc) noexcept
     {
         if (!(formatProps.bufferFeatures & VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_BIT))
         {
-            AXE_WARN("Failed to create storage texel buffer view for format {}", reflection::enum_name(desc.mFormat));
+            AXE_WARN("Failed to create storage texel buffer view for format {}", reflection::enum_name(desc.format));
         }
         else
         {
@@ -97,13 +97,13 @@ bool VulkanBuffer::_create(const BufferDesc& desc) noexcept
         }
     }
 
-    _mSize              = desc.mSize;
-    _mMemoryUsage       = desc.mMemoryUsage;
-    _mDescriptors       = desc.mDescriptors;
+    _mSize              = desc.size;
+    _mMemoryUsage       = desc.memoryUsage;
+    _mDescriptors       = desc.descriptorType;
     _mpCPUMappedAddress = allocInfo.pMappedData;
-    if ((desc.mDescriptors & DESCRIPTOR_TYPE_BUFFER) || (desc.mDescriptors & DESCRIPTOR_TYPE_BUFFER_RAW))
+    if ((desc.descriptorType & DESCRIPTOR_TYPE_BUFFER) || (desc.descriptorType & DESCRIPTOR_TYPE_BUFFER_RAW))
     {
-        _mOffset = desc.mStructStride * desc.mFirstElement;
+        _mOffset = desc.structStride * desc.firstElement;
     }
 
     return true;

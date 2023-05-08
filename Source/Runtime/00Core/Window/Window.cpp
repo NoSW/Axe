@@ -16,7 +16,7 @@ bool Window::init(WindowDesc& desc) noexcept
     sdlWindowFlag |= _mResizable ? SDL_WINDOW_RESIZABLE : 0;
     sdlWindowFlag |= SDL_WINDOW_VULKAN;
 
-    _mpSDLWindow = SDL_CreateWindow(desc.mTitle.data(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _mWidth, _mHeight, sdlWindowFlag);
+    _mpSDLWindow = SDL_CreateWindow(desc.title.data(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _mWidth, _mHeight, sdlWindowFlag);
 
     if (_mMaximized) { SDL_MaximizeWindow(_mpSDLWindow); }
     SDL_GL_GetDrawableSize(_mpSDLWindow, (i32*)(&_mWidth), (i32*)(&_mHeight));

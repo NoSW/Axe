@@ -74,19 +74,19 @@ private:
 public:
     VulkanDevice(VulkanAdapter*, DeviceDesc& desc) noexcept;
 
-    bool queryAvailableQueueIndex(QueueType quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) const noexcept;
+    bool queryAvailableQueueIndex(QueueTypeFlag quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) const noexcept;
 
-    void requestQueueIndex(QueueType quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) noexcept;
+    void requestQueueIndex(QueueTypeFlag quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) noexcept;
 
     auto handle() noexcept { return _mpHandle; }
 
-    VkSampler getDefaultSamplerHandle() noexcept { return ((VulkanSampler*)_mNullDescriptors.mpDefaultSampler)->handle(); }
-    VkBuffer getDefaultBufferSRVHandle() noexcept { return ((VulkanBuffer*)_mNullDescriptors.mpDefaultBufferSRV)->handle(); }
-    VkBuffer getDefaultBufferUAVHandle() noexcept { return ((VulkanBuffer*)_mNullDescriptors.mpDefaultBufferUAV)->handle(); }
-    VkImage getDefaultTextureSRVHandle(TextureDimension dim) noexcept { return ((VulkanTexture*)_mNullDescriptors.mpDefaultTextureSRV[(u8)dim])->handle(); }
-    VkImage getDefaultTextureUAVHandle(TextureDimension dim) noexcept { return ((VulkanTexture*)_mNullDescriptors.mpDefaultTextureUAV[(u8)dim])->handle(); }
+    VkSampler getDefaultSamplerHandle() noexcept { return ((VulkanSampler*)_mNullDescriptors.pDefaultSampler)->handle(); }
+    VkBuffer getDefaultBufferSRVHandle() noexcept { return ((VulkanBuffer*)_mNullDescriptors.pDefaultBufferSRV)->handle(); }
+    VkBuffer getDefaultBufferUAVHandle() noexcept { return ((VulkanBuffer*)_mNullDescriptors.pDefaultBufferUAV)->handle(); }
+    VkImage getDefaultTextureSRVHandle(TextureDimension dim) noexcept { return ((VulkanTexture*)_mNullDescriptors.pDefaultTextureSRV[(u8)dim])->handle(); }
+    VkImage getDefaultTextureUAVHandle(TextureDimension dim) noexcept { return ((VulkanTexture*)_mNullDescriptors.pDefaultTextureUAV[(u8)dim])->handle(); }
 
-    void initial_transition(Texture* pTexture, ResourceState startState) noexcept;
+    void initial_transition(Texture* pTexture, ResourceStateFlags startState) noexcept;
 
 private:
     void _setDebugLabel(void* handle, VkObjectType, std::string_view) noexcept;
@@ -104,9 +104,9 @@ private:
         {
 #if AXE_RHI_VULKAN_ENABLE_DEBUG
             static_assert(std::is_base_of_v<RhiObjectBase, T>, "T must be derived from RhiObjectBase for using _mLabel");
-            static_assert(std::is_base_of_v<DescBase, Desc>, "Desc must be derived from DescBase for using mLabel");
-            p->_mLabel = desc.mLabel;
-            _setDebugLabel((void*)p->handle(), T::getVkTypeId(), desc.mLabel);
+            static_assert(std::is_base_of_v<DescBase, Desc>, "Desc must be derived from DescBase for using label");
+            p->_mLabel = desc.label;
+            _setDebugLabel((void*)p->handle(), T::getVkTypeId(), desc.label);
 #endif
         }
 
@@ -179,13 +179,13 @@ private:
     // usage status
     struct QueueInfo
     {
-        u32 mAvailableCount = 0;  // total available count
-        u32 mUsedCount      = 0;  // already used count
-        u8 mFamilyIndex     = U8_MAX;
+        u32 availableCount = 0;  // total available count
+        u32 usedCount      = 0;  // already used count
+        u8 familyIndex     = U8_MAX;
     };
 
     std::array<QueueInfo, MAX_QUEUE_FLAG> _mQueueInfos;  // <familyIndex, count>
-    std::array<u8, QUEUE_TYPE_COUNT> _mQueueFamilyIndexes{U8_MAX, U8_MAX, U8_MAX};
+    std::array<u8, QUEUE_TYPE_FLAG_COUNT> _mQueueFamilyIndexes{U8_MAX, U8_MAX, U8_MAX};
 };
 
 }  // namespace axe::rhi

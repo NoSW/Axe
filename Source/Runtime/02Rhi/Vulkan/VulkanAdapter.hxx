@@ -26,10 +26,10 @@ public:
     AdapterType type() const noexcept { return (AdapterType)_mpProperties.properties.deviceType; }
     auto backendHandle() const noexcept { return _mpBackend->handle(); }
 
-    bool isSupportRead(TinyImageFormat format) const noexcept { return _mGPUCapBits.mCanShaderReadFrom[format]; }
-    bool isSupportWrite(TinyImageFormat format) const noexcept { return _mGPUCapBits.mCanShaderWriteTo[format]; }
-    bool isSupportRenderTargetWrite(TinyImageFormat format) const noexcept { return _mGPUCapBits.mCanRenderTargetWriteTo[format]; }
-    bool isSupportQueue(QueueType) noexcept;
+    bool isSupportRead(TinyImageFormat format) const noexcept { return _mGPUCapBits.canShaderReadFrom[format]; }
+    bool isSupportWrite(TinyImageFormat format) const noexcept { return _mGPUCapBits.canShaderWriteTo[format]; }
+    bool isSupportRenderTargetWrite(TinyImageFormat format) const noexcept { return _mGPUCapBits.canRenderTargetWriteTo[format]; }
+    bool isSupportQueue(QueueTypeFlag) noexcept;
     u32 maxUniformBufferRange() const noexcept { return _mpProperties.properties.limits.maxUniformBufferRange; }
     u32 maxStorageBufferRange() const noexcept { return _mpProperties.properties.limits.maxStorageBufferRange; }
 

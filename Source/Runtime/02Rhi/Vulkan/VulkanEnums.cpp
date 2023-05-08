@@ -63,9 +63,9 @@ VkImageAspectFlags determine_aspect_mask(VkFormat format, bool includeStencilBit
 VkPipelineStageFlags determine_pipeline_stage_flags(DeterminePipelineStageOption option) noexcept
 {
     VkPipelineStageFlags flags = 0;
-    switch (option.mQueueType)
+    switch (option.queueType)
     {
-        case QUEUE_TYPE_GRAPHICS:
+        case QUEUE_TYPE_FLAG_GRAPHICS:
         {
             if ((option.mAccessFlags & (VK_ACCESS_INDEX_READ_BIT | VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT)))
             {
@@ -76,17 +76,17 @@ VkPipelineStageFlags determine_pipeline_stage_flags(DeterminePipelineStageOption
             {
                 flags |= VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
                 flags |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-                if (option.mIsSupportGeomShader)
+                if (option.supportGeomShader)
                 {
                     flags |= VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT;
                 }
-                if (option.mIsSupportTeseShader)
+                if (option.supportTeseShader)
                 {
                     flags |= VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT;
                     flags |= VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT;
                 }
                 flags |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-                if (option.mIsSupportRayTracing)
+                if (option.supportRayTracing)
                 {
                     flags |= VK_PIPELINE_STAGE_RAY_TRACING_SHADER_BIT_KHR;
                 }
@@ -106,7 +106,7 @@ VkPipelineStageFlags determine_pipeline_stage_flags(DeterminePipelineStageOption
                 flags |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
             break;
         }
-        case QUEUE_TYPE_COMPUTE:
+        case QUEUE_TYPE_FLAG_COMPUTE:
         {
             if ((option.mAccessFlags & (VK_ACCESS_INDEX_READ_BIT | VK_ACCESS_VERTEX_ATTRIBUTE_READ_BIT)) ||
                 (option.mAccessFlags & VK_ACCESS_INPUT_ATTACHMENT_READ_BIT) ||
@@ -121,7 +121,7 @@ VkPipelineStageFlags determine_pipeline_stage_flags(DeterminePipelineStageOption
             }
             break;
         }
-        case QUEUE_TYPE_TRANSFER: return VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+        case QUEUE_TYPE_FLAG_TRANSFER: return VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
         default: break;
     }
 
@@ -146,7 +146,7 @@ VkPipelineStageFlags determine_pipeline_stage_flags(DeterminePipelineStageOption
     return flags;
 }
 
-VkAccessFlags resource_state_to_access_flags(ResourceState state) noexcept
+VkAccessFlags resource_state_to_access_flags(ResourceStateFlags state) noexcept
 {
     VkAccessFlags ret = 0;
     if (state & RESOURCE_STATE_COPY_SOURCE) { ret |= VK_ACCESS_TRANSFER_READ_BIT; }
@@ -163,7 +163,7 @@ VkAccessFlags resource_state_to_access_flags(ResourceState state) noexcept
     return ret;
 }
 
-VkImageLayout resource_state_to_image_layout(ResourceState usage) noexcept
+VkImageLayout resource_state_to_image_layout(ResourceStateFlags usage) noexcept
 {
     if (usage & RESOURCE_STATE_COPY_SOURCE) { return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL; }
     else if (usage & RESOURCE_STATE_COPY_DEST) { return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL; }
@@ -176,7 +176,7 @@ VkImageLayout resource_state_to_image_layout(ResourceState usage) noexcept
     else { return VK_IMAGE_LAYOUT_UNDEFINED; }
 }
 
-VkBufferUsageFlags to_buffer_usage(DescriptorType usage, bool texel) noexcept
+VkBufferUsageFlags to_buffer_usage(DescriptorTypeFlag usage, bool texel) noexcept
 {
     VkBufferUsageFlags result = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
     if (usage & DESCRIPTOR_TYPE_UNIFORM_BUFFER)
@@ -224,7 +224,7 @@ VkBufferUsageFlags to_buffer_usage(DescriptorType usage, bool texel) noexcept
     return result;
 }
 
-VkImageUsageFlags to_image_usage(DescriptorType usage) noexcept
+VkImageUsageFlags to_image_usage(DescriptorTypeFlag usage) noexcept
 {
     {
         VkImageUsageFlags result = 0;
@@ -300,7 +300,7 @@ VkCompareOp to_vk_enum(CompareMode type) noexcept
     }
 }
 
-VkDescriptorType to_vk_enum(DescriptorType type) noexcept
+VkDescriptorType to_vk_enum(DescriptorTypeFlag type) noexcept
 {
     switch (type)
     {
@@ -400,28 +400,28 @@ VkBlendOp to_vk_enum(BlendMode bm) noexcept
 VkPipelineColorBlendStateCreateInfo to_vk_struct(const BlendStateDesc& blendDesc) noexcept
 {
     std::array<VkPipelineColorBlendAttachmentState, MAX_RENDER_TARGET_ATTACHMENTS> vkBlendStates;
-    for (u32 i = 0; i < blendDesc.mAttachmentCount; ++i)
+    for (u32 i = 0; i < blendDesc.attachmentCount; ++i)
     {
-        if (!blendDesc.mIndependentBlend && i > 0) { break; }
+        if (!blendDesc.isIndependentBlend && i > 0) { break; }
 
-        if (blendDesc.mRenderTargetMask & (1 << i))
+        if (blendDesc.renderTargetMask & (1 << i))
         {
-            const auto& rt = blendDesc.mPerRenderTarget[i];
+            const auto& rt = blendDesc.perRenderTarget[i];
 
             VkBool32 blendDisable =
-                (to_vk_enum(rt.mSrcFactor) == VK_BLEND_FACTOR_ONE &&
-                 to_vk_enum(rt.mDstFactor) == VK_BLEND_FACTOR_ZERO &&
-                 to_vk_enum(rt.mSrcAlphaFactor) == VK_BLEND_FACTOR_ONE &&
-                 to_vk_enum(rt.mDstAlphaFactor) == VK_BLEND_FACTOR_ZERO);
+                (to_vk_enum(rt.srcFactor) == VK_BLEND_FACTOR_ONE &&
+                 to_vk_enum(rt.dstFactor) == VK_BLEND_FACTOR_ZERO &&
+                 to_vk_enum(rt.srcAlphaFactor) == VK_BLEND_FACTOR_ONE &&
+                 to_vk_enum(rt.dstAlphaFactor) == VK_BLEND_FACTOR_ZERO);
 
             vkBlendStates[i].blendEnable         = !blendDisable;
-            vkBlendStates[i].colorWriteMask      = rt.mMask;
-            vkBlendStates[i].srcColorBlendFactor = to_vk_enum(rt.mSrcFactor);
-            vkBlendStates[i].dstColorBlendFactor = to_vk_enum(rt.mDstFactor);
-            vkBlendStates[i].srcAlphaBlendFactor = to_vk_enum(rt.mSrcAlphaFactor);
-            vkBlendStates[i].dstAlphaBlendFactor = to_vk_enum(rt.mDstAlphaFactor);
-            vkBlendStates[i].colorBlendOp        = to_vk_enum(rt.mBlendMode);
-            vkBlendStates[i].alphaBlendOp        = to_vk_enum(rt.mBlendAlphaMode);
+            vkBlendStates[i].colorWriteMask      = rt.mask;
+            vkBlendStates[i].srcColorBlendFactor = to_vk_enum(rt.srcFactor);
+            vkBlendStates[i].dstColorBlendFactor = to_vk_enum(rt.dstFactor);
+            vkBlendStates[i].srcAlphaBlendFactor = to_vk_enum(rt.srcAlphaFactor);
+            vkBlendStates[i].dstAlphaBlendFactor = to_vk_enum(rt.dstAlphaFactor);
+            vkBlendStates[i].colorBlendOp        = to_vk_enum(rt.blendMode);
+            vkBlendStates[i].alphaBlendOp        = to_vk_enum(rt.blendAlphaMode);
         }
     }
 
@@ -431,7 +431,7 @@ VkPipelineColorBlendStateCreateInfo to_vk_struct(const BlendStateDesc& blendDesc
         .flags           = 0,
         .logicOpEnable   = VK_FALSE,
         .logicOp         = VK_LOGIC_OP_CLEAR,
-        .attachmentCount = blendDesc.mAttachmentCount,
+        .attachmentCount = blendDesc.attachmentCount,
         .pAttachments    = vkBlendStates.data(),
         .blendConstants{0.0f, 0.0f, 0.0f, 0.0f}};
 }

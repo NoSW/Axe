@@ -11,12 +11,12 @@
 namespace axe::rhi
 {
 
-Backend* createBackend(GraphicsApi api, BackendDesc& desc) noexcept
+Backend* createBackend(GraphicsApiFlag api, BackendDesc& desc) noexcept
 {
     switch (api)
     {
-        case GRAPHICS_API_VULKAN: return new VulkanBackend(desc);
-        case GRAPHICS_API_D3D12: return nullptr;
+        case GRAPHICS_API_FLAG_VULKAN: return new VulkanBackend(desc);
+        case GRAPHICS_API_FLAG_D3D12: return nullptr;
         default:
             AXE_ERROR("Unrecognized graphics api")
             return nullptr;
@@ -36,27 +36,27 @@ bool create_pipeline_reflection(std::pmr::vector<ShaderReflection>& shaderRefls,
     auto shaderAllFlags = SHADER_STAGE_FLAG_NONE;
     for (const auto& refl : shaderRefls)
     {
-        AXE_ASSERT(std::has_single_bit((u32)refl.mShaderStage));
-        if (shaderAllFlags & refl.mShaderStage)
+        AXE_ASSERT(std::has_single_bit((u32)refl.shaderStage));
+        if (shaderAllFlags & refl.shaderStage)
         {
-            AXE_ERROR("Duplicate shader stage ({}) was detected in shader reflection array.", reflection::enum_name(refl.mShaderStage));
+            AXE_ERROR("Duplicate shader stage ({}) was detected in shader reflection array.", reflection::enum_name(refl.shaderStage));
             return false;
         }
         else
         {
-            shaderAllFlags |= refl.mShaderStage;
+            shaderAllFlags |= refl.shaderStage;
         }
     }
-    outPipelineRefl.mShaderStages = shaderAllFlags;
+    outPipelineRefl.shaderStages = shaderAllFlags;
 
     //
-    auto& outUniqueResources      = outPipelineRefl.mShaderResources;
-    auto outUniqueVariables       = outPipelineRefl.mShaderVariables;
+    auto& outUniqueResources     = outPipelineRefl.shaderResources;
+    auto outUniqueVariables      = outPipelineRefl.shaderVariables;
     std::pmr::vector<const ShaderResource*> tmpUniqueVariableParents;
     for (auto& srcRefl : shaderRefls)
     {
-        outPipelineRefl.mShaderReflections[std::countr_zero((u32)srcRefl.mShaderStage)].reset(&srcRefl);
-        for (const auto& shaderRes : srcRefl.mShaderResources)
+        outPipelineRefl.shaderReflections[std::countr_zero((u32)srcRefl.shaderStage)].reset(&srcRefl);
+        for (const auto& shaderRes : srcRefl.shaderResources)
         {
             // Go through all already added shader resources to see if this shader
             //  resource was already added from a different shader stage. If we find a
@@ -66,17 +66,17 @@ bool create_pipeline_reflection(std::pmr::vector<ShaderReflection>& shaderRefls,
             auto iter = std::find_if(outUniqueResources.begin(), outUniqueResources.end(), [&shaderRes](ShaderResource& uniRes)
                                      { return uniRes == shaderRes; });
             if (iter == outUniqueResources.end()) { outUniqueResources.push_back(shaderRes); }  // not found
-            else { iter->mUsedShaderStage |= shaderRes.mUsedShaderStage; }                      // fond
+            else { iter->usedShaderStage |= shaderRes.usedShaderStage; }                        // fond
         }
 
         // Loop through all shader variables (constant/uniform buffer members)
-        for (const auto& shaderVar : srcRefl.mShaderVariables)
+        for (const auto& shaderVar : srcRefl.shaderVariables)
         {
             auto iter = std::find_if(outUniqueVariables.begin(), outUniqueVariables.end(), [&shaderVar](ShaderVariable& uniVar)
                                      { return uniVar == shaderVar; });
             if (iter == outUniqueVariables.end())  // not found
             {
-                tmpUniqueVariableParents.push_back(&srcRefl.mShaderResources[shaderVar.mParentIndex]);
+                tmpUniqueVariableParents.push_back(&srcRefl.shaderResources[shaderVar.parentIndex]);
                 outUniqueVariables.push_back(shaderVar);
             }
             else {}  // do nothing if found
@@ -90,7 +90,7 @@ bool create_pipeline_reflection(std::pmr::vector<ShaderReflection>& shaderRefls,
         {
             if (outUniqueResources[j] == *tmpUniqueVariableParents[i])
             {
-                outUniqueVariables[i].mParentIndex = j;
+                outUniqueVariables[i].parentIndex = j;
                 break;
             }
         }

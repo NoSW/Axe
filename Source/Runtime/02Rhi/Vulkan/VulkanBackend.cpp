@@ -164,7 +164,7 @@ VulkanBackend::VulkanBackend(BackendDesc& desc) noexcept
     VkApplicationInfo appInfo = {
         .sType              = VK_STRUCTURE_TYPE_APPLICATION_INFO,
         .pNext              = nullptr,
-        .pApplicationName   = desc.mAppName.data(),
+        .pApplicationName   = desc.appName.data(),
         .applicationVersion = VK_MAKE_VERSION(0, 1, 0),
         .pEngineName        = "Axe",
         .engineVersion      = VK_MAKE_VERSION(0, 1, 0),
@@ -219,7 +219,7 @@ VulkanBackend::VulkanBackend(BackendDesc& desc) noexcept
     std::sort(_mAdapters.begin(), _mAdapters.begin() + gpuCount, [this](auto& gpu1, auto& gpu2)
               { return VulkanAdapter::isBetterGpu(*gpu1, *gpu2); });
 
-    AXE_CHECK(_mAdapters[0]->isSupportQueue(QUEUE_TYPE_GRAPHICS), "No gpu supporting graphics queue");
+    AXE_CHECK(_mAdapters[0]->isSupportQueue(QUEUE_TYPE_FLAG_GRAPHICS), "No gpu supporting graphics queue");
     AXE_CHECK(_mAdapters[0]->type() != ADAPTER_TYPE_CPU, "The only available GPU is type of CPU");
 }
 
@@ -243,8 +243,8 @@ Adapter* VulkanBackend::requestAdapter(AdapterDesc& desc) noexcept
         {
             const auto& setting = adapter->requestGPUSettings();
             AXE_INFO("Selected GPU[{}], Name: {}, Vendor Id: {:#x}, Model Id {:#x}, Backend Version: {}",
-                     adapter->nodeIndex(), setting.mGpuVendorPreset.mGpuName, setting.mGpuVendorPreset.mVendorId,
-                     setting.mGpuVendorPreset.mModelId, setting.mGpuVendorPreset.mGpuBackendVersion);
+                     adapter->nodeIndex(), setting.gpuVendorPreset.gpuName, setting.gpuVendorPreset.vendorId,
+                     setting.gpuVendorPreset.modelId, setting.gpuVendorPreset.gpuBackendVersion);
             return adapter.get();
         }
     }

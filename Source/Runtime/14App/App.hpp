@@ -35,6 +35,6 @@ public:
 
 public:
     std::unique_ptr<pipeline::Pipeline> mpPipeline = nullptr;
-    std::unique_ptr<window::Window> mpWindow       = nullptr;
+    std::unique_ptr<window::Window> pWindow        = nullptr;
 };
 }  // namespace axe::app

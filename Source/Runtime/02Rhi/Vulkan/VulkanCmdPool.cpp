@@ -8,7 +8,7 @@ namespace axe::rhi
 
 bool VulkanCmdPool::_create(CmdPoolDesc& desc) noexcept
 {
-    _mpQueue = (VulkanQueue*)desc.mpUsedForQueue;
+    _mpQueue = (VulkanQueue*)desc.pUsedForQueue;
     VkCommandPoolCreateInfo createInfo{
         .sType            = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
         .pNext            = nullptr,
@@ -20,12 +20,12 @@ bool VulkanCmdPool::_create(CmdPoolDesc& desc) noexcept
     // without this flag, we can’t rerecord the same command buffer multiple times. It must be reset first. And, what’s more, command buffers created
     // from one pool may be reset only all at once. Specifying this flag allows us to reset command buffers individually, and (even better) it is done
     // implicitly by calling the vkBeginCommandBuffer() function.
-    if (desc.mAllowIndividualReset) { createInfo.flags |= VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT; }
+    if (desc.isAllowIndividualReset) { createInfo.flags |= VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT; }
 
     // VK_COMMAND_POOL_CREATE_TRANSIENT_BIT: This flag tells the backend that command buffers allocated from this pool will be living for a short
     // amount of time, they will be often recorded and reset (re-recorded). This information helps optimize command buffer allocation and perform it
     // more optimally.
-    if (desc.mShortLived) { createInfo.flags |= VK_COMMAND_POOL_CREATE_TRANSIENT_BIT; }
+    if (desc.isShortLived) { createInfo.flags |= VK_COMMAND_POOL_CREATE_TRANSIENT_BIT; }
 
     auto result = vkCreateCommandPool(_mpDevice->handle(), &createInfo, nullptr, &_mpHandle);
     if (VK_FAILED(result)) { AXE_ERROR("Failed to create VulkanCmdPool due to {}", string_VkResult(result)); }

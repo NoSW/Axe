@@ -77,48 +77,48 @@ VulkanAdapter::VulkanAdapter(VulkanBackend* backend, VkPhysicalDevice handle, u8
 
         VkFormatProperties formatSupport;
         vkGetPhysicalDeviceFormatProperties(_mpHandle, format, &formatSupport);
-        _mGPUCapBits.mCanShaderReadFrom[i]      = (formatSupport.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT);
-        _mGPUCapBits.mCanShaderWriteTo[i]       = (formatSupport.optimalTilingFeatures & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT);
-        _mGPUCapBits.mCanRenderTargetWriteTo[i] = (formatSupport.optimalTilingFeatures & (VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT | VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT));
+        _mGPUCapBits.canShaderReadFrom[i]      = (formatSupport.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT);
+        _mGPUCapBits.canShaderWriteTo[i]       = (formatSupport.optimalTilingFeatures & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT);
+        _mGPUCapBits.canRenderTargetWriteTo[i] = (formatSupport.optimalTilingFeatures & (VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT | VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT));
     }
 
     /// GPUSettings of interest
-    _mpGPUSettings.mUniformBufferAlignment          = _mpProperties.properties.limits.minUniformBufferOffsetAlignment;
-    _mpGPUSettings.mUploadBufferTextureAlignment    = _mpProperties.properties.limits.optimalBufferCopyOffsetAlignment;
-    _mpGPUSettings.mUploadBufferTextureRowAlignment = _mpProperties.properties.limits.optimalBufferCopyRowPitchAlignment;
-    _mpGPUSettings.mMaxVertexInputBindings          = _mpProperties.properties.limits.maxVertexInputBindings;
-    _mpGPUSettings.mTimestampPeriod                 = _mpProperties.properties.limits.timestampPeriod;
-    _mpGPUSettings.mMultiDrawIndirect               = _mpFeatures.features.multiDrawIndirect;
-    _mpGPUSettings.mWaveLaneCount                   = subgroupProps.subgroupSize;
+    _mpGPUSettings.uniformBufferAlignment          = _mpProperties.properties.limits.minUniformBufferOffsetAlignment;
+    _mpGPUSettings.uploadBufferTextureAlignment    = _mpProperties.properties.limits.optimalBufferCopyOffsetAlignment;
+    _mpGPUSettings.uploadBufferTextureRowAlignment = _mpProperties.properties.limits.optimalBufferCopyRowPitchAlignment;
+    _mpGPUSettings.maxVertexInputBindings          = _mpProperties.properties.limits.maxVertexInputBindings;
+    _mpGPUSettings.timestampPeriod                 = _mpProperties.properties.limits.timestampPeriod;
+    _mpGPUSettings.multiDrawIndirect               = _mpFeatures.features.multiDrawIndirect;
+    _mpGPUSettings.waveLaneCount                   = subgroupProps.subgroupSize;
 
     if (subgroupProps.supportedOperations & VK_SUBGROUP_FEATURE_BASIC_BIT)
-        _mpGPUSettings.mWaveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_BASIC_BIT;
+        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_BASIC_BIT;
     if (subgroupProps.supportedOperations & VK_SUBGROUP_FEATURE_VOTE_BIT)
-        _mpGPUSettings.mWaveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_VOTE_BIT;
+        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_VOTE_BIT;
     if (subgroupProps.supportedOperations & VK_SUBGROUP_FEATURE_ARITHMETIC_BIT)
-        _mpGPUSettings.mWaveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_ARITHMETIC_BIT;
+        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_ARITHMETIC_BIT;
     if (subgroupProps.supportedOperations & VK_SUBGROUP_FEATURE_BALLOT_BIT)
-        _mpGPUSettings.mWaveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_BALLOT_BIT;
+        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_BALLOT_BIT;
     if (subgroupProps.supportedOperations & VK_SUBGROUP_FEATURE_SHUFFLE_BIT)
-        _mpGPUSettings.mWaveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_SHUFFLE_BIT;
+        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_SHUFFLE_BIT;
     if (subgroupProps.supportedOperations & VK_SUBGROUP_FEATURE_SHUFFLE_RELATIVE_BIT)
-        _mpGPUSettings.mWaveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_SHUFFLE_RELATIVE_BIT;
+        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_SHUFFLE_RELATIVE_BIT;
     if (subgroupProps.supportedOperations & VK_SUBGROUP_FEATURE_CLUSTERED_BIT)
-        _mpGPUSettings.mWaveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_CLUSTERED_BIT;
+        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_CLUSTERED_BIT;
     if (subgroupProps.supportedOperations & VK_SUBGROUP_FEATURE_QUAD_BIT)
-        _mpGPUSettings.mWaveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_QUAD_BIT;
+        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_QUAD_BIT;
     if (subgroupProps.supportedOperations & VK_SUBGROUP_FEATURE_PARTITIONED_BIT_NV)
-        _mpGPUSettings.mWaveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_PARTITIONED_BIT_NV;
+        _mpGPUSettings.waveOpsSupportFlags |= WaveOpsSupportFlag::WAVE_OPS_SUPPORT_FLAG_PARTITIONED_BIT_NV;
 
 #if VK_EXT_fragment_shader_interlock
-    _mpGPUSettings.mROVsSupported = fsInterlockFeas.fragmentShaderPixelInterlock;
+    _mpGPUSettings.ROVsSupported = fsInterlockFeas.fragmentShaderPixelInterlock;
 #endif
-    _mpGPUSettings.mTessellationSupported       = _mpFeatures.features.tessellationShader;
-    _mpGPUSettings.mGeometryShaderSupported     = _mpFeatures.features.geometryShader;
-    _mpGPUSettings.mGpuVendorPreset.mModelId    = _mpProperties.properties.deviceID;
-    _mpGPUSettings.mGpuVendorPreset.mVendorId   = _mpProperties.properties.vendorID;
-    _mpGPUSettings.mGpuVendorPreset.mRevisionId = 0x0;  // Vulkan is NOT supported revision ID
-    sprintf(_mpGPUSettings.mGpuVendorPreset.mGpuName, _mpProperties.properties.deviceName, CapabilityLevel::MAX_GPU_VENDOR_STRING_LENGTH);
+    _mpGPUSettings.tessellationSupported      = _mpFeatures.features.tessellationShader;
+    _mpGPUSettings.geometryShaderSupported    = _mpFeatures.features.geometryShader;
+    _mpGPUSettings.gpuVendorPreset.modelId    = _mpProperties.properties.deviceID;
+    _mpGPUSettings.gpuVendorPreset.vendorId   = _mpProperties.properties.vendorID;
+    _mpGPUSettings.gpuVendorPreset.revisionId = 0x0;  // Vulkan is NOT supported revision ID
+    sprintf(_mpGPUSettings.gpuVendorPreset.gpuName, _mpProperties.properties.deviceName, CapabilityLevel::MAX_GPU_VENDOR_STRING_LENGTH);
     u32 major, minor, secondaryBranch, tertiaryBranch;
     switch (_mpProperties.properties.vendorID)
     {
@@ -127,11 +127,11 @@ VulkanAdapter::VulkanAdapter(VulkanBackend* backend, VkPhysicalDevice handle, u8
             minor            = (_mpProperties.properties.driverVersion >> 14) & 0x0ff;
             secondaryBranch  = (_mpProperties.properties.driverVersion >> 6) & 0x0ff;
             tertiaryBranch   = (_mpProperties.properties.driverVersion) & 0x003f;
-            sprintf(_mpGPUSettings.mGpuVendorPreset.mGpuBackendVersion, "%u.%u.%u.%u", major, minor, secondaryBranch, tertiaryBranch);
+            sprintf(_mpGPUSettings.gpuVendorPreset.gpuBackendVersion, "%u.%u.%u.%u", major, minor, secondaryBranch, tertiaryBranch);
             break;
         default:
             const auto version = _mpProperties.properties.driverVersion;
-            sprintf(_mpGPUSettings.mGpuVendorPreset.mGpuBackendVersion, "%u.%u,%u", VK_VERSION_MAJOR(version), VK_VERSION_MINOR(version), VK_VERSION_PATCH(version));
+            sprintf(_mpGPUSettings.gpuVendorPreset.gpuBackendVersion, "%u.%u,%u", VK_VERSION_MAJOR(version), VK_VERSION_MINOR(version), VK_VERSION_PATCH(version));
             break;
     }
 
@@ -144,7 +144,7 @@ VulkanAdapter::VulkanAdapter(VulkanBackend* backend, VkPhysicalDevice handle, u8
     _mHasDedicatedTransferQueue                 = _mSupportTransferQueue && transQuFamId != graQuFamId && transQuFamId != comQuFamId;
 
     AXE_INFO("GPU[{}], detected. Vendor ID: {:#x}, Model ID: {:#x}, GPU Name: {}, Backend Version: {}",
-             _mNodeIndex, _mpGPUSettings.mGpuVendorPreset.mVendorId, _mpGPUSettings.mGpuVendorPreset.mModelId, _mpGPUSettings.mGpuVendorPreset.mGpuName, _mpGPUSettings.mGpuVendorPreset.mGpuBackendVersion);
+             _mNodeIndex, _mpGPUSettings.gpuVendorPreset.vendorId, _mpGPUSettings.gpuVendorPreset.modelId, _mpGPUSettings.gpuVendorPreset.gpuName, _mpGPUSettings.gpuVendorPreset.gpuBackendVersion);
 }
 
 Device* VulkanAdapter::requestDevice(DeviceDesc& desc) noexcept
@@ -180,13 +180,13 @@ void VulkanAdapter::releaseDevice(Device*& device) noexcept
     AXE_ERROR("Cannot release device that not create from this adapter");
 }
 
-bool VulkanAdapter::isSupportQueue(QueueType t) noexcept
+bool VulkanAdapter::isSupportQueue(QueueTypeFlag t) noexcept
 {
     switch (t)
     {
-        case QUEUE_TYPE_GRAPHICS: return _mSupportGraphicsQueue;
-        case QUEUE_TYPE_COMPUTE: return _mSupportComputeQueue;
-        case QUEUE_TYPE_TRANSFER: return _mSupportTransferQueue;
+        case QUEUE_TYPE_FLAG_GRAPHICS: return _mSupportGraphicsQueue;
+        case QUEUE_TYPE_FLAG_COMPUTE: return _mSupportComputeQueue;
+        case QUEUE_TYPE_FLAG_TRANSFER: return _mSupportTransferQueue;
         default: AXE_ASSERT(false, "Invalid type"); return false;
     }
 }

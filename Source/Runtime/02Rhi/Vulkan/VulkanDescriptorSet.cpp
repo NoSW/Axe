@@ -10,7 +10,7 @@ namespace axe::rhi
 bool VulkanDescriptorSet::_create(DescriptorSetDesc& desc) noexcept
 {
     // check if requested updateFreq is registered in RootSignature
-    u8 updateFreq = (u8)desc.mUpdateFrequency;
+    u8 updateFreq = (u8)desc.updateFrequency;
     AXE_ASSERT(updateFreq < (u8)DESCRIPTOR_UPDATE_FREQ_COUNT);
     VulkanRootSignature* pRootSignature = (VulkanRootSignature*)desc.mpRootSignature;
 
@@ -75,7 +75,7 @@ bool VulkanDescriptorSet::_create(DescriptorSetDesc& desc) noexcept
 
         for (const DescriptorInfo& descriptorInfo : pRootSignature->_mDescriptors)
         {
-            if (descriptorInfo.mUpdateFrequency != updateFreq || descriptorInfo.mIsRootDescriptor || descriptorInfo.mIsStaticSampler) { continue; }
+            if (descriptorInfo.updateFrequency != updateFreq || descriptorInfo.isRootDescriptor || descriptorInfo.isStaticSampler) { continue; }
             std::pmr::vector<VkDescriptorImageInfo> imageInfos;
             VkDescriptorImageInfo* pImageInfo   = nullptr;
             VkDescriptorBufferInfo* pBufferInfo = nullptr;
@@ -89,10 +89,10 @@ bool VulkanDescriptorSet::_create(DescriptorSetDesc& desc) noexcept
                         .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                         .pNext            = nullptr,
                         .dstSet           = handle,
-                        .dstBinding       = descriptorInfo.mReg,
+                        .dstBinding       = descriptorInfo.reg,
                         .dstArrayElement  = 0,
-                        .descriptorCount  = descriptorInfo.mSize,
-                        .descriptorType   = (VkDescriptorType)descriptorInfo.mVkType,
+                        .descriptorCount  = descriptorInfo.size,
+                        .descriptorType   = (VkDescriptorType)descriptorInfo.vkType,
                         .pImageInfo       = pImageInfo,
                         .pBufferInfo      = pBufferInfo,
                         .pTexelBufferView = pTexelBufferView,
@@ -101,11 +101,11 @@ bool VulkanDescriptorSet::_create(DescriptorSetDesc& desc) noexcept
                 }
             };
 
-            switch (descriptorInfo.mType)
+            switch (descriptorInfo.type)
             {
                 case DESCRIPTOR_TYPE_SAMPLER:
                 {
-                    u32 appendCount = getAppendCount(samplerInfos.size(), descriptorInfo.mSize);
+                    u32 appendCount = getAppendCount(samplerInfos.size(), descriptorInfo.size);
                     for (u32 i = 0; i < appendCount; ++i)
                     {
                         samplerInfos.push_back(VkDescriptorImageInfo{.sampler = _mpDevice->getDefaultSamplerHandle(), .imageView = VK_NULL_HANDLE, .imageLayout = VK_IMAGE_LAYOUT_UNDEFINED});
@@ -116,10 +116,10 @@ bool VulkanDescriptorSet::_create(DescriptorSetDesc& desc) noexcept
                 case DESCRIPTOR_TYPE_TEXTURE:
                 {
                     std::pmr::vector<VkDescriptorImageInfo> imageInfos(
-                        descriptorInfo.mSize,
+                        descriptorInfo.size,
                         VkDescriptorImageInfo{
                             .sampler     = VK_NULL_HANDLE,
-                            .imageView   = ((VulkanTexture*)_mpDevice->_mNullDescriptors.mpDefaultTextureSRV[descriptorInfo.mDim])->_mpVkSRVDescriptor,
+                            .imageView   = ((VulkanTexture*)_mpDevice->_mNullDescriptors.pDefaultTextureSRV[descriptorInfo.dim])->_mpVkSRVDescriptor,
                             .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL});
                     updateHelper(imageInfos.data(), nullptr, nullptr);
                 };
@@ -127,10 +127,10 @@ bool VulkanDescriptorSet::_create(DescriptorSetDesc& desc) noexcept
                 case DESCRIPTOR_TYPE_RW_TEXTURE:
                 {
                     std::pmr::vector<VkDescriptorImageInfo> imageInfos(
-                        descriptorInfo.mSize,
+                        descriptorInfo.size,
                         VkDescriptorImageInfo{
                             .sampler     = VK_NULL_HANDLE,
-                            .imageView   = ((VulkanTexture*)_mpDevice->_mNullDescriptors.mpDefaultTextureUAV[descriptorInfo.mDim])->_mpVkUAVDescriptors[0],
+                            .imageView   = ((VulkanTexture*)_mpDevice->_mNullDescriptors.pDefaultTextureUAV[descriptorInfo.dim])->_mpVkUAVDescriptors[0],
                             .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
                     updateHelper(imageInfos.data(), nullptr, nullptr);
                 }
@@ -141,7 +141,7 @@ bool VulkanDescriptorSet::_create(DescriptorSetDesc& desc) noexcept
                 case DESCRIPTOR_TYPE_RW_BUFFER_RAW:
                 case DESCRIPTOR_TYPE_UNIFORM_BUFFER:
                 {
-                    u32 appendCount = getAppendCount(bufferInfos.size(), descriptorInfo.mSize);
+                    u32 appendCount = getAppendCount(bufferInfos.size(), descriptorInfo.size);
                     for (u32 i = 0; i < appendCount; ++i)
                     {
                         bufferInfos.push_back(VkDescriptorBufferInfo{.buffer = _mpDevice->getDefaultBufferSRVHandle(), .offset = 0, .range = VK_WHOLE_SIZE});
@@ -151,20 +151,20 @@ bool VulkanDescriptorSet::_create(DescriptorSetDesc& desc) noexcept
                 break;
                 case DESCRIPTOR_TYPE_TEXEL_BUFFER_VKONLY:
                 {
-                    u32 appendCount = getAppendCount(bufferViewInfos.size(), descriptorInfo.mSize);
+                    u32 appendCount = getAppendCount(bufferViewInfos.size(), descriptorInfo.size);
                     for (u32 i = 0; i < appendCount; ++i)
                     {
-                        bufferViewInfos.push_back(((VulkanBuffer*)_mpDevice->_mNullDescriptors.mpDefaultBufferSRV)->_mpVkUniformTexelView);
+                        bufferViewInfos.push_back(((VulkanBuffer*)_mpDevice->_mNullDescriptors.pDefaultBufferSRV)->_mpVkUniformTexelView);
                     }
                     updateHelper(nullptr, nullptr, bufferViewInfos.data());
                 }
                 break;
                 case DESCRIPTOR_TYPE_RW_TEXEL_BUFFER_VKONLY:
                 {
-                    u32 appendCount = getAppendCount(bufferViewRawInfos.size(), descriptorInfo.mSize);
+                    u32 appendCount = getAppendCount(bufferViewRawInfos.size(), descriptorInfo.size);
                     for (u32 i = 0; i < appendCount; ++i)
                     {
-                        bufferViewRawInfos.push_back(((VulkanBuffer*)_mpDevice->_mNullDescriptors.mpDefaultBufferUAV)->_mpVkStorageTexelView);
+                        bufferViewRawInfos.push_back(((VulkanBuffer*)_mpDevice->_mNullDescriptors.pDefaultBufferUAV)->_mpVkStorageTexelView);
                     }
                     updateHelper(nullptr, nullptr, bufferViewRawInfos.data());
                 }
@@ -188,15 +188,15 @@ void VulkanDescriptorSet::update(u32 index, std::pmr::vector<DescriptorData*> pa
     for (const DescriptorData* pParam : params)
     {
         // Step 1: find descriptor info
-        u32 paramIndex                             = pParam->mIndex;
+        u32 paramIndex                             = pParam->index;
         const DescriptorInfo* pFoundDescriptorInfo = nullptr;
         if (paramIndex < _mpRootSignature->_mDescriptors.size())
         {
             pFoundDescriptorInfo = &_mpRootSignature->_mDescriptors[paramIndex];
         }
-        else if (!pParam->mName.empty())
+        else if (!pParam->name.empty())
         {
-            auto iter = _mpRootSignature->_mNameHashIds.find(std::pmr::string(pParam->mName));
+            auto iter = _mpRootSignature->_mNameHashIds.find(std::pmr::string(pParam->name));
             if (iter != _mpRootSignature->_mNameHashIds.end())
             {
                 pFoundDescriptorInfo = &_mpRootSignature->_mDescriptors[iter->second];
@@ -205,18 +205,18 @@ void VulkanDescriptorSet::update(u32 index, std::pmr::vector<DescriptorData*> pa
 
         if (pFoundDescriptorInfo == nullptr)
         {
-            AXE_ERROR("Failed to find descriptor param with index={}, or name {}", paramIndex, pParam->mName);
+            AXE_ERROR("Failed to find descriptor param with index={}, or name {}", paramIndex, pParam->name);
             continue;
         }
 
         // Step 2: do some checks
-        std::string_view foundName = pFoundDescriptorInfo->mName;
-        if (pFoundDescriptorInfo->mUpdateFrequency != _mUpdateFrequency)
+        std::string_view foundName = pFoundDescriptorInfo->name;
+        if (pFoundDescriptorInfo->updateFrequency != _mUpdateFrequency)
         {
             AXE_ERROR("Failed to update descriptor since update frequency mismatch, name={}", foundName);
             continue;
         }
-        if (pParam->mpResources.empty())
+        if (pParam->pResources.empty())
         {
             AXE_ERROR("Failed to update descriptor since count is 0, name={}", foundName);
             continue;
@@ -230,10 +230,10 @@ void VulkanDescriptorSet::update(u32 index, std::pmr::vector<DescriptorData*> pa
                 .sType            = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
                 .pNext            = nullptr,
                 .dstSet           = _mpHandles[index],
-                .dstBinding       = pFoundDescriptorInfo->mReg,
-                .dstArrayElement  = pParam->mArrayOffset,
+                .dstBinding       = pFoundDescriptorInfo->reg,
+                .dstArrayElement  = pParam->arrayOffset,
                 .descriptorCount  = descriptorCount,
-                .descriptorType   = (VkDescriptorType)pFoundDescriptorInfo->mVkType,
+                .descriptorType   = (VkDescriptorType)pFoundDescriptorInfo->vkType,
                 .pImageInfo       = pImageInfo,
                 .pBufferInfo      = pBufferInfo,
                 .pTexelBufferView = pTexelBufferView,
@@ -241,95 +241,95 @@ void VulkanDescriptorSet::update(u32 index, std::pmr::vector<DescriptorData*> pa
             vkUpdateDescriptorSets(_mpDevice->handle(), 1, &writeSet, 0, nullptr);
         };
 
-        switch (pFoundDescriptorInfo->mType)
+        switch (pFoundDescriptorInfo->type)
         {
             case DESCRIPTOR_TYPE_SAMPLER:
             {
-                if (pFoundDescriptorInfo->mIsStaticSampler)
+                if (pFoundDescriptorInfo->isStaticSampler)
                 {
                     AXE_ERROR("Trying to update static sampler that is NOT allowed, name={}", foundName);
                     continue;
                 }
                 std::pmr::vector<VkDescriptorImageInfo> imageInfos;
-                imageInfos.reserve(pParam->mpResources.size());
-                for (void* pResource : pParam->mpResources)
+                imageInfos.reserve(pParam->pResources.size());
+                for (void* pResource : pParam->pResources)
                 {
                     imageInfos.push_back(VkDescriptorImageInfo{
                         .sampler = ((VulkanSampler*)pResource)->handle(), .imageView = VK_NULL_HANDLE, .imageLayout = VK_IMAGE_LAYOUT_UNDEFINED});
                 }
-                updateHelper(imageInfos.data(), nullptr, nullptr, pParam->mpResources.size());
+                updateHelper(imageInfos.data(), nullptr, nullptr, pParam->pResources.size());
                 break;
             }
             case DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER_VKONLY:
             {
                 std::pmr::vector<VkDescriptorImageInfo> imageInfos;
-                imageInfos.reserve(pParam->mpResources.size());
-                for (void* pResource : pParam->mpResources)
+                imageInfos.reserve(pParam->pResources.size());
+                for (void* pResource : pParam->pResources)
                 {
                     imageInfos.push_back(VkDescriptorImageInfo{
                         .sampler     = VK_NULL_HANDLE,
                         .imageView   = ((VulkanTexture*)pResource)->_mpVkSRVDescriptor,
                         .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL});
                 }
-                updateHelper(imageInfos.data(), nullptr, nullptr, pParam->mpResources.size());
+                updateHelper(imageInfos.data(), nullptr, nullptr, pParam->pResources.size());
                 break;
             }
             case DESCRIPTOR_TYPE_TEXTURE:
             {
                 std::pmr::vector<VkDescriptorImageInfo> imageInfos;
-                imageInfos.reserve(pParam->mpResources.size());
-                for (void* pResource : pParam->mpResources)
+                imageInfos.reserve(pParam->pResources.size());
+                for (void* pResource : pParam->pResources)
                 {
                     imageInfos.push_back(VkDescriptorImageInfo{
                         .sampler     = VK_NULL_HANDLE,
-                        .imageView   = pParam->mBindStencilResource ? ((VulkanTexture*)pResource)->_mpVkSRVStencilDescriptor : ((VulkanTexture*)pResource)->_mpVkSRVDescriptor,
+                        .imageView   = pParam->isBindStencilResource ? ((VulkanTexture*)pResource)->_mpVkSRVStencilDescriptor : ((VulkanTexture*)pResource)->_mpVkSRVDescriptor,
                         .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL});
                 }
-                updateHelper(imageInfos.data(), nullptr, nullptr, pParam->mpResources.size());
+                updateHelper(imageInfos.data(), nullptr, nullptr, pParam->pResources.size());
                 break;
             }
             case DESCRIPTOR_TYPE_RW_TEXTURE:
             {
                 std::pmr::vector<VkDescriptorImageInfo> imageInfos;
 
-                if (pParam->mBindMipChain)
+                if (pParam->isBindMipChain)
                 {
-                    if (pParam->mArrayOffset != 0)
+                    if (pParam->arrayOffset != 0)
                     {
                         AXE_ERROR("RWTexture array offset must be 0 when binding mip chain, name={}", foundName);
                         continue;
                     }
-                    const u32 mipCount = ((VulkanTexture*)(pParam->mpResources[0]))->_mMipLevels;
+                    const u32 mipCount = ((VulkanTexture*)(pParam->pResources[0]))->_mMipLevels;
                     imageInfos.reserve(mipCount);
                     for (u32 i = 0; i < mipCount; ++i)
                     {
                         imageInfos.push_back(VkDescriptorImageInfo{
                             .sampler     = VK_NULL_HANDLE,
-                            .imageView   = ((VulkanTexture*)(pParam->mpResources[0]))->_mpVkUAVDescriptors[i],
+                            .imageView   = ((VulkanTexture*)(pParam->pResources[0]))->_mpVkUAVDescriptors[i],
                             .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
                     }
                     updateHelper(imageInfos.data(), nullptr, nullptr, mipCount);
                 }
                 else
                 {
-                    const u32 mipSlice = pParam->mUAVMipSlice;
-                    imageInfos.reserve(pParam->mpResources.size());
-                    for (void* pResource : pParam->mpResources)
+                    const u32 mipSlice = pParam->UAVMipSlice;
+                    imageInfos.reserve(pParam->pResources.size());
+                    for (void* pResource : pParam->pResources)
                     {
                         imageInfos.push_back(VkDescriptorImageInfo{
                             .sampler     = VK_NULL_HANDLE,
                             .imageView   = ((VulkanTexture*)pResource)->_mpVkUAVDescriptors[mipSlice],
                             .imageLayout = VK_IMAGE_LAYOUT_GENERAL});
                     }
-                    updateHelper(imageInfos.data(), nullptr, nullptr, pParam->mpResources.size());
+                    updateHelper(imageInfos.data(), nullptr, nullptr, pParam->pResources.size());
                 }
                 break;
             }
             case DESCRIPTOR_TYPE_UNIFORM_BUFFER:
             {
-                if (pFoundDescriptorInfo->mIsRootDescriptor)
+                if (pFoundDescriptorInfo->isRootDescriptor)
                 {
-                    AXE_ERROR("Descriptor (name={}) tries to update a root cbv through updateDescriptorSet. All root cbvs must be updated through bindDescriptorSetWithRootCbvs", pFoundDescriptorInfo->mName);
+                    AXE_ERROR("Descriptor (name={}) tries to update a root cbv through updateDescriptorSet. All root cbvs must be updated through bindDescriptorSetWithRootCbvs", pFoundDescriptorInfo->name);
                     break;
                 }
             }
@@ -339,19 +339,19 @@ void VulkanDescriptorSet::update(u32 index, std::pmr::vector<DescriptorData*> pa
             case DESCRIPTOR_TYPE_RW_BUFFER_RAW:
             {
                 std::pmr::vector<VkDescriptorBufferInfo> bufferInfos;
-                bufferInfos.reserve(pParam->mpResources.size());
-                for (u32 i = 0; i < pParam->mpResources.size(); ++i)
+                bufferInfos.reserve(pParam->pResources.size());
+                for (u32 i = 0; i < pParam->pResources.size(); ++i)
                 {
-                    void* pResource     = pParam->mpResources[i];
-                    VkDeviceSize offset = pParam->pRanges ? pParam->pRanges[i].mOffset : ((VulkanBuffer*)pResource)->_mOffset;
-                    VkDeviceSize range  = pParam->pRanges ? pParam->pRanges[i].mSize : VK_WHOLE_SIZE;
+                    void* pResource     = pParam->pResources[i];
+                    VkDeviceSize offset = pParam->pRanges ? pParam->pRanges[i].offset : ((VulkanBuffer*)pResource)->_mOffset;
+                    VkDeviceSize range  = pParam->pRanges ? pParam->pRanges[i].size : VK_WHOLE_SIZE;
 
-                    u32 maxRange        = DESCRIPTOR_TYPE_UNIFORM_BUFFER == pFoundDescriptorInfo->mType ?
+                    u32 maxRange        = DESCRIPTOR_TYPE_UNIFORM_BUFFER == pFoundDescriptorInfo->type ?
                                               _mpDevice->_mpAdapter->maxUniformBufferRange() :
                                               _mpDevice->_mpAdapter->maxStorageBufferRange();
                     if (range == 0 || range > maxRange)
                     {
-                        AXE_ERROR(" Descriptor(name={})'s ranges[{}].mSize is {} which is not in [1, {}]", pFoundDescriptorInfo->mName, i, (u32)range, maxRange);
+                        AXE_ERROR(" Descriptor(name={})'s ranges[{}].size is {} which is not in [1, {}]", pFoundDescriptorInfo->name, i, (u32)range, maxRange);
                     }
 
                     bufferInfos.push_back(VkDescriptorBufferInfo{
@@ -359,23 +359,23 @@ void VulkanDescriptorSet::update(u32 index, std::pmr::vector<DescriptorData*> pa
                         .offset = offset,
                         .range  = range});
                 }
-                updateHelper(nullptr, bufferInfos.data(), nullptr, pParam->mpResources.size());
+                updateHelper(nullptr, bufferInfos.data(), nullptr, pParam->pResources.size());
                 break;
             }
             case DESCRIPTOR_TYPE_TEXEL_BUFFER_VKONLY:
             {
                 std::pmr::vector<VkBufferView> bufferViews;
-                bufferViews.reserve(pParam->mpResources.size());
-                for (void* pResource : pParam->mpResources) { bufferViews.push_back(((VulkanBuffer*)pResource)->_mpVkUniformTexelView); }
-                updateHelper(nullptr, nullptr, bufferViews.data(), pParam->mpResources.size());
+                bufferViews.reserve(pParam->pResources.size());
+                for (void* pResource : pParam->pResources) { bufferViews.push_back(((VulkanBuffer*)pResource)->_mpVkUniformTexelView); }
+                updateHelper(nullptr, nullptr, bufferViews.data(), pParam->pResources.size());
                 break;
             }
             case DESCRIPTOR_TYPE_RW_TEXEL_BUFFER_VKONLY:
             {
                 std::pmr::vector<VkBufferView> bufferViews;
-                bufferViews.reserve(pParam->mpResources.size());
-                for (void* pResource : pParam->mpResources) { bufferViews.push_back(((VulkanBuffer*)pResource)->_mpVkStorageTexelView); }
-                updateHelper(nullptr, nullptr, bufferViews.data(), pParam->mpResources.size());
+                bufferViews.reserve(pParam->pResources.size());
+                for (void* pResource : pParam->pResources) { bufferViews.push_back(((VulkanBuffer*)pResource)->_mpVkStorageTexelView); }
+                updateHelper(nullptr, nullptr, bufferViews.data(), pParam->pResources.size());
                 break;
             }
             case DESCRIPTOR_TYPE_RAY_TRACING:

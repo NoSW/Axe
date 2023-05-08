@@ -45,7 +45,7 @@ private:
     float _mTimestampPeriod       = 0.0f;
     u32 _mVkQueueFamilyIndex : 8  = U8_MAX;
     u32 _mVkQueueIndex       : 8  = U8_MAX;
-    u32 _mType               : 3  = QUEUE_TYPE_MAX;
+    u32 _mType               : 3  = QUEUE_TYPE_FLAG_MAX;
 };
 
 }  // namespace axe::rhi

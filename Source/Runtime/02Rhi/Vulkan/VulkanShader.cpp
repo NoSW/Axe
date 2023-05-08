@@ -31,7 +31,7 @@ static TextureDimension to_TextureDimension(spirv_cross::SPIRType::ImageType ima
     }
 }
 
-static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageFlag shaderStage, ShaderReflection& outReflection) noexcept
+static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageFlagOneBit shaderStage, ShaderReflection& outReflection) noexcept
 {
     // using SPIRV-Cross
     spirv_cross::Compiler compiler((u32*)byteCode.data(), byteCode.size() / 4);
@@ -72,14 +72,14 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
     if (shaderStage & SHADER_STAGE_FLAG_COMP)
     {
         spirv_cross::SPIREntryPoint& entryPointInfo = compiler.get_entry_point(entryPoint.data(), executionModel);
-        outReflection.mNumThreadsPerGroup[0]        = entryPointInfo.workgroup_size.x;
-        outReflection.mNumThreadsPerGroup[1]        = entryPointInfo.workgroup_size.y;
-        outReflection.mNumThreadsPerGroup[2]        = entryPointInfo.workgroup_size.z;
+        outReflection.numThreadsPerGroup[0]         = entryPointInfo.workgroup_size.x;
+        outReflection.numThreadsPerGroup[1]         = entryPointInfo.workgroup_size.y;
+        outReflection.numThreadsPerGroup[2]         = entryPointInfo.workgroup_size.z;
     }
     else if (shaderStage & SHADER_STAGE_FLAG_TESC)
     {
         spirv_cross::SPIREntryPoint entryPointInfo = compiler.get_entry_point(entryPoint.data(), executionModel);
-        outReflection.mNumControlPoint             = entryPointInfo.output_vertices;
+        outReflection.numControlPoint              = entryPointInfo.output_vertices;
     }
     else if (shaderStage & SHADER_STAGE_FLAG_VERT)  // we dont care about inputs except for vertex shader
     {
@@ -89,7 +89,7 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
             {
                 spirv_cross::SPIRType type = compiler.get_type(input.type_id);
                 u32 byteCount              = (type.width / 8) * type.vecsize;
-                vertexInputs.push_back(VertexInput{.mName = input.name.data(), .mSize = byteCount});
+                vertexInputs.push_back(VertexInput{.name = input.name.data(), .size = byteCount});
             }
         }
     }
@@ -100,7 +100,7 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
     std::pmr::vector<ShaderVariable> shaderVariables;
     std::pmr::vector<u32> parentIndex;
     const auto extractShaderResource = [shaderStage, &compiler, &usedResources, &shaderResources](
-                                           const spirv_cross::SmallVector<spirv_cross::Resource>& resources, DescriptorType descriptorType)
+                                           const spirv_cross::SmallVector<spirv_cross::Resource>& resources, DescriptorTypeFlag descriptorType)
     {
         for (const auto& res : resources)
         {
@@ -120,15 +120,15 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
             }
 
             shaderResources.push_back(ShaderResource{
-                .mName            = res.name,
-                .mUsedShaderStage = shaderStage,
-                .mDim             = to_TextureDimension(type.image),
-                .mType            = descriptorType,
-                .mSet             = descriptorType == DESCRIPTOR_TYPE_UNDEFINED ?
-                                        U32_MAX :
-                                        compiler.get_decoration(res.id, spv::DecorationDescriptorSet),
-                .mBindingLocation = compiler.get_decoration(res.id, spv::DecorationBinding),
-                .mSize            = type.array.size() ? type.array[0] : 1});
+                .name            = res.name,
+                .usedShaderStage = shaderStage,
+                .dim             = to_TextureDimension(type.image),
+                .type            = descriptorType,
+                .mSet            = descriptorType == DESCRIPTOR_TYPE_UNDEFINED ?
+                                       U32_MAX :
+                                       compiler.get_decoration(res.id, spv::DecorationDescriptorSet),
+                .bindingLocation = compiler.get_decoration(res.id, spv::DecorationBinding),
+                .size            = type.array.size() ? type.array[0] : 1});
         }
     };
     const auto extractShaderVariable = [shaderStage, &compiler, &shaderVariables](
@@ -138,10 +138,10 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
         for (u32 i = 0; i < type.member_types.size(); ++i)
         {
             shaderVariables.push_back(ShaderVariable{
-                .mName        = res.name,
-                .mParentIndex = 0,  // TODO
-                .mOffset      = compiler.get_member_decoration(res.base_type_id, i, spv::DecorationOffset),
-                .mSize        = (u32)compiler.get_declared_struct_member_size(type, i),
+                .name        = res.name,
+                .parentIndex = 0,  // TODO
+                .offset      = compiler.get_member_decoration(res.base_type_id, i, spv::DecorationOffset),
+                .size        = (u32)compiler.get_declared_struct_member_size(type, i),
             });
         }
     };
@@ -167,13 +167,13 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
 
         spirv_cross::SPIRType type = compiler.get_type(res.type_id);
         shaderResources.push_back(ShaderResource{
-            .mName            = res.name,
-            .mUsedShaderStage = shaderStage,
-            .mDim             = to_TextureDimension(type.image),
-            .mType            = DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            .mSet             = compiler.get_decoration(res.id, spv::DecorationDescriptorSet),
-            .mBindingLocation = compiler.get_decoration(res.id, spv::DecorationBinding),
-            .mSize            = type.array.size() ? type.array[0] : 1});
+            .name            = res.name,
+            .usedShaderStage = shaderStage,
+            .dim             = to_TextureDimension(type.image),
+            .type            = DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .mSet            = compiler.get_decoration(res.id, spv::DecorationDescriptorSet),
+            .bindingLocation = compiler.get_decoration(res.id, spv::DecorationBinding),
+            .size            = type.array.size() ? type.array[0] : 1});
 
         extractShaderVariable(res, shaderResources.size() - 1);
     }
@@ -186,22 +186,22 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
 
         spirv_cross::SPIRType type = compiler.get_type(res.type_id);
         shaderResources.push_back(ShaderResource{
-            .mName            = res.name,
-            .mUsedShaderStage = shaderStage,
-            .mDim             = TEXTURE_DIM_UNDEFINED,
-            .mType            = DESCRIPTOR_TYPE_ROOT_CONSTANT,
-            .mSet             = U32_MAX,
-            .mBindingLocation = U32_MAX,
-            .mSize            = (u32)compiler.get_declared_struct_size(type)});
+            .name            = res.name,
+            .usedShaderStage = shaderStage,
+            .dim             = TEXTURE_DIM_UNDEFINED,
+            .type            = DESCRIPTOR_TYPE_ROOT_CONSTANT,
+            .mSet            = U32_MAX,
+            .bindingLocation = U32_MAX,
+            .size            = (u32)compiler.get_declared_struct_size(type)});
 
         extractShaderVariable(res, shaderResources.size() - 1);
     }
 
-    outReflection.mShaderStage       = shaderStage;
-    outReflection.mEntryPoint_VkOnly = std::move(entryPoint);
-    outReflection.mVertexInputs      = std::move(vertexInputs);
-    outReflection.mShaderResources   = std::move(shaderResources);
-    outReflection.mShaderVariables   = std::move(shaderVariables);
+    outReflection.shaderStage       = shaderStage;
+    outReflection.entryPoint_VkOnly = std::move(entryPoint);
+    outReflection.vertexInputs      = std::move(vertexInputs);
+    outReflection.shaderResources   = std::move(shaderResources);
+    outReflection.shaderVariables   = std::move(shaderVariables);
     return true;
 }
 
@@ -263,7 +263,7 @@ bool VulkanShader::_create(ShaderDesc& desc) noexcept
         {
             memcpy(data + offset, desc.mConstants[i].mBlob.data(), desc.mConstants[i].mBlob.size());
             mainEntries[i].size       = desc.mConstants[i].mBlob.size();
-            mainEntries[i].constantID = desc.mConstants[i].mIndex;
+            mainEntries[i].constantID = desc.mConstants[i].index;
             mainEntries[i].offset     = offset;
             offset += mainEntries[i].size;
         }

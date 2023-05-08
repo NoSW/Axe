@@ -13,16 +13,16 @@ namespace axe::rhi
 
 bool VulkanCmd::_create(CmdDesc& desc) noexcept
 {
-    _mpCmdPool       = (VulkanCmdPool*)desc.mpCmdPool;
+    _mpCmdPool       = (VulkanCmdPool*)desc.pCmdPool;
     _mpQueue         = _mpCmdPool->_mpQueue;
     _mType           = _mpQueue->_mType;
-    _mCmdBufferCount = desc.mCmdCount;
+    _mCmdBufferCount = desc.cmdCount;
 
     VkCommandBufferAllocateInfo allocInfo{
         .sType              = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
         .pNext              = nullptr,
         .commandPool        = _mpCmdPool->handle(),
-        .level              = desc.mSecondary ? VK_COMMAND_BUFFER_LEVEL_SECONDARY : VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .level              = desc.isSecondary ? VK_COMMAND_BUFFER_LEVEL_SECONDARY : VK_COMMAND_BUFFER_LEVEL_PRIMARY,
         .commandBufferCount = _mCmdBufferCount,
     };
     auto result = vkAllocateCommandBuffers(_mpDevice->handle(), &allocInfo, &_mpHandle);
@@ -153,13 +153,13 @@ void VulkanCmd::resourceBarrier(
 
     const auto findQueueFamIndexHelper = [this](const BarrierInfo& info) -> std::pair<u8, u8>
     {
-        if (info.mAcquire && info.mCurrentState != RESOURCE_STATE_UNDEFINED)
+        if (info.isAcquire && info.currentState != RESOURCE_STATE_UNDEFINED)
         {
-            return {_mpDevice->_mQueueFamilyIndexes[(u32)info.mQueueType], (u8)_mpQueue->_mVkQueueFamilyIndex};
+            return {_mpDevice->_mQueueFamilyIndexes[(u32)info.queueType], (u8)_mpQueue->_mVkQueueFamilyIndex};
         }
-        else if (info.mRelease && info.mCurrentState != RESOURCE_STATE_UNDEFINED)
+        else if (info.isRelease && info.currentState != RESOURCE_STATE_UNDEFINED)
         {
-            return {(u8)_mpQueue->_mVkQueueFamilyIndex, _mpDevice->_mQueueFamilyIndexes[(u32)info.mQueueType]};
+            return {(u8)_mpQueue->_mVkQueueFamilyIndex, _mpDevice->_mQueueFamilyIndexes[(u32)info.queueType]};
         }
         else
         {
@@ -175,13 +175,13 @@ void VulkanCmd::resourceBarrier(
             auto* pBuffer                       = static_cast<VulkanBuffer*>(pTrans.pBuffer);
             auto& bufMemTrans                   = bufMemBarriers[i];
 
-            const bool isBothUA                 = pTrans.mBarrierInfo.mCurrentState == RESOURCE_STATE_UNORDERED_ACCESS && pTrans.mBarrierInfo.mNewState == RESOURCE_STATE_UNORDERED_ACCESS;
-            auto [srcQuFamIndex, dstQuFamIndex] = findQueueFamIndexHelper(pTrans.mBarrierInfo);
+            const bool isBothUA                 = pTrans.barrierInfo.currentState == RESOURCE_STATE_UNORDERED_ACCESS && pTrans.barrierInfo.newState == RESOURCE_STATE_UNORDERED_ACCESS;
+            auto [srcQuFamIndex, dstQuFamIndex] = findQueueFamIndexHelper(pTrans.barrierInfo);
 
             bufMemTrans.sType                   = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
             bufMemTrans.pNext                   = nullptr;
-            bufMemTrans.srcAccessMask           = isBothUA ? VK_ACCESS_SHADER_WRITE_BIT : resource_state_to_access_flags(pTrans.mBarrierInfo.mCurrentState);
-            bufMemTrans.dstAccessMask           = isBothUA ? (VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT) : resource_state_to_access_flags(pTrans.mBarrierInfo.mNewState);
+            bufMemTrans.srcAccessMask           = isBothUA ? VK_ACCESS_SHADER_WRITE_BIT : resource_state_to_access_flags(pTrans.barrierInfo.currentState);
+            bufMemTrans.dstAccessMask           = isBothUA ? (VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT) : resource_state_to_access_flags(pTrans.barrierInfo.newState);
             bufMemTrans.buffer                  = pBuffer->handle();
             bufMemTrans.size                    = VK_WHOLE_SIZE;
             bufMemTrans.offset                  = 0;
@@ -196,20 +196,20 @@ void VulkanCmd::resourceBarrier(
     const auto imageBarrierHelper = [&findQueueFamIndexHelper, &srcAccessFlags, &dstAccessFlags](
                                         const ImageBarrier& pTrans, VulkanTexture* pTexture, VkImageMemoryBarrier& imgMemTrans)
     {
-        const bool isBothUA                         = pTrans.mBarrierInfo.mCurrentState == RESOURCE_STATE_UNORDERED_ACCESS && pTrans.mBarrierInfo.mNewState == RESOURCE_STATE_UNORDERED_ACCESS;
-        auto [srcQuFamIndex, dstQuFamIndex]         = findQueueFamIndexHelper(pTrans.mBarrierInfo);
+        const bool isBothUA                         = pTrans.barrierInfo.currentState == RESOURCE_STATE_UNORDERED_ACCESS && pTrans.barrierInfo.newState == RESOURCE_STATE_UNORDERED_ACCESS;
+        auto [srcQuFamIndex, dstQuFamIndex]         = findQueueFamIndexHelper(pTrans.barrierInfo);
         imgMemTrans.sType                           = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         imgMemTrans.pNext                           = nullptr;
-        imgMemTrans.srcAccessMask                   = isBothUA ? VK_ACCESS_SHADER_WRITE_BIT : resource_state_to_access_flags(pTrans.mBarrierInfo.mCurrentState);
-        imgMemTrans.dstAccessMask                   = isBothUA ? (VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT) : resource_state_to_access_flags(pTrans.mBarrierInfo.mNewState);
-        imgMemTrans.oldLayout                       = isBothUA ? VK_IMAGE_LAYOUT_GENERAL : resource_state_to_image_layout(pTrans.mBarrierInfo.mCurrentState);
-        imgMemTrans.newLayout                       = isBothUA ? VK_IMAGE_LAYOUT_GENERAL : resource_state_to_image_layout(pTrans.mBarrierInfo.mNewState);
+        imgMemTrans.srcAccessMask                   = isBothUA ? VK_ACCESS_SHADER_WRITE_BIT : resource_state_to_access_flags(pTrans.barrierInfo.currentState);
+        imgMemTrans.dstAccessMask                   = isBothUA ? (VK_ACCESS_SHADER_WRITE_BIT | VK_ACCESS_SHADER_READ_BIT) : resource_state_to_access_flags(pTrans.barrierInfo.newState);
+        imgMemTrans.oldLayout                       = isBothUA ? VK_IMAGE_LAYOUT_GENERAL : resource_state_to_image_layout(pTrans.barrierInfo.currentState);
+        imgMemTrans.newLayout                       = isBothUA ? VK_IMAGE_LAYOUT_GENERAL : resource_state_to_image_layout(pTrans.barrierInfo.newState);
         imgMemTrans.image                           = pTexture->handle();
         imgMemTrans.subresourceRange.aspectMask     = (VkImageAspectFlags)pTexture->_mAspectMask;
-        imgMemTrans.subresourceRange.baseMipLevel   = pTrans.mSubresourceBarrier ? pTrans.mMipLevel : 0;
-        imgMemTrans.subresourceRange.levelCount     = pTrans.mSubresourceBarrier ? 1 : VK_REMAINING_MIP_LEVELS;
-        imgMemTrans.subresourceRange.baseArrayLayer = pTrans.mSubresourceBarrier ? pTrans.mArrayLayer : 0;
-        imgMemTrans.subresourceRange.layerCount     = pTrans.mSubresourceBarrier ? 1 : VK_REMAINING_ARRAY_LAYERS;
+        imgMemTrans.subresourceRange.baseMipLevel   = pTrans.isSubresourceBarrier ? pTrans.mipLevel : 0;
+        imgMemTrans.subresourceRange.levelCount     = pTrans.isSubresourceBarrier ? 1 : VK_REMAINING_MIP_LEVELS;
+        imgMemTrans.subresourceRange.baseArrayLayer = pTrans.isSubresourceBarrier ? pTrans.arrayLayer : 0;
+        imgMemTrans.subresourceRange.layerCount     = pTrans.isSubresourceBarrier ? 1 : VK_REMAINING_ARRAY_LAYERS;
         imgMemTrans.srcQueueFamilyIndex             = srcQuFamIndex;
         imgMemTrans.dstQueueFamilyIndex             = dstQuFamIndex;
         srcAccessFlags |= imgMemTrans.srcAccessMask;
@@ -222,7 +222,7 @@ void VulkanCmd::resourceBarrier(
         for (u32 i = 0; i < pTextureBarriers->size(); ++i)
         {
             auto& textureBarrier = pTextureBarriers->at(i);
-            imageBarrierHelper(textureBarrier.mImageBarrier, static_cast<VulkanTexture*>(textureBarrier.mpTexture), imgMemBarriers[imageBarrierIndex++]);
+            imageBarrierHelper(textureBarrier.imageBarrier, static_cast<VulkanTexture*>(textureBarrier.pTexture), imgMemBarriers[imageBarrierIndex++]);
         }
     }
     if (pRTBarriers)
@@ -230,21 +230,21 @@ void VulkanCmd::resourceBarrier(
         for (u32 i = 0; i < pRTBarriers->size(); ++i)
         {
             auto& rtBarrier = pRTBarriers->at(i);
-            imageBarrierHelper(rtBarrier.mImageBarrier, static_cast<VulkanRenderTarget*>(rtBarrier.mpRenderTarget)->_mpTexture, imgMemBarriers[imageBarrierIndex++]);
+            imageBarrierHelper(rtBarrier.imageBarrier, static_cast<VulkanRenderTarget*>(rtBarrier.pRenderTarget)->_mpTexture, imgMemBarriers[imageBarrierIndex++]);
         }
     }
 
-    auto srcStageMask = determine_pipeline_stage_flags({.mAccessFlags         = srcAccessFlags,
-                                                        .mQueueType           = (QueueType)_mType,
-                                                        .mIsSupportGeomShader = (bool)_mpDevice->_mpAdapter->requestGPUSettings().mGeometryShaderSupported,
-                                                        .mIsSupportTeseShader = (bool)_mpDevice->_mpAdapter->requestGPUSettings().mTessellationSupported,
-                                                        .mIsSupportRayTracing = (bool)_mpDevice->_mRaytracingSupported});
+    auto srcStageMask = determine_pipeline_stage_flags({.mAccessFlags      = srcAccessFlags,
+                                                        .queueType         = (QueueTypeFlag)_mType,
+                                                        .supportGeomShader = (bool)_mpDevice->_mpAdapter->requestGPUSettings().geometryShaderSupported,
+                                                        .supportTeseShader = (bool)_mpDevice->_mpAdapter->requestGPUSettings().tessellationSupported,
+                                                        .supportRayTracing = (bool)_mpDevice->_mRaytracingSupported});
 
-    auto dstStageMask = determine_pipeline_stage_flags({.mAccessFlags         = dstAccessFlags,
-                                                        .mQueueType           = (QueueType)_mType,
-                                                        .mIsSupportGeomShader = (bool)_mpDevice->_mpAdapter->requestGPUSettings().mGeometryShaderSupported,
-                                                        .mIsSupportTeseShader = (bool)_mpDevice->_mpAdapter->requestGPUSettings().mTessellationSupported,
-                                                        .mIsSupportRayTracing = (bool)_mpDevice->_mRaytracingSupported});
+    auto dstStageMask = determine_pipeline_stage_flags({.mAccessFlags      = dstAccessFlags,
+                                                        .queueType         = (QueueTypeFlag)_mType,
+                                                        .supportGeomShader = (bool)_mpDevice->_mpAdapter->requestGPUSettings().geometryShaderSupported,
+                                                        .supportTeseShader = (bool)_mpDevice->_mpAdapter->requestGPUSettings().tessellationSupported,
+                                                        .supportRayTracing = (bool)_mpDevice->_mRaytracingSupported});
 
     vkCmdPipelineBarrier(_mpHandle, srcStageMask, dstStageMask, 0,
                          0, nullptr,

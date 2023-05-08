@@ -11,8 +11,8 @@ namespace axe::pipeline
 
 struct PipelineDesc
 {
-    window::Window* mpWindow = nullptr;
-    std::string_view mAppName;
+    window::Window* pWindow = nullptr;
+    std::string_view appName;
 };
 
 enum LoadFlag
@@ -22,6 +22,7 @@ enum LoadFlag
     LOAD_FLAG_RENDER_TARGET = 0x4,
     LOAD_FLAG_ALL           = 0xffffffff
 };
+using LoadFlagOneBit = LoadFlag;
 
 class Pipeline
 {

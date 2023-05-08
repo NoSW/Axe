@@ -11,12 +11,12 @@ i32 MainLoop(i32 argc, char** argv, app::App* app)
     }
     /* init Window */
     {
-        app->mpWindow = std::make_unique<window::Window>();
+        app->pWindow = std::make_unique<window::Window>();
         struct window::WindowDesc windowDesc
         {
-            .mTitle = app->name()
+            .title = app->name()
         };
-        bool succ = app->mpWindow->init(windowDesc);
+        bool succ = app->pWindow->init(windowDesc);
 
         AXE_ASSERT(succ);
     }
@@ -24,10 +24,10 @@ i32 MainLoop(i32 argc, char** argv, app::App* app)
     /* init Backend */
     {
         pipeline::PipelineDesc pipelineDesc;
-        pipelineDesc.mAppName = app->name();
-        pipelineDesc.mpWindow = app->mpWindow.get();
-        app->mpPipeline       = std::make_unique<pipeline::Forward>();
-        bool succ             = app->mpPipeline->init(pipelineDesc);
+        pipelineDesc.appName = app->name();
+        pipelineDesc.pWindow = app->pWindow.get();
+        app->mpPipeline      = std::make_unique<pipeline::Forward>();
+        bool succ            = app->mpPipeline->init(pipelineDesc);
         AXE_ASSERT(succ);
     }
     {
@@ -44,9 +44,9 @@ i32 MainLoop(i32 argc, char** argv, app::App* app)
 
     /* begin loop */
     {
-        while (!app->mpWindow->isQuit())
+        while (!app->pWindow->isQuit())
         {
-            if (app->mpWindow->isResized())
+            if (app->pWindow->isResized())
             {
                 if (!app->mpPipeline->unload(pipeline::LOAD_FLAG_RESIZE))
                 {
@@ -61,18 +61,18 @@ i32 MainLoop(i32 argc, char** argv, app::App* app)
                 }
             }
             {
-                app->mpWindow->update(30.0f);
+                app->pWindow->update(30.0f);
             }
             {
                 app->mpPipeline->update();
-                if (!app->mpWindow->isMinimized())
+                if (!app->pWindow->isMinimized())
                 {
                     app->mpPipeline->draw();
                 }
             }
             {
                 app->update(30.0f);
-                if (!app->mpWindow->isMinimized())
+                if (!app->pWindow->isMinimized())
                 {
                     app->draw();
                 }
@@ -89,7 +89,7 @@ i32 MainLoop(i32 argc, char** argv, app::App* app)
 
     /* exit window */
     {
-        app->mpWindow->exit();
+        app->pWindow->exit();
     }
 
     /* exit backend */

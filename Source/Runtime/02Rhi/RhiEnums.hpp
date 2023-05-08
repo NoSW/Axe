@@ -30,6 +30,7 @@ enum WaveOpsSupportFlag
     WAVE_OPS_SUPPORT_FLAG_PARTITIONED_BIT_NV   = 1 << 8,
     WAVE_OPS_SUPPORT_FLAG_ALL                  = 0x7FFFFFFF
 };
+using WaveOpsSupportFlagOneBit = WaveOpsSupportFlag;
 
 enum GpuVender
 {
@@ -64,14 +65,15 @@ enum FenceStatus
     FENCE_STATUS_NOTSUBMITTED,
 };
 
-enum QueueType
+enum QueueTypeFlag
 {
-    QUEUE_TYPE_GRAPHICS = 0,
-    QUEUE_TYPE_COMPUTE,
-    QUEUE_TYPE_TRANSFER,
-    QUEUE_TYPE_COUNT,
-    QUEUE_TYPE_MAX = QUEUE_TYPE_COUNT
+    QUEUE_TYPE_FLAG_GRAPHICS = 0,
+    QUEUE_TYPE_FLAG_COMPUTE  = 1 << 0,
+    QUEUE_TYPE_FLAG_TRANSFER = 1 << 1,
+    QUEUE_TYPE_FLAG_COUNT,
+    QUEUE_TYPE_FLAG_MAX = QUEUE_TYPE_FLAG_COUNT
 };
+using QueueTypeOneBit = QueueTypeFlag;
 
 enum QueueFlag
 {
@@ -80,6 +82,7 @@ enum QueueFlag
     QUEUE_FLAG_INIT_MICROPROFILE   = 0x2,
     MAX_QUEUE_FLAG                 = 0xFFFFFFFF
 };
+using QueueFlagOneBit = QueueFlag;
 
 enum QueuePriority
 {
@@ -137,7 +140,7 @@ enum BlendMode
     MAX_BLEND_MODES,
 };
 
-enum BlendStateTargets
+enum BlendStateTargetsFlag
 {
     BLEND_STATE_TARGET_0   = 1 << 0,
     BLEND_STATE_TARGET_1   = 1 << 1,
@@ -149,6 +152,7 @@ enum BlendStateTargets
     BLEND_STATE_TARGET_7   = 1 << 7,
     BLEND_STATE_TARGET_ALL = 0xFF,
 };
+using BlendStateTargetsFlagOneBit = BlendStateTargetsFlag;
 
 enum StencilOp
 {
@@ -207,7 +211,7 @@ enum SamplerModelConversion
     SAMPLER_MODEL_CONVERSION_YCBCR_2020     = 4,
 };
 
-enum ResourceState
+enum ResourceStateFlags
 {
     RESOURCE_STATE_UNDEFINED                         = 0,
     RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER        = 1 << 0,
@@ -230,6 +234,7 @@ enum ResourceState
     RESOURCE_STATE_GENERIC_READ                      = RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER | RESOURCE_STATE_INDEX_BUFFER | RESOURCE_STATE_RENDER_TARGET |
                                   RESOURCE_STATE_PIXEL_SHADER_RESOURCE | RESOURCE_STATE_INDIRECT_ARGUMENT | RESOURCE_STATE_COPY_SOURCE,
 };
+using ResourceStateFlagsOneBit = ResourceStateFlags;
 
 enum TextureCreationFlags
 {
@@ -270,6 +275,7 @@ enum TextureCreationFlags
     // Creates resolve attachment for auto resolve (MSAA on tiled architecture - Resolve can be done on tile through render pass)
     TEXTURE_CREATION_FLAG_CREATE_RESOLVE_ATTACHMENT = 1 << 16,
 };
+using TextureCreationFlagsOneBit = TextureCreationFlags;
 
 enum MSAASampleCount
 {
@@ -305,6 +311,7 @@ enum ResourceFlag
                                  RESOURCE_FLAG_NON_PIXEL_SHADER_RESOURCE | RESOURCE_FLAG_PIXEL_SHADER_RESOURCE |
                                  RESOURCE_FLAG_INDIRECT_ARGUMENT | RESOURCE_FLAG_COPY_SOURCE,
 };
+using ResourceFlagOneBit = ResourceFlag;
 
 enum ResourceMemoryUsage
 {
@@ -329,6 +336,7 @@ enum BufferCreationFlags
     BUFFER_CREATION_FLAG_HOST_COHERENT_VKONLY        = 1 << 7,  // Memory Host Flags
 
 };
+using BufferCreationFlagsOneBit = BufferCreationFlags;
 
 enum TextureDimension
 {
@@ -360,7 +368,7 @@ enum IndirectArgumentType
     INDIRECT_UNORDERED_ACCESS_VIEW_DXONLY,  // only for dx
 };
 
-enum DescriptorType
+enum DescriptorTypeFlag
 {
     DESCRIPTOR_TYPE_UNDEFINED                                 = 0,
     DESCRIPTOR_TYPE_SAMPLER                                   = 1 << 0,
@@ -399,6 +407,7 @@ enum DescriptorType
     DESCRIPTOR_TYPE_SHADER_DEVICE_ADDRESS_VKONLY              = 1 << 24,
     DESCRIPTOR_TYPE_SHADER_BINDING_TABLE_VKONLY               = 1 << 25,
 };
+using DescriptorTypeFlagOneBit = DescriptorTypeFlag;
 
 enum ShaderStageFlag
 {
@@ -418,6 +427,7 @@ enum ShaderStageFlag
 
     SHADER_STAGE_FLAG_GRAPHICS   = SHADER_STAGE_FLAG_VERT | SHADER_STAGE_FLAG_TESC | SHADER_STAGE_FLAG_TESE | SHADER_STAGE_FLAG_GEOM | SHADER_STAGE_FLAG_FRAG,
 };
+using ShaderStageFlagOneBit = ShaderStageFlag;  // must be the single bit
 
 enum ShaderModel
 {
@@ -436,9 +446,10 @@ enum ShaderModel
 
 enum ShaderStageLoadFlag
 {
-    SHADER_STAGE_LOAD_FLAG_NONE,
-    SHADER_STAGE_LOAD_FLAG_ENABLE_PS_PRIMITIVEID,
+    SHADER_STAGE_LOAD_FLAG_NONE                  = 0,
+    SHADER_STAGE_LOAD_FLAG_ENABLE_PS_PRIMITIVEID = 1 << 0,
 };
+using ShaderStageLoadFlagOneBit = ShaderStageLoadFlag;
 
 enum PipelineType
 {
@@ -460,9 +471,10 @@ enum DescriptorUpdateFrequency
 
 enum RootSignatureFlags
 {
-    ROOT_SIGNATURE_FLAG_NONE,       // Default flag
-    ROOT_SIGNATURE_FLAG_LOCAL_BIT,  // used mainly in raytracing shaders
+    ROOT_SIGNATURE_FLAG_NONE      = 0,       // Default flag
+    ROOT_SIGNATURE_FLAG_LOCAL_BIT = 1 << 0,  // used mainly in raytracing shaders
 };
+using RootSignatureFlagsOneBit = RootSignatureFlags;
 
 enum AdapterType
 {
@@ -474,13 +486,14 @@ enum AdapterType
     ADAPTER_TYPE_COUNT
 };
 
-enum GraphicsApi
+enum GraphicsApiFlag
 {
-    GRAPHICS_API_NULL      = AXE_02RHI_API_FLAG_NULL,
-    GRAPHICS_API_VULKAN    = AXE_02RHI_API_FLAG_VULKAN,
-    GRAPHICS_API_D3D12     = AXE_02RHI_API_FLAG_D3D12,
-    GRAPHICS_API_AVAILABLE = AXE_02RHI_API_FLAG_AVAILABLE,
+    GRAPHICS_API_FLAG_NULL      = AXE_02RHI_API_FLAG_NULL,
+    GRAPHICS_API_FLAG_VULKAN    = AXE_02RHI_API_FLAG_VULKAN,
+    GRAPHICS_API_FLAG_D3D12     = AXE_02RHI_API_FLAG_D3D12,
+    GRAPHICS_API_FLAG_AVAILABLE = AXE_02RHI_API_FLAG_AVAILABLE,
 };
+using GraphicsApiFlagOneBit = GraphicsApiFlag;
 
 inline constexpr ShaderStageFlag get_shader_stage(std::string_view ext)
 {
@@ -498,25 +511,25 @@ inline constexpr ShaderStageFlag get_shader_stage(std::string_view ext)
 struct VertexInput
 {
     // resource name
-    std::pmr::string mName;
+    std::pmr::string name;
 
     // The size of the attribute
-    u32 mSize;
+    u32 size;
 };
 
 struct ShaderResource
 {
-    std::string_view mName;
-    ShaderStageFlag mUsedShaderStage;
-    TextureDimension mDim;
-    DescriptorType mType;
+    std::string_view name;
+    ShaderStageFlag usedShaderStage;
+    TextureDimension dim;
+    DescriptorTypeFlag type;
     u32 mSet;
-    u32 mBindingLocation;
-    u32 mSize;  // element count of array
+    u32 bindingLocation;
+    u32 size;  // element count of array
 
     bool operator==(const ShaderResource& b) const
     {
-        return mType == b.mType && mSet == b.mSet && mBindingLocation == b.mBindingLocation && mName == b.mName;
+        return type == b.type && mSet == b.mSet && bindingLocation == b.bindingLocation && name == b.name;
     }
 
     bool operator!=(const ShaderResource& b) const { return !(*this == b); }
@@ -524,13 +537,13 @@ struct ShaderResource
 
 struct ShaderVariable
 {
-    std::string_view mName;
-    u32 mParentIndex;
-    u32 mOffset;
-    u32 mSize;
+    std::string_view name;
+    u32 parentIndex;
+    u32 offset;
+    u32 size;
     bool operator==(const ShaderVariable& b) const
     {
-        return mOffset == b.mOffset && mSize == b.mSize && mName == b.mName;
+        return offset == b.offset && size == b.size && name == b.name;
     }
 
     bool operator!=(const ShaderVariable& b) const { return !(*this == b); }
@@ -538,21 +551,21 @@ struct ShaderVariable
 
 struct ShaderReflection
 {
-    std::pmr::vector<VertexInput> mVertexInputs;
-    std::pmr::vector<ShaderResource> mShaderResources;
-    std::pmr::vector<ShaderVariable> mShaderVariables;
-    std::pmr::string mEntryPoint_VkOnly;
-    ShaderStageFlag mShaderStage;
-    u32 mNumThreadsPerGroup[3];  // for compute shader
-    u32 mNumControlPoint;        // for tessellation
+    std::pmr::vector<VertexInput> vertexInputs;
+    std::pmr::vector<ShaderResource> shaderResources;
+    std::pmr::vector<ShaderVariable> shaderVariables;
+    std::pmr::string entryPoint_VkOnly;
+    ShaderStageFlagOneBit shaderStage;
+    u32 numThreadsPerGroup[3];  // for compute shader
+    u32 numControlPoint;        // for tessellation
 };
 
 struct PipelineReflection
 {
-    ShaderStageFlag mShaderStages;
-    std::array<std::unique_ptr<ShaderReflection>, SHADER_STAGE_FLAG_COUNT> mShaderReflections{};
-    std::pmr::vector<ShaderResource> mShaderResources;  // unique shader resources, (we need indexing here, so use vector just fine)
-    std::pmr::vector<ShaderVariable> mShaderVariables;  // unique shader variables
+    ShaderStageFlag shaderStages;
+    std::array<std::unique_ptr<ShaderReflection>, SHADER_STAGE_FLAG_COUNT> shaderReflections{};
+    std::pmr::vector<ShaderResource> shaderResources;  // unique shader resources, (we need indexing here, so use vector just fine)
+    std::pmr::vector<ShaderVariable> shaderVariables;  // unique shader variables
 };
 
 }  // namespace axe::rhi

@@ -12,9 +12,9 @@ namespace axe::rhi
 
 struct UpdateFrequencyLayoutInfo
 {
-    std::pmr::vector<VkDescriptorSetLayoutBinding> mBindings;  // Array of all bindings in the descriptor set
-    std::pmr::vector<DescriptorInfo*> mDescriptors;            // Array of all descriptors in this descriptor set
-    std::pmr::vector<DescriptorInfo*> mDynamicDescriptors;     // Array of all descriptors marked as dynamic in this descriptor set
+    std::pmr::vector<VkDescriptorSetLayoutBinding> bindings;  // Array of all bindings in the descriptor set
+    std::pmr::vector<DescriptorInfo*> descriptorType;         // Array of all descriptors in this descriptor set
+    std::pmr::vector<DescriptorInfo*> dynamicDescriptors;     // Array of all descriptors marked as dynamic in this descriptor set
     // (applicable to DESCRIPTOR_TYPE_UNIFORM_BUFFER)
 };
 
@@ -30,37 +30,37 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
         PipelineReflection const* pReflection = &pShader->_mReflection;
 
         // Step1: determine pipeline type(graphics, compute, raytracing)' from reflection
-        if (pShader->_mReflection.mShaderStages & SHADER_STAGE_FLAG_COMP)
+        if (pShader->_mReflection.shaderStages & SHADER_STAGE_FLAG_COMP)
         {
-            AXE_ASSERT(std::has_single_bit((u32)pShader->_mReflection.mShaderStages), "must be computer shader only");
+            AXE_ASSERT(std::has_single_bit((u32)pShader->_mReflection.shaderStages), "must be computer shader only");
             pipelineType = PIPELINE_TYPE_COMPUTE;
         }
-        else if (pShader->_mReflection.mShaderStages & SHADER_STAGE_FLAG_RAYTRACING)
+        else if (pShader->_mReflection.shaderStages & SHADER_STAGE_FLAG_RAYTRACING)
         {
-            AXE_ASSERT(std::has_single_bit((u32)pShader->_mReflection.mShaderStages), "must be raytracing shader only since we haven't subdivision it yet");
+            AXE_ASSERT(std::has_single_bit((u32)pShader->_mReflection.shaderStages), "must be raytracing shader only since we haven't subdivision it yet");
             pipelineType = PIPELINE_TYPE_RAYTRACING;
         }
         else
         {
-            AXE_ASSERT(!std::has_single_bit((u32)pShader->_mReflection.mShaderStages), "at least two shader stages");
+            AXE_ASSERT(!std::has_single_bit((u32)pShader->_mReflection.shaderStages), "at least two shader stages");
             pipelineType = PIPELINE_TYPE_GRAPHICS;
         }
         _mPipelineType = pipelineType;
 
         // Step2: collect all shader resources by name from reflection. If same binding with diff name, also be think as same one
-        for (const auto& currRes : pReflection->mShaderResources)
+        for (const auto& currRes : pReflection->shaderResources)
         {
             u32 foundIndexByName     = U32_MAX;
             u32 foundIndexByLocation = U32_MAX;
             for (u32 i = 0; i < addedShaderResources.size(); ++i)
             {
-                if (addedShaderResources[i].mName == currRes.mName)
+                if (addedShaderResources[i].name == currRes.name)
                 {
                     foundIndexByName = i;
                 }
 
-                if (addedShaderResources[i].mType == currRes.mType && addedShaderResources[i].mUsedShaderStage == currRes.mUsedShaderStage &&
-                    addedShaderResources[i].mSet == currRes.mSet && addedShaderResources[i].mBindingLocation == currRes.mBindingLocation)
+                if (addedShaderResources[i].type == currRes.type && addedShaderResources[i].usedShaderStage == currRes.usedShaderStage &&
+                    addedShaderResources[i].mSet == currRes.mSet && addedShaderResources[i].bindingLocation == currRes.bindingLocation)
                 {
                     foundIndexByLocation = i;
                 }
@@ -74,18 +74,18 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
                 }
                 else  // if found by binding, we also think the same one
                 {
-                    addedShaderResources[foundIndexByLocation].mUsedShaderStage |= currRes.mUsedShaderStage;
+                    addedShaderResources[foundIndexByLocation].usedShaderStage |= currRes.usedShaderStage;
                 }
             }
             else  // already added, we check whether conflicts with existing one
             {
                 if (addedShaderResources[foundIndexByName].mSet != currRes.mSet ||
-                    addedShaderResources[foundIndexByName].mBindingLocation != currRes.mBindingLocation)
+                    addedShaderResources[foundIndexByName].bindingLocation != currRes.bindingLocation)
                 {
-                    AXE_ERROR("Failed to create root signature: Shared shader resource {} has mismatching set or binding location", currRes.mName.data());
+                    AXE_ERROR("Failed to create root signature: Shared shader resource {} has mismatching set or binding location", currRes.name.data());
                     return false;
                 }
-                addedShaderResources[foundIndexByName].mUsedShaderStage |= currRes.mUsedShaderStage;
+                addedShaderResources[foundIndexByName].usedShaderStage |= currRes.usedShaderStage;
             }
         }
     }
@@ -103,55 +103,55 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
         u32 setIndx             = fromRes.mSet;
 
         // Step1: Copy the binding information generated from the shader reflection into the descriptor
-        toInfo.mReg             = fromRes.mBindingLocation;
-        toInfo.mSize            = fromRes.mSize;
-        toInfo.mType            = fromRes.mType;
-        toInfo.mName            = fromRes.mName;
-        toInfo.mDim             = fromRes.mDim;
+        toInfo.reg              = fromRes.bindingLocation;
+        toInfo.size             = fromRes.size;
+        toInfo.type             = fromRes.type;
+        toInfo.name             = fromRes.name;
+        toInfo.dim              = fromRes.dim;
 
         // Step2: If descriptor is not a root constant, create a new layout binding for this descriptor and add it to the binding array
-        if (fromRes.mType == DESCRIPTOR_TYPE_ROOT_CONSTANT)  // is a root constant, just add it to the root constant array
+        if (fromRes.type == DESCRIPTOR_TYPE_ROOT_CONSTANT)  // is a root constant, just add it to the root constant array
         {
-            AXE_INFO("Descriptor ({}) : User specified Push Constant", toInfo.mName.data());
-            toInfo.mIsRootDescriptor = true;
-            toInfo.mVkStages         = to_vk_enum(fromRes.mUsedShaderStage);
-            setIndx                  = 0;
-            toInfo.mHandleIndex      = pushConstants.size();
+            AXE_INFO("Descriptor ({}) : User specified Push Constant", toInfo.name.data());
+            toInfo.isRootDescriptor = true;
+            toInfo.vkStages         = to_vk_enum(fromRes.usedShaderStage);
+            setIndx                 = 0;
+            toInfo.handleIndex      = pushConstants.size();
             pushConstants.push_back(VkPushConstantRange{
-                .stageFlags = toInfo.mVkStages,
+                .stageFlags = toInfo.vkStages,
                 .offset     = 0,
-                .size       = toInfo.mSize});
+                .size       = toInfo.size});
         }
         else
         {
             VkDescriptorSetLayoutBinding binding{
-                .binding            = fromRes.mBindingLocation,
-                .descriptorType     = to_vk_enum(fromRes.mType),
-                .descriptorCount    = fromRes.mSize,
-                .stageFlags         = to_vk_enum(fromRes.mUsedShaderStage),
+                .binding            = fromRes.bindingLocation,
+                .descriptorType     = to_vk_enum(fromRes.type),
+                .descriptorCount    = fromRes.size,
+                .stageFlags         = to_vk_enum(fromRes.usedShaderStage),
                 .pImmutableSamplers = nullptr};
 
-            // if (string::find_substr_case_insensitive(fromRes.mName, std::string_view("rootcbv")) < fromRes.mName.size())
-            if (fromRes.mName.find_first_of("rootcbv") < fromRes.mName.size())  // FIXME, using above
+            // if (string::find_substr_case_insensitive(fromRes.name, std::string_view("rootcbv")) < fromRes.name.size())
+            if (fromRes.name.find_first_of("rootcbv") < fromRes.name.size())  // FIXME, using above
             {
-                if (fromRes.mSize == 1)
+                if (fromRes.size == 1)
                 {
                     binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-                    AXE_INFO("Descriptor ({}) : User specified VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC", fromRes.mName.data());
+                    AXE_INFO("Descriptor ({}) : User specified VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC", fromRes.name.data());
                 }
                 else
                 {
-                    AXE_ERROR("Descriptor ({}) : Cannot use VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC for arrays", fromRes.mName.data());
+                    AXE_ERROR("Descriptor ({}) : Cannot use VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC for arrays", fromRes.name.data());
                 }
             }
 
             // record enum value of vulkan
-            toInfo.mType            = binding.descriptorType;
-            toInfo.mVkStages        = binding.stageFlags;
-            toInfo.mUpdateFrequency = (DescriptorUpdateFrequency)setIndx;
+            toInfo.type            = binding.descriptorType;
+            toInfo.vkStages        = binding.stageFlags;
+            toInfo.updateFrequency = (DescriptorUpdateFrequency)setIndx;
 
             // Find if the given descriptor is a static sampler
-            auto foundSamIter       = desc.mStaticSamplersMap.find(toInfo.mName);
+            auto foundSamIter      = desc.mStaticSamplersMap.find(toInfo.name);
 
             if (foundSamIter != desc.mStaticSamplersMap.end())
             {
@@ -162,22 +162,22 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
             // Set the index to an invalid value so we can use this later for error checking if user tries to update a static sampler
             // In case of Combined Image Samplers, skip invalidating the index
             // because we do not to introduce new ways to update the descriptor in the Interface
-            if (foundSamIter != desc.mStaticSamplersMap.end() && toInfo.mType != DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER_VKONLY)
+            if (foundSamIter != desc.mStaticSamplersMap.end() && toInfo.type != DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER_VKONLY)
             {
-                toInfo.mIsStaticSampler = true;
+                toInfo.isStaticSampler = true;
             }
             else
             {
-                Layouts[setIndx].mDescriptors.push_back(&toInfo);
+                Layouts[setIndx].descriptorType.push_back(&toInfo);
             }
 
             if (binding.descriptorType == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC)
             {
-                Layouts[setIndx].mDynamicDescriptors.push_back(&toInfo);
-                toInfo.mIsRootDescriptor = true;
+                Layouts[setIndx].dynamicDescriptors.push_back(&toInfo);
+                toInfo.isRootDescriptor = true;
             }
 
-            Layouts[setIndx].mBindings.push_back(binding);
+            Layouts[setIndx].bindings.push_back(binding);
 
             // Update descriptor pool size for this descriptor type
             VkDescriptorPoolSize* pPoolSize = nullptr;
@@ -201,13 +201,13 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
     // build a hash table for index descriptor by name quickly
     for (u32 i = 0; i < _mDescriptors.size(); ++i)
     {
-        if (_mNameHashIds.find(std::pmr::string(_mDescriptors[i].mName)) != _mNameHashIds.end())
+        if (_mNameHashIds.find(std::pmr::string(_mDescriptors[i].name)) != _mNameHashIds.end())
         {
-            AXE_ERROR("Descriptor ({}) : Duplicate descriptor name found", _mDescriptors[i].mName.data());
+            AXE_ERROR("Descriptor ({}) : Duplicate descriptor name found", _mDescriptors[i].name.data());
         }
         else
         {
-            _mNameHashIds[std::pmr::string(_mDescriptors[i].mName)] = i;
+            _mNameHashIds[std::pmr::string(_mDescriptors[i].name)] = i;
         }
     }
 
@@ -218,11 +218,11 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
         UpdateFrequencyLayoutInfo& layout = Layouts[layoutIndex];
 
         // sort table by type (CBV/SRV/UAV) by register
-        std::sort(layout.mBindings.begin(), layout.mBindings.end(),
+        std::sort(layout.bindings.begin(), layout.bindings.end(),
                   [](VkDescriptorSetLayoutBinding& a, VkDescriptorSetLayoutBinding& b)
                   { return b.descriptorType < a.descriptorType || (b.descriptorType == a.descriptorType && b.binding < a.binding); });  // confusion: why sort in this order?
 
-        bool needToCreateLayout = !layout.mBindings.empty();
+        bool needToCreateLayout = !layout.bindings.empty();
 
         // Check if we need to create an empty layout in case there is an empty set between two used sets
         // Example: set = 0 is used, set = 2 is used. In this case, set = 1 needs to exist even if it is empty
@@ -233,14 +233,14 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
 
         if (needToCreateLayout)
         {
-            if (!layout.mBindings.empty())
+            if (!layout.bindings.empty())
             {
                 VkDescriptorSetLayoutCreateInfo layoutInfo{
                     .sType        = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
                     .pNext        = nullptr,
                     .flags        = 0,
-                    .bindingCount = (u32)layout.mBindings.size(),
-                    .pBindings    = layout.mBindings.data()};
+                    .bindingCount = (u32)layout.bindings.size(),
+                    .pBindings    = layout.bindings.data()};
 
                 if (VK_FAILED(vkCreateDescriptorSetLayout(_mpDevice->handle(), &layoutInfo, nullptr, &_mpDescriptorSetLayouts[layoutIndex]))) { return false; }
             }
@@ -250,29 +250,29 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
             }
         }
 
-        if (layout.mBindings.empty()) { continue; }
+        if (layout.bindings.empty()) { continue; }
 
         u32 cumulativeDescriptorCount = 0;
-        for (DescriptorInfo* info : layout.mDescriptors)
+        for (DescriptorInfo* info : layout.descriptorType)
         {
-            if (!info->mIsRootDescriptor)
+            if (!info->isRootDescriptor)
             {
-                info->mHandleIndex = cumulativeDescriptorCount;
-                cumulativeDescriptorCount += info->mSize;
+                info->handleIndex = cumulativeDescriptorCount;
+                cumulativeDescriptorCount += info->size;
             }
         }
 
         cumulativeDescriptorCount = 0;
 
         // vkCmdBindDescriptorSets - pDynamicOffsets - entries are ordered by the binding numbers in the descriptor set layouts
-        std::sort(layout.mDynamicDescriptors.begin(), layout.mDynamicDescriptors.end(),
+        std::sort(layout.dynamicDescriptors.begin(), layout.dynamicDescriptors.end(),
                   [](DescriptorInfo* a, DescriptorInfo* b)
-                  { return a->mReg < b->mReg; });
+                  { return a->reg < b->reg; });
 
-        _mDynamicDescriptorCounts[layoutIndex] = layout.mDynamicDescriptors.size();
-        for (DescriptorInfo* info : layout.mDynamicDescriptors)
+        _mDynamicDescriptorCounts[layoutIndex] = layout.dynamicDescriptors.size();
+        for (DescriptorInfo* info : layout.dynamicDescriptors)
         {
-            info->mHandleIndex = cumulativeDescriptorCount;
+            info->handleIndex = cumulativeDescriptorCount;
             cumulativeDescriptorCount += 1;
         }
     }
