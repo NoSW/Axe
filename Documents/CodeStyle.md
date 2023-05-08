@@ -24,6 +24,21 @@
 
 ## Naming Convention
 
+### File Extensions
+
+The project uses the following file extensions:
+- .cpp, c++ source file
+- .hpp, c++ public header file
+- .hxx, c++ private header file, only be include by the file in the same module or layer
+- .inl, code snippet, only be included by some specified .cpp
+  
+NOTE:
+- All other extensions(.h, .c, ...) come from third-party libraries,
+- All included header from third-party libraries, will be surround by `<>`,
+- All included header of the project, will be surround by `""`,
+
+### CXX Code
+
 ```c++
 #define AXE_TEST 1                  // MACRO, all upper-cases and with prefix AXE_
 constexpr auto APP_NAME = "Hello"; // constant evaluated at compile-time, all upper-cases

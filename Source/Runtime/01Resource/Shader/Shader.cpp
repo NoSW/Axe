@@ -1,6 +1,8 @@
 #include "01Resource/Shader/Shader.hpp"
 #include "00Core/Log/Log.hpp"
+
 #include <unordered_map>
+#include <span>
 
 namespace axe::resource
 {

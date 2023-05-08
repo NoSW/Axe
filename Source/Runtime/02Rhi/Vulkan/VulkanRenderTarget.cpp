@@ -1,6 +1,6 @@
-#include "02Rhi/Vulkan/VulkanRenderTarget.hpp"
-#include "02Rhi/Vulkan/VulkanDevice.hpp"
-#include "02Rhi/Vulkan/VulkanTexture.hpp"
+#include "VulkanRenderTarget.hxx"
+#include "VulkanDevice.hxx"
+#include "VulkanTexture.hxx"
 
 #include <volk.h>
 #include <tiny_imageformat/tinyimageformat_query.h>

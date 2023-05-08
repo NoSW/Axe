@@ -1,5 +1,5 @@
-#include "02Rhi/Vulkan/VulkanTexture.hpp"
-#include "02Rhi/Vulkan/VulkanDevice.hpp"
+#include "VulkanTexture.hxx"
+#include "VulkanDevice.hxx"
 
 #include "00Core/Math/Math.hpp"
 

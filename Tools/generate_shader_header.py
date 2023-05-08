@@ -16,8 +16,7 @@ with open(join(PJ_ROOT, "Source", "Generated", "ShaderHeader.inl"), "w") as f:
             f.write(f"#include <{rela_path}>\n")
 
     f.write("\n#include<unordered_map>\n")
-    f.write("#include<string_view>\n")
-    f.write("#include<span>\n\n")
+    f.write("#include<string_view>\n\n")
     f.write(
         "struct ShaderByte\n"
         "{\n"

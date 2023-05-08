@@ -1,9 +1,9 @@
 #include "02Rhi/Rhi.hpp"
 
-#include "02Rhi/Vulkan/VulkanBackend.hpp"
+#include "02Rhi/Vulkan/VulkanBackend.hxx"
 
 #if _WIN32
-#include "02Rhi/D3D12/D3D12Backend.hpp"
+#include "02Rhi/D3D12/D3D12Backend.hxx"
 #endif
 
 #include "00Core/OS/OS.hpp"

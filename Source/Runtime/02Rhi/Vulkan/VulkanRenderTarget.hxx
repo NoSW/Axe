@@ -1,7 +1,7 @@
 #pragma once
 #include "02Rhi/Rhi.hpp"
-#include "02Rhi/Vulkan/VulkanEnums.hpp"
-#include "02Rhi/Vulkan/VulkanTexture.hpp"
+#include "VulkanEnums.hxx"
+#include "VulkanTexture.hxx"
 
 namespace axe::rhi
 {

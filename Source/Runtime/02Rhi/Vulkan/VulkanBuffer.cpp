@@ -1,5 +1,6 @@
-#include "02Rhi/Vulkan/VulkanBuffer.hpp"
-#include "02Rhi/Vulkan/VulkanDevice.hpp"
+#include "VulkanBuffer.hxx"
+#include "VulkanDevice.hxx"
+
 #include "00Core/Math/Math.hpp"
 
 #include <volk.h>

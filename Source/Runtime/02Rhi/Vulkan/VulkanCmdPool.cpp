@@ -1,8 +1,7 @@
-#include "02Rhi/Vulkan/VulkanCmdPool.hpp"
-#include "02Rhi/Vulkan/VulkanQueue.hpp"
+#include "VulkanCmdPool.hxx"
+#include "VulkanQueue.hxx"
+#include "VulkanDevice.hxx"
 #include <volk.h>
-
-#include "02Rhi/Vulkan/VulkanDevice.hpp"
 
 namespace axe::rhi
 {

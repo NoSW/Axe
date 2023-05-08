@@ -1,11 +1,10 @@
-#include "02Rhi/Vulkan/VulkanCmd.hpp"
-#include "02Rhi/Vulkan/VulkanCmdPool.hpp"
-#include "02Rhi/Vulkan/VulkanQueue.hpp"
-#include "02Rhi/Vulkan/VulkanTexture.hpp"
-#include "02Rhi/Vulkan/VulkanBuffer.hpp"
-#include "02Rhi/Vulkan/VulkanDescriptorSet.hpp"
-
-#include "02Rhi/Vulkan/VulkanDevice.hpp"
+#include "VulkanCmd.hxx"
+#include "VulkanCmdPool.hxx"
+#include "VulkanQueue.hxx"
+#include "VulkanTexture.hxx"
+#include "VulkanBuffer.hxx"
+#include "VulkanDescriptorSet.hxx"
+#include "VulkanDevice.hxx"
 
 #include <volk.h>
 

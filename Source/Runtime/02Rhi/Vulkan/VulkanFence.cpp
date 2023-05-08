@@ -1,6 +1,6 @@
 
-#include "02Rhi/Vulkan/VulkanFence.hpp"
-#include "02Rhi/Vulkan/VulkanDevice.hpp"
+#include "VulkanFence.hxx"
+#include "VulkanDevice.hxx"
 #include <volk.h>
 
 namespace axe::rhi

@@ -1,6 +1,6 @@
 
-#include "02Rhi/Vulkan/VulkanDevice.hpp"
-#include "02Rhi/Vulkan/VulkanSemaphore.hpp"
+#include "VulkanDevice.hxx"
+#include "VulkanSemaphore.hxx"
 #include <volk.h>
 
 namespace axe::rhi

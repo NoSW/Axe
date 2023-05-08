@@ -1,5 +1,5 @@
-#include "02Rhi/Vulkan/VulkanShader.hpp"
-#include "02Rhi/Vulkan/VulkanDevice.hpp"
+#include "VulkanShader.hxx"
+#include "VulkanDevice.hxx"
 
 #include "01Resource/Shader/Shader.hpp"
 #include "00Core/IO/IO.hpp"

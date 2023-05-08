@@ -1,29 +1,33 @@
 #pragma once
 
 #include "02Rhi/Rhi.hpp"
-#include "02Rhi/Vulkan/VulkanEnums.hpp"
+#include "VulkanEnums.hxx"
 
-#include "02Rhi/Vulkan/VulkanAdapter.hpp"
+#include "VulkanAdapter.hxx"
 
-#include "02Rhi/Vulkan/VulkanSemaphore.hpp"
-#include "02Rhi/Vulkan/VulkanFence.hpp"
-#include "02Rhi/Vulkan/VulkanQueue.hpp"
-#include "02Rhi/Vulkan/VulkanCmdPool.hpp"
-#include "02Rhi/Vulkan/VulkanCmd.hpp"
-#include "02Rhi/Vulkan/VulkanSampler.hpp"
-#include "02Rhi/Vulkan/VulkanTexture.hpp"
-#include "02Rhi/Vulkan/VulkanBuffer.hpp"
-#include "02Rhi/Vulkan/VulkanRenderTarget.hpp"
-#include "02Rhi/Vulkan/VulkanSwapChain.hpp"
-#include "02Rhi/Vulkan/VulkanShader.hpp"
-#include "02Rhi/Vulkan/VulkanRootSignature.hpp"
-#include "02Rhi/Vulkan/VulkanDescriptorSet.hpp"
+#include "VulkanSemaphore.hxx"
+#include "VulkanFence.hxx"
+#include "VulkanQueue.hxx"
+#include "VulkanCmdPool.hxx"
+#include "VulkanCmd.hxx"
+#include "VulkanSampler.hxx"
+#include "VulkanTexture.hxx"
+#include "VulkanBuffer.hxx"
+#include "VulkanRenderTarget.hxx"
+#include "VulkanSwapChain.hxx"
+#include "VulkanShader.hxx"
+#include "VulkanRootSignature.hxx"
+#include "VulkanDescriptorSet.hxx"
 
 #include "00Core/Memory/Memory.hpp"
 
 #include <vk_mem_alloc.h>
 
-static inline void* VKAPI_PTR vk_allocation(void* pUserData, size_t size, size_t alignment, VkSystemAllocationScope allocationScope) { return axe::memory::DefaultMemoryResource::get()->new_aligned(size, alignment); }
+static inline void* VKAPI_PTR
+vk_allocation(void* pUserData, size_t size, size_t alignment, VkSystemAllocationScope allocationScope)
+{
+    return axe::memory::DefaultMemoryResource::get()->new_aligned(size, alignment);
+}
 static inline void* VKAPI_PTR vk_reallocation(void* pUserData, void* pOriginal, size_t size, size_t alignment, VkSystemAllocationScope allocationScope) { return axe::memory::DefaultMemoryResource::get()->realloc(pOriginal, size); }
 static inline void VKAPI_PTR vk_free(void* pUserData, void* pMemory) { axe::memory::DefaultMemoryResource::get()->free(pMemory); }
 static inline void VKAPI_PTR vk_internal_allocation(void* pUserData, size_t size, VkInternalAllocationType allocationType, VkSystemAllocationScope allocationScope) { AXE_ASSERT(false, "never used"); }

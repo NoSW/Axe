@@ -1,5 +1,5 @@
-#include "02Rhi/Vulkan/VulkanAdapter.hpp"
-#include "02Rhi/Vulkan/VulkanDevice.hpp"
+#include "VulkanAdapter.hxx"
+#include "VulkanDevice.hxx"
 
 #include <volk.h>
 #include <tiny_imageformat/tinyimageformat_apis.h>

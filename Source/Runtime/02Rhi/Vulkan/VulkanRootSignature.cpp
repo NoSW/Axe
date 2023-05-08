@@ -1,7 +1,7 @@
-#include "02Rhi/Vulkan/VulkanRootSignature.hpp"
-#include "02Rhi/Vulkan/VulkanSampler.hpp"
-#include "02Rhi/Vulkan/VulkanDevice.hpp"
-#include "02Rhi/Vulkan/VulkanShader.hpp"
+#include "VulkanRootSignature.hxx"
+#include "VulkanSampler.hxx"
+#include "VulkanDevice.hxx"
+#include "VulkanShader.hxx"
 
 // #include "00Core/String/String.hpp"
 

@@ -1,8 +1,7 @@
-#include "02Rhi/Vulkan/VulkanDescriptorSet.hpp"
-
-#include "02Rhi/Vulkan/VulkanDevice.hpp"
-#include "02Rhi/Vulkan/VulkanRootSignature.hpp"
-#include "02Rhi/Vulkan/VulkanTexture.hpp"
+#include "VulkanDescriptorSet.hxx"
+#include "VulkanDevice.hxx"
+#include "VulkanRootSignature.hxx"
+#include "VulkanTexture.hxx"
 
 #include <volk.h>
 
