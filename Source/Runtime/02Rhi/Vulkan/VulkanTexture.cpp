@@ -166,7 +166,7 @@ bool VulkanTexture::_create(const TextureDesc& desc) noexcept
         }
         memReqs.usage = (VmaMemoryUsage)VMA_MEMORY_USAGE_GPU_ONLY;
 
-        if ((bool)(_mpDevice->_mExternalMemoryExtension && ((bool)(desc.flags & TextureCreationFlags::IMPORT_BIT))))
+        if (_mpDevice->_mExternalMemoryExtension && (desc.flags & TextureCreationFlags::IMPORT_BIT))
         {
             VkExternalMemoryImageCreateInfoKHR externalInfo{
                 .sType       = VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO_KHR,
@@ -196,7 +196,7 @@ bool VulkanTexture::_create(const TextureDesc& desc) noexcept
 #endif
             createInfo.pNext = &externalInfo;
         }
-        else if (_mpDevice->_mExternalMemoryExtension && (bool)(desc.flags & TextureCreationFlags::EXPORT_BIT))
+        else if (_mpDevice->_mExternalMemoryExtension && (desc.flags & TextureCreationFlags::EXPORT_BIT))
         {
             VkExportMemoryAllocateInfoKHR exportMemoryInfo{
                 .sType       = VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO_KHR,
@@ -332,7 +332,7 @@ bool VulkanTexture::_create(const TextureDesc& desc) noexcept
     {
         if (VK_FAILED(vkCreateImageView(_mpDevice->handle(), &srvDesc, nullptr, &_mpVkSRVDescriptor))) { return false; }
     }
-    if ((TinyImageFormat_HasStencil(desc.format)) && (bool)(descriptorType & DescriptorTypeFlag::TEXTURE))
+    if (TinyImageFormat_HasStencil(desc.format) && (descriptorType & DescriptorTypeFlag::TEXTURE))
     {
         srvDesc.subresourceRange.aspectMask = VK_IMAGE_ASPECT_STENCIL_BIT;
         if (VK_FAILED(vkCreateImageView(_mpDevice->handle(), &srvDesc, nullptr, &_mpVkSRVStencilDescriptor))) { return false; }

@@ -23,15 +23,18 @@
 #endif
 
 template <typename E>
-concept T_Enum = std::is_enum_v<E>;
+concept T_enum = std::is_enum_v<E>;
+
+template <typename T>
+concept T_boolable = std::convertible_to<T, bool>;
 
 namespace axe::reflection
 {
 // clang-format off
-template <T_Enum E>
+template <T_enum E>
 constexpr static auto enum_entries() { return magic_enum::enum_entries<E>(); }
 
-template <T_Enum E>
+template <T_enum E>
 constexpr static E enum_value(std::string_view name)
 {
      const auto entries = enum_entries<E>();
@@ -39,30 +42,63 @@ constexpr static E enum_value(std::string_view name)
      return (E)-1;
  }
 
-template <T_Enum E>
-constexpr static std::string_view enum_name(E value)
+constexpr static std::string_view enum_name(T_enum auto value)
 {
-     const auto entries = enum_entries<E>();
+     const auto entries = enum_entries<decltype(value)>();
      for (auto i = 0; i < entries.size(); ++i) { if (entries[i].first == value) { return entries[i].second; } }
-     return typeid(E).name();
+     return typeid(decltype(value)).name();
  }
 
 // clang-format on
 }  // namespace axe::reflection
 
-using namespace magic_enum::bitwise_operators;
-
-template <T_Enum E>
-constexpr bool operator!(E rhs) noexcept
+namespace axe
 {
-    return static_cast<bool>(!static_cast<std::underlying_type_t<E>>(rhs));
+
+// some utils for enum
+
+using namespace magic_enum::bitwise_operators;  // ~, |, &, ^, |=, &=, ^=,
+
+constexpr bool operator!(T_enum auto a) noexcept  // !
+{
+    return !static_cast<bool>(a);
 }
+
+constexpr bool operator&&(T_enum auto a, T_boolable auto b) noexcept  // enum && other
+{
+    return static_cast<bool>(a) && static_cast<bool>(b);
+}
+
+constexpr bool operator&&(T_boolable auto a, T_enum auto b) noexcept  // other && enum
+{
+    return static_cast<bool>(a) && static_cast<bool>(b);
+}
+
+constexpr bool operator&&(T_enum auto a, T_enum auto b) noexcept  // enum & enum
+{
+    return static_cast<bool>(a) && static_cast<bool>(b);
+}
+
+constexpr bool operator||(T_enum auto a, T_boolable auto b) noexcept  // enum || other
+{
+    return static_cast<bool>(a) || static_cast<bool>(b);
+}
+
+constexpr bool operator||(T_boolable auto a, T_enum auto b) noexcept  // other || enum
+{
+    return static_cast<bool>(a) || static_cast<bool>(b);
+}
+
+constexpr bool operator||(T_enum auto a, T_enum auto b) noexcept  // enum || enum
+{
+    return static_cast<bool>(a) || static_cast<bool>(b);
+}
+
+};  // namespace axe
 
 namespace std
 {
-
-template <T_Enum E>
-[[nodiscard]] inline string to_string(E value)
+[[nodiscard]] inline string to_string(T_enum auto value)
 {
     return string(axe::reflection::enum_name(value));
 }

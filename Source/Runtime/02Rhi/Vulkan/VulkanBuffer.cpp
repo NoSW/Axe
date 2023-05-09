@@ -101,7 +101,7 @@ bool VulkanBuffer::_create(const BufferDesc& desc) noexcept
     _mMemoryUsage       = (u32)desc.memoryUsage;
     _mDescriptors       = (u32)desc.descriptorType;
     _mpCPUMappedAddress = allocInfo.pMappedData;
-    if (((bool)(desc.descriptorType & DescriptorTypeFlag::BUFFER)) || ((bool)(desc.descriptorType & DescriptorTypeFlag::BUFFER_RAW)))
+    if ((desc.descriptorType & DescriptorTypeFlag::BUFFER) || (desc.descriptorType & DescriptorTypeFlag::BUFFER_RAW))
     {
         _mOffset = desc.structStride * desc.firstElement;
     }

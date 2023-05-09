@@ -39,8 +39,7 @@ bool VulkanRenderTarget::_create(const RenderTargetDesc& desc) noexcept
     }
     else
     {
-        if ((bool)(desc.descriptorType & DescriptorTypeFlag::TEXTURE) ||
-            (bool)(desc.descriptorType & DescriptorTypeFlag::RW_TEXTURE))
+        if ((desc.descriptorType & DescriptorTypeFlag::TEXTURE) || (desc.descriptorType & DescriptorTypeFlag::RW_TEXTURE))
         {
             AXE_WARN("On tile textures do not support DescriptorTypeFlag::TEXTURE or DescriptorTypeFlag::RW_TEXTURE");
         }
@@ -111,7 +110,7 @@ bool VulkanRenderTarget::_create(const RenderTargetDesc& desc) noexcept
 
     if (VK_FAILED(vkCreateImageView(_mpDevice->handle(), &rtvCreateInfo, nullptr, &_mpVkDescriptor))) { return false; }
 
-    const bool isTexture = ((bool)(desc.descriptorType & DescriptorTypeFlag::TEXTURE) || ((bool)(desc.descriptorType & DescriptorTypeFlag::RW_TEXTURE)));
+    const bool isTexture = (desc.descriptorType & DescriptorTypeFlag::TEXTURE) || (desc.descriptorType & DescriptorTypeFlag::RW_TEXTURE);
     for (u32 i = 0; i < _mMipLevels; ++i)
     {
         rtvCreateInfo.subresourceRange.baseMipLevel = i;

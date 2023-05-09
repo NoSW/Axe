@@ -77,7 +77,25 @@ class DescriptorSet;
 struct DescBase
 {
 #if _DEBUG
+private:
     std::pmr::string label;
+
+public:
+    // only do actual work in Debug, do nothing in Release
+    void setDebugLabel(std::string_view s) noexcept { label = s; }
+
+    // return label in Debug, return null string in Release
+    std::string_view getDebugLabel() const noexcept { return label; }
+#else
+    // only do actual work in Debug, do nothing in Release
+    void setDebugLabel(std::string_view s) noexcept
+    {
+        /* do nothing */
+    }
+
+    // return label in Debug, return null string in Release
+    std::string_view getDebugLabel() const noexcept { return ""; }
+
 #endif
 };
 

@@ -105,8 +105,8 @@ private:
 #if AXE_RHI_VULKAN_ENABLE_DEBUG
             static_assert(std::is_base_of_v<RhiObjectBase, T>, "T must be derived from RhiObjectBase for using _mLabel");
             static_assert(std::is_base_of_v<DescBase, Desc>, "Desc must be derived from DescBase for using label");
-            p->_mLabel = desc.label;
-            _setDebugLabel((void*)p->handle(), T::getVkTypeId(), desc.label);
+            p->_mLabel = desc.getDebugLabel();
+            _setDebugLabel((void*)p->handle(), T::getVkTypeId(), p->_mLabel);
 #endif
         }
 

@@ -102,13 +102,13 @@ bool Forward::load(LoadFlag loadFlag) noexcept
 
         shaderDesc.mStages[0].mRelaFilePath = "Shaders/Basic.vert.glsl";
         shaderDesc.mStages[1].mRelaFilePath = "Shaders/Basic.frag.glsl";
-        shaderDesc.label                    = "Basic";
+        shaderDesc.setDebugLabel("Basic");
         _mpBasicShader                      = _mpDevice->createShader(shaderDesc);
 
         shaderDesc.mStages[0].mRelaFilePath = "Shaders/Skybox/Skybox.vert.glsl";
         shaderDesc.mStages[1].mRelaFilePath = "Shaders/Skybox/Skybox.frag.glsl";
-        shaderDesc.label                    = "Skybox";
-        _mpSkyboxShader                     = _mpDevice->createShader(shaderDesc);
+        shaderDesc.setDebugLabel("Skybox");
+        _mpSkyboxShader = _mpDevice->createShader(shaderDesc);
     }
 
     if ((bool)(loadFlag & (LoadFlag::RESIZE | LoadFlag::RENDER_TARGET)))
