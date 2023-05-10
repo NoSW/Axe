@@ -35,12 +35,18 @@ private:
     std::array<rhi::Fence*, _IMAGE_COUNT> _mpRenderCompleteFences{};
     std::array<rhi::Semaphore*, _IMAGE_COUNT> _mpRenderCompleteSemaphores{};
 
-    rhi::Semaphore* _mpImageAcquiredSemaphore = nullptr;
-    rhi::SwapChain* _mpSwapChain              = nullptr;
-    rhi::RenderTarget* _mpDepthBuffer         = nullptr;
+    rhi::Semaphore* _mpImageAcquiredSemaphore   = nullptr;
+    rhi::SwapChain* _mpSwapChain                = nullptr;
+    rhi::RenderTarget* _mpDepthBuffer           = nullptr;
 
-    rhi::Shader* _mpBasicShader               = nullptr;
-    rhi::Shader* _mpSkyboxShader              = nullptr;
+    rhi::Sampler* _mpStaticSampler              = nullptr;
+
+    rhi::Shader* _mpBasicShader                 = nullptr;
+    rhi::Shader* _mpSkyboxShader                = nullptr;
+
+    rhi::RootSignature* _mpRootSignature        = nullptr;
+    rhi::DescriptorSet* _mpDescriptorSetTexture = nullptr;
+    rhi::DescriptorSet* _mpDescriptorSetUniform = nullptr;
 };
 
 }  // namespace axe::pipeline

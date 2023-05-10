@@ -28,11 +28,12 @@ public:
     constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_UNKNOWN; }
 
 private:
+    std::pmr::list<std::pmr::string> _mNamePool;  // all strings reflected from spirv byte code
     VulkanDevice* const _mpDevice = nullptr;
     std::array<VkShaderModule, (u32)ShaderStageFlag::COUNT> _mpHandles{};
     std::array<std::string_view, (u32)ShaderStageFlag::COUNT> _mpEntryNames;
     VkSpecializationInfo* _mpSpecializationInfo = nullptr;
-    ShaderStageFlag _mStage                     = ShaderStageFlag::NONE;
+    ShaderStageFlag _mStages                    = ShaderStageFlag::NONE;
     u32 _mNumThreadsPerGroup[3]                 = {0, 0, 0};  // only for computer shader
     PipelineReflection _mReflection{};
 };

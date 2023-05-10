@@ -1,6 +1,8 @@
 # Axe
 Axe is a cross multi-platform ai-driven game engine(round 1, also an learning project about *[Game Engine Architecture, Third Edition](https://www.gameenginebook.com/)*).
 
+> Learn by coding
+
 ## Goal
 
 - practice modern c++ programming skills: C++20, OOP, STL, template, multi-threading, reflection, cross-platform(Windows, Linux, ...) etc
@@ -69,6 +71,7 @@ Axe is basically designed according to the architecture shown right. Thanks to t
 - **04Pipeline**
   - (WIP) Modern deferred rendering pipeline based on visibility buffer
   - (WIP) Global Illumination system with an unlimited number of light sources and minimal memory footprint
+  - (WIP) Integrated with shadertoy seamlessly
 - **05System**
   - (WIP) Animation System based on ...
   - (WIP) Physics System based on ...

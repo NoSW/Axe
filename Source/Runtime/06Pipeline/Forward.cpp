@@ -59,14 +59,19 @@ bool Forward::init(PipelineDesc& desc) noexcept
     _mpImageAcquiredSemaphore = _mpDevice->createSemaphore(semaphoreDesc);
     if (!_mpImageAcquiredSemaphore) { return false; }
 
-    rhi::SamplerDesc samplerDesc{};
-    auto* sampler = _mpDevice->createSampler(samplerDesc);
-    _mpDevice->destroySampler(sampler);
-    AXE_ASSERT(sampler == nullptr);
     // frameIndex
     _mFrameIndex = 0;
 
     // set textures
+    rhi::SamplerDesc samplerDesc{
+        .minFilter  = rhi::FilterType::LINEAR,
+        .magFilter  = rhi::FilterType::LINEAR,
+        .mipMapMode = rhi::MipMapMode::NEAREST,
+        .addressU   = rhi::AddressMode::CLAMP_TO_EDGE,
+        .addressV   = rhi::AddressMode::CLAMP_TO_EDGE,
+        .addressW   = rhi::AddressMode::CLAMP_TO_EDGE,
+    };
+    _mpStaticSampler = _mpDevice->createSampler(samplerDesc);
 
     // set vertex buffers
 
@@ -76,6 +81,7 @@ bool Forward::init(PipelineDesc& desc) noexcept
 bool Forward::exit() noexcept
 {
     bool succ = true;
+    _mpDevice->destroySampler(_mpStaticSampler);
     _mpDevice->destroySemaphore(_mpImageAcquiredSemaphore);
     for (u32 i = 0; i < _IMAGE_COUNT; ++i)
     {
@@ -96,53 +102,87 @@ bool Forward::load(LoadFlag loadFlag) noexcept
 {
     if ((bool)(loadFlag & LoadFlag::SHADER))
     {
-        rhi::ShaderDesc shaderDesc;
-        shaderDesc.mStages.push_back(rhi::ShaderStageDesc{.mStage = rhi::ShaderStageFlag::VERT});
-        shaderDesc.mStages.push_back(rhi::ShaderStageDesc{.mStage = rhi::ShaderStageFlag::FRAG});
+        // addShader
+        {
+            rhi::ShaderDesc shaderDesc;
+            shaderDesc.mStages.push_back(rhi::ShaderStageDesc{.mStage = rhi::ShaderStageFlag::VERT});
+            shaderDesc.mStages.push_back(rhi::ShaderStageDesc{.mStage = rhi::ShaderStageFlag::FRAG});
 
-        shaderDesc.mStages[0].mRelaFilePath = "Shaders/Basic.vert.glsl";
-        shaderDesc.mStages[1].mRelaFilePath = "Shaders/Basic.frag.glsl";
-        shaderDesc.setDebugLabel("Basic");
-        _mpBasicShader                      = _mpDevice->createShader(shaderDesc);
+            shaderDesc.mStages[0].mRelaFilePath = "Shaders/Basic.vert.glsl";
+            shaderDesc.mStages[1].mRelaFilePath = "Shaders/Basic.frag.glsl";
+            shaderDesc.setDebugLabel("Basic");
+            _mpBasicShader                      = _mpDevice->createShader(shaderDesc);
 
-        shaderDesc.mStages[0].mRelaFilePath = "Shaders/Skybox/Skybox.vert.glsl";
-        shaderDesc.mStages[1].mRelaFilePath = "Shaders/Skybox/Skybox.frag.glsl";
-        shaderDesc.setDebugLabel("Skybox");
-        _mpSkyboxShader = _mpDevice->createShader(shaderDesc);
+            shaderDesc.mStages[0].mRelaFilePath = "Shaders/Skybox/Skybox.vert.glsl";
+            shaderDesc.mStages[1].mRelaFilePath = "Shaders/Skybox/Skybox.frag.glsl";
+            shaderDesc.setDebugLabel("Skybox");
+            _mpSkyboxShader = _mpDevice->createShader(shaderDesc);
+        }
+
+        // addRootSignature
+        {
+            rhi::RootSignatureDesc rootDesc;
+            rootDesc.mShaders.push_back(_mpBasicShader);
+            rootDesc.mShaders.push_back(_mpSkyboxShader);
+            rootDesc.mStaticSamplersMap["uSampler0"] = _mpStaticSampler;
+            _mpRootSignature                         = _mpDevice->createRootSignature(rootDesc);
+        }
+
+        // addDescriptorSet
+        {
+            rhi::DescriptorSetDesc descSetDesc{
+                .mpRootSignature = _mpRootSignature,
+                .mMaxSet         = 1,
+                .updateFrequency = rhi::DescriptorUpdateFrequency::NONE};
+            descSetDesc.setDebugLabel("Texture");
+
+            _mpDescriptorSetTexture     = _mpDevice->createDescriptorSet(descSetDesc);
+
+            descSetDesc.mMaxSet         = _IMAGE_COUNT * 2;
+            descSetDesc.updateFrequency = rhi::DescriptorUpdateFrequency::PER_FRAME;
+            descSetDesc.setDebugLabel("Uniform");
+            _mpDescriptorSetUniform = _mpDevice->createDescriptorSet(descSetDesc);
+        }
     }
 
     if ((bool)(loadFlag & (LoadFlag::RESIZE | LoadFlag::RENDER_TARGET)))
     {
-        rhi::SwapChainDesc swapchainDesc{
-            .pWindow         = _mpWindow,
-            .pPresentQueue   = _mpGraphicsQueue,
-            .imageCount      = _IMAGE_COUNT,
-            .width           = _mWidth,
-            .height          = _mHeight,
-            .colorClearValue = rhi::ClearValue{
-                .rgba{1.0f, 0.8f, 0.4f, 0.0f},
-            }};
-        _mpSwapChain = _mpDevice->createSwapChain(swapchainDesc);
-        if (_mpSwapChain == nullptr) { return false; }
+        // addSwapchain
+        {
+            rhi::SwapChainDesc swapchainDesc{
+                .pWindow         = _mpWindow,
+                .pPresentQueue   = _mpGraphicsQueue,
+                .imageCount      = _IMAGE_COUNT,
+                .width           = _mWidth,
+                .height          = _mHeight,
+                .colorClearValue = rhi::ClearValue{
+                    .rgba{1.0f, 0.8f, 0.4f, 0.0f},
+                }};
+            _mpSwapChain = _mpDevice->createSwapChain(swapchainDesc);
+            if (_mpSwapChain == nullptr) { return false; }
+        }
 
-        rhi::RenderTargetDesc depthRT{
-            .flags            = rhi::TextureCreationFlags::ON_TILE | rhi::TextureCreationFlags::VR_MULTIVIEW,
-            .width            = _mWidth,
-            .height           = _mHeight,
-            .depth            = 1,
-            .arraySize        = 1,
-            .mipLevels        = 0,
-            .mMSAASampleCount = rhi::MSAASampleCount::COUNT_1,
-            .format           = TinyImageFormat_D32_SFLOAT,
-            .startState       = rhi::ResourceStateFlags::DEPTH_WRITE,
-            .clearValue{},
-            .sampleQuality  = 0,
-            .descriptorType = rhi::DescriptorTypeFlag::UNDEFINED,
-            .mpNativeHandle = nullptr,
-            .mpName         = "DepthBuffer",
-        };
-        _mpDepthBuffer = _mpDevice->createRenderTarget(depthRT);
-        if (_mpDepthBuffer == nullptr) { return false; }
+        // addDepthBuffer
+        {
+            rhi::RenderTargetDesc depthRT{
+                .flags            = rhi::TextureCreationFlags::ON_TILE | rhi::TextureCreationFlags::VR_MULTIVIEW,
+                .width            = _mWidth,
+                .height           = _mHeight,
+                .depth            = 1,
+                .arraySize        = 1,
+                .mipLevels        = 0,
+                .mMSAASampleCount = rhi::MSAASampleCount::COUNT_1,
+                .format           = TinyImageFormat_D32_SFLOAT,
+                .startState       = rhi::ResourceStateFlags::DEPTH_WRITE,
+                .clearValue{},
+                .sampleQuality  = 0,
+                .descriptorType = rhi::DescriptorTypeFlag::UNDEFINED,
+                .mpNativeHandle = nullptr,
+                .mpName         = "DepthBuffer",
+            };
+            _mpDepthBuffer = _mpDevice->createRenderTarget(depthRT);
+            if (_mpDepthBuffer == nullptr) { return false; }
+        }
     }
 
     if ((bool)(loadFlag & (LoadFlag::SHADER | LoadFlag::RENDER_TARGET)))
@@ -171,9 +211,19 @@ bool Forward::unload(LoadFlag loadFlag) noexcept
 
     if ((bool)(loadFlag & LoadFlag::SHADER))
     {
-        // removeDescriptorSets();
-        // removeRootSignatures();
-        // removeShaders();
+        {  // removeDescriptorSets
+            _mpDevice->destroyDescriptorSet(_mpDescriptorSetUniform);
+            _mpDevice->destroyDescriptorSet(_mpDescriptorSetTexture);
+        }
+
+        {  // removeRootSignatures
+            _mpDevice->destroyRootSignature(_mpRootSignature);
+        }
+
+        {  // remove shader
+            _mpDevice->destroyShader(_mpBasicShader);
+            _mpDevice->destroyShader(_mpSkyboxShader);
+        }
     }
 
     return true;

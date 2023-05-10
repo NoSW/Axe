@@ -322,23 +322,17 @@ VkDescriptorType to_vk_enum(DescriptorTypeFlag type) noexcept
 VkShaderStageFlags to_vk_enum(ShaderStageFlag stages) noexcept
 {
     VkShaderStageFlags res = 0;
-    if ((bool)(stages & ShaderStageFlag::GRAPHICS))
-        return VK_SHADER_STAGE_ALL_GRAPHICS;
-
-    if ((bool)(stages & ShaderStageFlag::VERT))
-        res |= VK_SHADER_STAGE_VERTEX_BIT;
-    if ((bool)(stages & ShaderStageFlag::GEOM))
-        res |= VK_SHADER_STAGE_GEOMETRY_BIT;
-    if ((bool)(stages & ShaderStageFlag::TESE))
-        res |= VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-    if ((bool)(stages & ShaderStageFlag::TESC))
-        res |= VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-    if ((bool)(stages & ShaderStageFlag::COMP))
-        res |= VK_SHADER_STAGE_COMPUTE_BIT;
+    if ((bool)(stages & ShaderStageFlag::VERT)) { res |= VK_SHADER_STAGE_VERTEX_BIT; }
+    if ((bool)(stages & ShaderStageFlag::TESC)) { res |= VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT; }
+    if ((bool)(stages & ShaderStageFlag::TESE)) { res |= VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT; }
+    if ((bool)(stages & ShaderStageFlag::GEOM)) { res |= VK_SHADER_STAGE_GEOMETRY_BIT; }
+    if ((bool)(stages & ShaderStageFlag::FRAG)) { res |= VK_SHADER_STAGE_FRAGMENT_BIT; }
+    if ((bool)(stages & ShaderStageFlag::COMP)) { res |= VK_SHADER_STAGE_COMPUTE_BIT; }
     if ((bool)(stages & ShaderStageFlag::RAYTRACING))
-        res |=
-            (VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_ANY_HIT_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR |
-             VK_SHADER_STAGE_MISS_BIT_KHR | VK_SHADER_STAGE_INTERSECTION_BIT_KHR | VK_SHADER_STAGE_CALLABLE_BIT_KHR);
+    {
+        res |= (VK_SHADER_STAGE_RAYGEN_BIT_KHR | VK_SHADER_STAGE_ANY_HIT_BIT_KHR | VK_SHADER_STAGE_CLOSEST_HIT_BIT_KHR |
+                VK_SHADER_STAGE_MISS_BIT_KHR | VK_SHADER_STAGE_INTERSECTION_BIT_KHR | VK_SHADER_STAGE_CALLABLE_BIT_KHR);
+    }
 
     AXE_ASSERT(res != 0, "Invalid Type");
     return res;

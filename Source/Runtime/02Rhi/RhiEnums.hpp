@@ -461,7 +461,7 @@ enum class PipelineType
     COUNT,
 };
 
-enum class DescriptorUpdateFrequency
+enum class DescriptorUpdateFrequency : u8
 {
     NONE = 0,
     PER_FRAME,
@@ -512,13 +512,13 @@ inline constexpr ShaderStageFlag get_shader_stage(std::string_view ext)
 struct VertexInput
 {
     // resource name
-    std::pmr::string name;
+    std::string_view name;
 
     // The size of the attribute
     u32 size;
 };
 
-struct ShaderResource
+struct ShaderResource  // all other resourecs except for ShaderVariable (vertex in/out, ...)
 {
     std::string_view name;
     ShaderStageFlag usedShaderStage;
@@ -528,24 +528,18 @@ struct ShaderResource
     u32 bindingLocation;
     u32 size;  // element count of array
 
-    bool operator==(const ShaderResource& b) const
-    {
-        return type == b.type && mSet == b.mSet && bindingLocation == b.bindingLocation && name == b.name;
-    }
+    bool operator==(const ShaderResource& b) const { return type == b.type && mSet == b.mSet && bindingLocation == b.bindingLocation && name == b.name; }
 
     bool operator!=(const ShaderResource& b) const { return !(*this == b); }
 };
 
-struct ShaderVariable
+struct ShaderVariable  // resources updated frequently (uniform buffer, root constant(i.e., pushConstants in VK))
 {
     std::string_view name;
     u32 parentIndex;
     u32 offset;
     u32 size;
-    bool operator==(const ShaderVariable& b) const
-    {
-        return offset == b.offset && size == b.size && name == b.name;
-    }
+    bool operator==(const ShaderVariable& b) const { return offset == b.offset && size == b.size && name == b.name; }
 
     bool operator!=(const ShaderVariable& b) const { return !(*this == b); }
 };
@@ -564,9 +558,9 @@ struct ShaderReflection
 struct PipelineReflection
 {
     ShaderStageFlag shaderStages;
-    std::array<std::unique_ptr<ShaderReflection>, (u32)ShaderStageFlag::COUNT> shaderReflections{};
-    std::pmr::vector<ShaderResource> shaderResources;  // unique shader resources, (we need indexing here, so use vector just fine)
-    std::pmr::vector<ShaderVariable> shaderVariables;  // unique shader variables
+    std::array<ShaderReflection, (u32)ShaderStageFlag::COUNT> shaderReflections{};
+    std::pmr::vector<ShaderResource> shaderResources;  //  unique shader resources in all stages, (we need indexing here, so use vector just fine)
+    std::pmr::vector<ShaderVariable> shaderVariables;  // unique shader variables  in all stages
 };
 
 }  // namespace axe::rhi

@@ -55,7 +55,7 @@ bool create_pipeline_reflection(std::pmr::vector<ShaderReflection>& shaderRefls,
     std::pmr::vector<const ShaderResource*> tmpUniqueVariableParents;
     for (auto& srcRefl : shaderRefls)
     {
-        outPipelineRefl.shaderReflections[std::countr_zero((u32)srcRefl.shaderStage)].reset(&srcRefl);
+        outPipelineRefl.shaderReflections[std::countr_zero((u32)srcRefl.shaderStage)] = srcRefl;
         for (const auto& shaderRes : srcRefl.shaderResources)
         {
             // Go through all already added shader resources to see if this shader

@@ -328,18 +328,16 @@ struct DescriptorSetDesc : public DescBase
 
 struct DescriptorInfo
 {
-    std::string_view name;
-    u32 type;
-    u32 size;
-    u32 handleIndex;
-    u32 dim              : 4;
-    u32 isRootDescriptor : 1;
-    u32 isStaticSampler  : 1;
-    u32 updateFrequency  : 3;
+    std::string_view name         = "Untitled";
+    DescriptorTypeFlagOneBit type = DescriptorTypeFlagOneBit::UNDEFINED;
+    u32 size                      = 0;  //  byte count if root descriptor, otherwise element count of array
+    u32 handleIndex               = 0;
+    u32 dim               : 4     = 0;
+    u32 updateFrequency   : 4     = 0;
+    bool isRootDescriptor : 1     = 0;  // whether uniform buffer or root constant or not, which need to be updated per frame
+    bool isStaticSampler  : 1     = 0;
 
-    u32 vkStages         : 8;
-    u32 vkType;
-    u32 reg;
+    u32 reg               : 14    = 0;  // only used by Vulkan
 };
 
 struct DescriptorDataRange

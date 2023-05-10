@@ -3,6 +3,7 @@
 
 #include "01Resource/Shader/Shader.hpp"
 #include "00Core/IO/IO.hpp"
+#include "00Core/Reflection/Enum.hpp"
 
 #include <spirv_common.hpp>
 #include <spirv_cross.hpp>
@@ -31,7 +32,11 @@ static TextureDimension to_TextureDimension(spirv_cross::SPIRType::ImageType ima
     }
 }
 
-static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageFlagOneBit shaderStage, ShaderReflection& outReflection) noexcept
+static bool create_shader_reflection(const std::span<u8>& byteCode,  // spv coe
+                                     ShaderStageFlagOneBit shaderStage,
+                                     std::string_view glslFilePath,                  // used for print error msg
+                                     std::pmr::list<std::pmr::string>& outNamePool,  // all strings will from  shader reflection (i.e., output from this func)
+                                     ShaderReflection& outReflection) noexcept
 {
     // using SPIRV-Cross
     spirv_cross::Compiler compiler((u32*)byteCode.data(), byteCode.size() / 4);
@@ -89,7 +94,8 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
             {
                 spirv_cross::SPIRType type = compiler.get_type(input.type_id);
                 u32 byteCount              = (type.width / 8) * type.vecsize;
-                vertexInputs.push_back(VertexInput{.name = input.name.data(), .size = byteCount});
+                outNamePool.push_back(input.name.data());
+                vertexInputs.push_back(VertexInput{.name = outNamePool.back().data(), .size = byteCount});
             }
         }
     }
@@ -99,12 +105,18 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
     std::pmr::vector<ShaderResource> shaderResources;
     std::pmr::vector<ShaderVariable> shaderVariables;
     std::pmr::vector<u32> parentIndex;
-    const auto extractShaderResource = [shaderStage, &compiler, &usedResources, &shaderResources](
+    const auto extractShaderResource = [shaderStage, &glslFilePath, &compiler, &usedResources, &outNamePool, &shaderResources](
                                            const spirv_cross::SmallVector<spirv_cross::Resource>& resources, DescriptorTypeFlag descriptorType)
     {
         for (const auto& res : resources)
         {
-            if (usedResources.find(res.id) != usedResources.end()) { continue; }
+            if (usedResources.find(res.id) == usedResources.end())
+            {
+#if _DEBUG
+                AXE_WARN("{} is not used in {}", res.name, glslFilePath);
+#endif
+                continue;
+            }
 
             spirv_cross::SPIRType type = compiler.get_type(res.type_id);
             if (type.image.dim == spv::Dim::DimBuffer)
@@ -119,8 +131,9 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
                 }
             }
 
+            outNamePool.push_back(res.name.data());
             shaderResources.push_back(ShaderResource{
-                .name            = res.name,
+                .name            = outNamePool.back().data(),
                 .usedShaderStage = shaderStage,
                 .dim             = to_TextureDimension(type.image),
                 .type            = descriptorType,
@@ -131,14 +144,14 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
                 .size            = type.array.size() ? type.array[0] : 1});
         }
     };
-    const auto extractShaderVariable = [shaderStage, &compiler, &shaderVariables](
+    const auto extractShaderVariable = [shaderStage, &compiler, &outNamePool, &shaderVariables](
                                            const spirv_cross::Resource& res, u32 parentIndex)
     {
         spirv_cross::SPIRType type = compiler.get_type(res.type_id);
         for (u32 i = 0; i < type.member_types.size(); ++i)
         {
             shaderVariables.push_back(ShaderVariable{
-                .name        = res.name,
+                .name        = outNamePool.back().data(),
                 .parentIndex = 0,  // TODO
                 .offset      = compiler.get_member_decoration(res.base_type_id, i, spv::DecorationOffset),
                 .size        = (u32)compiler.get_declared_struct_member_size(type, i),
@@ -147,7 +160,7 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
     };
 
     extractShaderResource(allResources.storage_buffers, DescriptorTypeFlag::RW_BUFFER);
-    extractShaderResource(allResources.stage_outputs, DescriptorTypeFlag::UNDEFINED);
+    //  extractShaderResource(allResources.stage_outputs, ); // filtered
     // extractShaderResource(allResources.subpass_inputs, ); // not use
     extractShaderResource(allResources.storage_images, DescriptorTypeFlag::RW_TEXTURE);
     extractShaderResource(allResources.sampled_images, DescriptorTypeFlag::COMBINED_IMAGE_SAMPLER_VKONLY);
@@ -163,11 +176,18 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
     for (u32 i = 0; i < allResources.uniform_buffers.size(); ++i)
     {
         auto& res = allResources.uniform_buffers[i];
-        if (usedResources.find(res.id) != usedResources.end()) { continue; }
+        if (usedResources.find(res.id) == usedResources.end())
+        {
+#if _DEBUG
+            AXE_WARN("{} is not used in {}", res.name, glslFilePath);
+#endif
+            continue;
+        }
 
         spirv_cross::SPIRType type = compiler.get_type(res.type_id);
+        outNamePool.push_back(res.name.data());
         shaderResources.push_back(ShaderResource{
-            .name            = res.name,
+            .name            = outNamePool.back().data(),
             .usedShaderStage = shaderStage,
             .dim             = to_TextureDimension(type.image),
             .type            = DescriptorTypeFlag::UNIFORM_BUFFER,
@@ -185,15 +205,15 @@ static bool create_shader_reflection(const std::span<u8>& byteCode, ShaderStageF
         if (usedResources.find(res.id) == usedResources.end()) { continue; }
 
         spirv_cross::SPIRType type = compiler.get_type(res.type_id);
+        outNamePool.push_back(res.name.data());
         shaderResources.push_back(ShaderResource{
-            .name            = res.name,
+            .name            = outNamePool.back().data(),
             .usedShaderStage = shaderStage,
             .dim             = TextureDimension::DIM_UNDEFINED,
             .type            = DescriptorTypeFlag::ROOT_CONSTANT,
             .mSet            = U32_MAX,
             .bindingLocation = U32_MAX,
             .size            = (u32)compiler.get_declared_struct_size(type)});
-
         extractShaderVariable(res, shaderResources.size() - 1);
     }
 
@@ -227,7 +247,7 @@ bool VulkanShader::_create(ShaderDesc& desc) noexcept
         if (!shaderByteCode.empty())
         {
             shaderReflections.push_back({});
-            if (AXE_FAILED(create_shader_reflection(shaderByteCode, stageDesc.mStage, shaderReflections.back()))) { return false; }
+            if (AXE_FAILED(create_shader_reflection(shaderByteCode, stageDesc.mStage, stageDesc.mRelaFilePath, _mNamePool, shaderReflections.back()))) { return false; }
             VkShaderModuleCreateInfo createInfo = {
                 .sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
                 .pNext    = nullptr,
@@ -247,6 +267,8 @@ bool VulkanShader::_create(ShaderDesc& desc) noexcept
         {
             return false;
         }
+
+        _mStages |= stageDesc.mStage;
     }
 
     // record constants

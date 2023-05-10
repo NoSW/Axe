@@ -14,7 +14,7 @@ bool VulkanDescriptorSet::_create(DescriptorSetDesc& desc) noexcept
     AXE_ASSERT(updateFreq < (u8)DescriptorUpdateFrequency::COUNT);
     VulkanRootSignature* pRootSignature = (VulkanRootSignature*)desc.mpRootSignature;
 
-    if (pRootSignature[updateFreq]._mpDescriptorSetLayouts[updateFreq] == VK_NULL_HANDLE)
+    if (pRootSignature->_mpDescriptorSetLayouts[updateFreq] == VK_NULL_HANDLE)
     {
         AXE_ERROR("DescriptorSetLayout in RootSignature is null at updateFreq={}", updateFreq);
         return false;
@@ -46,7 +46,7 @@ bool VulkanDescriptorSet::_create(DescriptorSetDesc& desc) noexcept
             .pPoolSizes    = poolSizes.data(),
         };
 
-        if (VK_FAILED(vkCreateDescriptorPool(_mpDevice->handle(), &poolInfo, nullptr, &_mpDescriptorPool))) { return false; }
+        if (VK_FAILED(vkCreateDescriptorPool(_mpDevice->handle(), &poolInfo, &g_VkAllocationCallbacks, &_mpDescriptorPool))) { return false; }
 
         // allocate descriptor sets
         std::pmr::vector<VkDescriptorSetLayout> pDescriptorSetLayouts(desc.mMaxSet, _mpRootSignature->_mpDescriptorSetLayouts[updateFreq]);
@@ -92,7 +92,7 @@ bool VulkanDescriptorSet::_create(DescriptorSetDesc& desc) noexcept
                         .dstBinding       = descriptorInfo.reg,
                         .dstArrayElement  = 0,
                         .descriptorCount  = descriptorInfo.size,
-                        .descriptorType   = (VkDescriptorType)descriptorInfo.vkType,
+                        .descriptorType   = to_vk_enum(descriptorInfo.type),
                         .pImageInfo       = pImageInfo,
                         .pBufferInfo      = pBufferInfo,
                         .pTexelBufferView = pTexelBufferView,
@@ -101,7 +101,7 @@ bool VulkanDescriptorSet::_create(DescriptorSetDesc& desc) noexcept
                 }
             };
 
-            switch ((DescriptorTypeFlag)descriptorInfo.type)
+            switch (descriptorInfo.type)
             {
                 case DescriptorTypeFlag::SAMPLER:
                 {
@@ -233,7 +233,7 @@ void VulkanDescriptorSet::update(u32 index, std::pmr::vector<DescriptorData*> pa
                 .dstBinding       = pFoundDescriptorInfo->reg,
                 .dstArrayElement  = pParam->arrayOffset,
                 .descriptorCount  = descriptorCount,
-                .descriptorType   = (VkDescriptorType)pFoundDescriptorInfo->vkType,
+                .descriptorType   = to_vk_enum(pFoundDescriptorInfo->type),
                 .pImageInfo       = pImageInfo,
                 .pBufferInfo      = pBufferInfo,
                 .pTexelBufferView = pTexelBufferView,
@@ -241,7 +241,7 @@ void VulkanDescriptorSet::update(u32 index, std::pmr::vector<DescriptorData*> pa
             vkUpdateDescriptorSets(_mpDevice->handle(), 1, &writeSet, 0, nullptr);
         };
 
-        switch ((DescriptorTypeFlag)pFoundDescriptorInfo->type)
+        switch (pFoundDescriptorInfo->type)
         {
             case DescriptorTypeFlag::SAMPLER:
             {
@@ -346,7 +346,7 @@ void VulkanDescriptorSet::update(u32 index, std::pmr::vector<DescriptorData*> pa
                     VkDeviceSize offset = pParam->pRanges ? pParam->pRanges[i].offset : ((VulkanBuffer*)pResource)->_mOffset;
                     VkDeviceSize range  = pParam->pRanges ? pParam->pRanges[i].size : VK_WHOLE_SIZE;
 
-                    u32 maxRange        = (u32)DescriptorTypeFlag::UNIFORM_BUFFER == pFoundDescriptorInfo->type ?
+                    u32 maxRange        = DescriptorTypeFlag::UNIFORM_BUFFER == pFoundDescriptorInfo->type ?
                                               _mpDevice->_mpAdapter->maxUniformBufferRange() :
                                               _mpDevice->_mpAdapter->maxStorageBufferRange();
                     if (range == 0 || range > maxRange)
