@@ -26,11 +26,21 @@ public:
 public:
     auto handle() noexcept { return _mpHandle; }
 
+    RenderTarget* getRenderTarget(u32 index) noexcept override
+    {
+        AXE_ASSERT(index < _mpRenderTargets.size());
+        return _mpRenderTargets[index];
+    }
+
 public:
-    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_SWAPCHAIN_KHR; }
+    constexpr static VkObjectType
+    getVkTypeId() noexcept
+    {
+        return VK_OBJECT_TYPE_SWAPCHAIN_KHR;
+    }
 
 private:
-    std::pmr::vector<VulkanRenderTarget*> _mpRenderTargets;  // created from the swapchain back buffers
+    std::pmr::vector<RenderTarget*> _mpRenderTargets;  // created from the swapchain back buffers
     VulkanDevice* const _mpDevice = nullptr;
 
     /// Present queue if one exists (queuePresent will use this queue if the hardware has a dedicated present queue)
@@ -39,8 +49,7 @@ private:
     VkSurfaceKHR _mpVkSurface     = VK_NULL_HANDLE;
     VkFormat _mVkSwapchainFormat  = VK_FORMAT_UNDEFINED;
     u32 _mPresentQueueFamilyIndex = U32_MAX;
-    u32 _mImageCount  : 3         = 0;
-    u32 _mEnableVsync : 1         = 0;
+    bool _mEnableVsync            = 0;
 };
 
 }  // namespace axe::rhi

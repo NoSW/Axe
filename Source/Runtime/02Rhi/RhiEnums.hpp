@@ -240,41 +240,39 @@ using ResourceStateFlagsOneBit = ResourceStateFlags;
 enum class TextureCreationFlags
 {
     // Default flag (Texture will use default allocation strategy decided by the api specific allocator)
-    NONE                      = 0,
+    NONE                  = 0,
     // Texture will allocate its own memory (COMMITTED resource)
-    OWN_MEMORY_BIT            = 1 << 0,
+    OWN_MEMORY_BIT        = 1 << 0,
     // Texture will be allocated in memory which can be shared among multiple processes
-    EXPORT_BIT                = 1 << 1,
+    EXPORT_BIT            = 1 << 1,
     // Texture will be allocated in memory which can be shared among multiple gpus
-    EXPORT_ADAPTER_BIT        = 1 << 2,
+    EXPORT_ADAPTER_BIT    = 1 << 2,
     // Texture will be imported from a handle created in another process
-    IMPORT_BIT                = 1 << 3,
+    IMPORT_BIT            = 1 << 3,
     // Use ESRAM to store this texture
-    ESRAM                     = 1 << 4,
+    ESRAM                 = 1 << 4,
     // Use on-tile memory to store this texture
-    ON_TILE                   = 1 << 5,
+    ON_TILE               = 1 << 5,
     // Prevent compression meta data from generating (XBox)
-    NO_COMPRESSION            = 1 << 6,
+    NO_COMPRESSION        = 1 << 6,
     // Force 2D instead of automatically determining dimension based on width, height, depth
-    FORCE_2D                  = 1 << 7,
+    FORCE_2D              = 1 << 7,
     // Force 3D instead of automatically determining dimension based on width, height, depth
-    FORCE_3D                  = 1 << 8,
+    FORCE_3D              = 1 << 8,
     // Display target
-    ALLOW_DISPLAY_TARGET      = 1 << 9,
+    ALLOW_DISPLAY_TARGET  = 1 << 9,
     // Create an sRGB texture.
-    SRGB                      = 1 << 10,
+    SRGB                  = 1 << 10,
     // Create a normal map texture
-    NORMAL_MAP                = 1 << 11,
+    NORMAL_MAP            = 1 << 11,
     // Fast clear
-    FAST_CLEAR                = 1 << 12,
+    FAST_CLEAR            = 1 << 12,
     // Fragment mask
-    FRAG_MASK                 = 1 << 13,
+    FRAG_MASK             = 1 << 13,
     // Doubles the amount of array layers of the texture when rendering VR. Also forces the texture to be a 2D Array texture.
-    VR_MULTIVIEW              = 1 << 14,
+    VR_MULTIVIEW          = 1 << 14,
     // Binds the FFR fragment density if this texture is used as a render target.
-    VR_FOVEATED_RENDERING     = 1 << 15,
-    // Creates resolve attachment for auto resolve (MSAA on tiled architecture - Resolve can be done on tile through render pass)
-    CREATE_RESOLVE_ATTACHMENT = 1 << 16,
+    VR_FOVEATED_RENDERING = 1 << 15,
 };
 using TextureCreationFlagsOneBit = TextureCreationFlags;
 
@@ -477,6 +475,85 @@ enum class RootSignatureFlags
 };
 using RootSignatureFlagsOneBit = RootSignatureFlags;
 
+enum class VertexAttribRate
+{
+    VERTEX   = 0,
+    INSTANCE = 1,
+    COUNT,
+};
+
+enum class ShaderSemantic
+{
+    UNDEFINED = 0,
+    POSITION,
+    NORMAL,
+    COLOR,
+    TANGENT,
+    BITANGENT,
+    JOINTS,
+    WEIGHTS,
+    SHADING_RATE,
+    TEXCOORD0,
+    TEXCOORD1,
+    TEXCOORD2,
+    TEXCOORD3,
+    TEXCOORD4,
+    TEXCOORD5,
+    TEXCOORD6,
+    TEXCOORD7,
+    TEXCOORD8,
+    TEXCOORD9,
+};
+
+enum class CullMode
+{
+    NONE = 0,
+    BACK,
+    FRONT,
+    BOTH,
+    COUNT,
+};
+
+enum class FrontFace
+{
+    CCW = 0,
+    CW
+};
+
+enum class FillMode
+{
+    SOLID = 0,
+    WIREFRAME,
+    COUNT,
+};
+
+enum class LoadActionType
+{
+    DONT_CARE,
+    LOAD,
+    CLEAR,
+    COUNT
+};
+
+enum class StoreActionType
+{
+    STORE = 0,
+    DONT_CARE,
+    NONE,
+    COUNT
+};
+
+enum class PrimitiveTopology
+{
+    POINT_LIST = 0,
+    LINE_LIST,
+    LINE_STRIP,
+    TRI_LIST,
+    TRI_STRIP,
+    PATCH_LIST,
+    COUNT,
+};
+
 enum class AdapterType
 {
     _OTHER          = 0,
@@ -511,14 +588,11 @@ inline constexpr ShaderStageFlag get_shader_stage(std::string_view ext)
 
 struct VertexInput
 {
-    // resource name
-    std::string_view name;
-
-    // The size of the attribute
-    u32 size;
+    std::string_view name;  // resource name
+    u32 size;               // The size of the attribute
 };
 
-struct ShaderResource  // all other resourecs except for ShaderVariable (vertex in/out, ...)
+struct ShaderResource  // all other resources except for ShaderVariable (vertex in/out, ...)
 {
     std::string_view name;
     ShaderStageFlag usedShaderStage;

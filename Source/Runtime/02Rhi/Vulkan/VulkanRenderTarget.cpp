@@ -15,8 +15,8 @@ bool VulkanRenderTarget::_create(const RenderTargetDesc& desc) noexcept
 
     _mMipLevels = std::max(1u, desc.mipLevels);  // clamp mipLevels
     TextureDesc texDesc{
-        .pNativeHandle  = desc.mpNativeHandle,
-        .pName          = desc.mpName,
+        .pNativeHandle  = desc.pNativeHandle,
+        .pName          = desc.name,
         .clearValue     = desc.clearValue,
         .flags          = desc.flags,
         .width          = desc.width,
@@ -27,13 +27,13 @@ bool VulkanRenderTarget::_create(const RenderTargetDesc& desc) noexcept
         .sampleCount    = desc.mMSAASampleCount,
         .sampleQuality  = desc.sampleQuality,
         .format         = desc.format,
-        .startState     = isDepth ? ResourceStateFlags::RENDER_TARGET : ResourceStateFlags::DEPTH_WRITE,
+        .startState     = isDepth ? ResourceStateFlags::DEPTH_WRITE : ResourceStateFlags::RENDER_TARGET,
         .descriptorType = desc.descriptorType,
 
     };
 
     // Create SRV by default for a render target unless this is on tile texture where SRV is not supported
-    if (!((u32)desc.descriptorType & (u32)TextureCreationFlags::ON_TILE))
+    if (!((u32)desc.flags & (u32)TextureCreationFlags::ON_TILE))
     {
         texDesc.descriptorType |= DescriptorTypeFlag::TEXTURE;
     }
@@ -53,7 +53,7 @@ bool VulkanRenderTarget::_create(const RenderTargetDesc& desc) noexcept
         const auto depthStencilFormat = to_vk_enum(desc.format);
         if (depthStencilFormat != VK_FORMAT_UNDEFINED)
         {
-            VkImageFormatProperties2 formatProperties{};
+            VkImageFormatProperties2 formatProperties{.sType = VK_STRUCTURE_TYPE_IMAGE_FORMAT_PROPERTIES_2, .pNext = nullptr};
             VkPhysicalDeviceImageFormatInfo2 formatInfo{
                 .sType  = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_FORMAT_INFO_2,
                 .pNext  = nullptr,

@@ -75,13 +75,13 @@ DefaultMemoryResource::~DefaultMemoryResource() noexcept
 {
     void* ret = mi_realloc(p, newsize);
 #if AXE_CORE_MEM_DEBUG_ENABLE
-    _mAllocBytes += newsize;
-    _mAllocCount++;
-    if (p)
+    if (p != ret)
     {
-        if (p != ret) { _mFreeCount++; }
+        _mAllocBytes += newsize;
+        _mAllocCount++;
+        if (p) { _mFreeCount++; }
+        else { _mFreeNullCount++; }
     }
-    else { _mFreeNullCount++; }
 #endif
     return ret;
 }

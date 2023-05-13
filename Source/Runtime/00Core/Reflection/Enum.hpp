@@ -16,7 +16,10 @@
 #error "Too old compiler that cannot support magic enum";
 #endif
 
+#include "00Core/Config.hpp"
+
 #include <concepts>
+#include <bit>
 
 #ifdef _MSC_VER
 #pragma warning(disable : 4067)  // warning C4067: unexpected tokens following preprocessor directive - expected a newline
@@ -24,6 +27,9 @@
 
 template <typename E>
 concept T_enum = std::is_enum_v<E>;
+
+template <typename E>
+concept T_enum_or_integral = std::is_enum_v<E> || std::is_integral_v<E>;
 
 template <typename T>
 concept T_boolable = std::convertible_to<T, bool>;
@@ -92,6 +98,20 @@ constexpr bool operator||(T_boolable auto a, T_enum auto b) noexcept  // other |
 constexpr bool operator||(T_enum auto a, T_enum auto b) noexcept  // enum || enum
 {
     return static_cast<bool>(a) || static_cast<bool>(b);
+}
+
+// return index of a flag that has single bit, e.g., 0x00000010 -> 4, 0x0000001 -> 0,
+inline constexpr u64 bit2id(T_enum_or_integral auto e)
+{
+    AXE_ASSERT(std::has_single_bit((u64)e));
+    return (u64)std::countr_zero((u64)e);
+}
+
+template <T_enum_or_integral E>
+inline constexpr E id2bit(u8 index)  // return a flag that has single bit, ee.g., 4 -> 0x00000010, 0 -> 0x0000001,
+{
+    AXE_ASSERT(index < 64);
+    return (E)(1u << index);
 }
 
 };  // namespace axe

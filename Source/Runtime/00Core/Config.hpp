@@ -58,6 +58,10 @@ inline constexpr float FLOAT_MAX   = std::numeric_limits<float>::max();
 inline constexpr double DOUBLE_MIN = std::numeric_limits<double>::min();
 inline constexpr double DOUBLE_MAX = std::numeric_limits<double>::max();
 
+template <typename T>
+using nullable = T *;  // an alias of raw pointer used to indicate that nullptr is allowed.
+                       // It's not allowed to be nullptr by default (i.e., raw pointer).
+
 }  // namespace axe
 
 //////////////////////////////////////////////////////////////////////////////////////////////

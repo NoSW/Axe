@@ -14,7 +14,8 @@ namespace axe::rhi
 enum
 {
     MAX_DESCRIPTOR_POOL_SIZE_ARRAY_COUNT = VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT + 1,  // maximum count of descriptor pool for each set
-    MAX_PLANE_COUNT                      = 3
+    MAX_PLANE_COUNT                      = 3,
+    VK_MAX_ATTACHMENT_ARRAY_COUNT        = ((MAX_RENDER_TARGET_ATTACHMENTS + 2) * 2)
 };
 
 // Use vkSetDeviceMemoryPriorityEXT to provide the OS with information on which allocations should stay in memory and which should be demoted first when video memory is limited.
@@ -55,6 +56,15 @@ VkSampleCountFlagBits   to_vk_enum(MSAASampleCount) noexcept;
 VkFormat                to_vk_enum(TinyImageFormat) noexcept;
 VkBlendFactor           to_vk_enum(BlendConstant) noexcept;
 VkBlendOp               to_vk_enum(BlendMode) noexcept;
+VkAttachmentLoadOp      to_vk_enum(LoadActionType) noexcept;
+VkAttachmentStoreOp     to_vk_enum(StoreActionType) noexcept;
+VkVertexInputRate       to_vk_enum(VertexAttribRate) noexcept;
+VkPrimitiveTopology     to_vk_enum(PrimitiveTopology) noexcept;
+VkPolygonMode           to_vk_enum(FillMode) noexcept;
+VkCullModeFlags         to_vk_enum(CullMode) noexcept;
+VkFrontFace             to_vk_enum(FrontFace) noexcept;
+VkStencilOp             to_vk_enum(StencilOp) noexcept;
+VkColorComponentFlags   to_vk_enum(Channel) noexcept;
 
 // struct to struct
 VkPipelineColorBlendStateCreateInfo to_vk_struct(const BlendStateDesc& blendDesc) noexcept; // TODO: remove this one-use  function

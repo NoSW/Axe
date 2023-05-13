@@ -234,17 +234,19 @@ void VulkanCmd::resourceBarrier(
         }
     }
 
-    auto srcStageMask = determine_pipeline_stage_flags({.mAccessFlags      = srcAccessFlags,
-                                                        .queueType         = (QueueTypeFlag)_mType,
-                                                        .supportGeomShader = (bool)_mpDevice->_mpAdapter->requestGPUSettings().geometryShaderSupported,
-                                                        .supportTeseShader = (bool)_mpDevice->_mpAdapter->requestGPUSettings().tessellationSupported,
-                                                        .supportRayTracing = (bool)_mpDevice->_mRaytracingSupported});
+    auto srcStageMask = determine_pipeline_stage_flags(
+        DeterminePipelineStageOption{.mAccessFlags      = srcAccessFlags,
+                                     .queueType         = (QueueTypeFlag)_mType,
+                                     .supportGeomShader = (bool)_mpDevice->_mpAdapter->requestGPUSettings().geometryShaderSupported,
+                                     .supportTeseShader = (bool)_mpDevice->_mpAdapter->requestGPUSettings().tessellationSupported,
+                                     .supportRayTracing = (bool)_mpDevice->_mRaytracingSupported});
 
-    auto dstStageMask = determine_pipeline_stage_flags({.mAccessFlags      = dstAccessFlags,
-                                                        .queueType         = (QueueTypeFlag)_mType,
-                                                        .supportGeomShader = (bool)_mpDevice->_mpAdapter->requestGPUSettings().geometryShaderSupported,
-                                                        .supportTeseShader = (bool)_mpDevice->_mpAdapter->requestGPUSettings().tessellationSupported,
-                                                        .supportRayTracing = (bool)_mpDevice->_mRaytracingSupported});
+    auto dstStageMask = determine_pipeline_stage_flags(
+        DeterminePipelineStageOption{.mAccessFlags      = dstAccessFlags,
+                                     .queueType         = (QueueTypeFlag)_mType,
+                                     .supportGeomShader = (bool)_mpDevice->_mpAdapter->requestGPUSettings().geometryShaderSupported,
+                                     .supportTeseShader = (bool)_mpDevice->_mpAdapter->requestGPUSettings().tessellationSupported,
+                                     .supportRayTracing = (bool)_mpDevice->_mRaytracingSupported});
 
     vkCmdPipelineBarrier(_mpHandle, srcStageMask, dstStageMask, 0,
                          0, nullptr,

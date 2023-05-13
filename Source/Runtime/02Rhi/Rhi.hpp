@@ -5,7 +5,16 @@
 
 namespace axe::rhi
 {
+///////////////////////////////////////////////
+//                    common helpers
+///////////////////////////////////////////////
 
+// return the size in bytes of a given format
+u32 byte_count_of_format(TinyImageFormat) noexcept;
+
+///////////////////////////////////////////////
+//                    base
+///////////////////////////////////////////////
 class RhiObjectBase
 {
     // developer-provided label which is used in an implementation-defined way.
@@ -68,6 +77,7 @@ public:
     [[nodiscard]] virtual Shader* createShader(ShaderDesc&) noexcept                      = 0;
     [[nodiscard]] virtual RootSignature* createRootSignature(RootSignatureDesc&) noexcept = 0;
     [[nodiscard]] virtual DescriptorSet* createDescriptorSet(DescriptorSetDesc&) noexcept = 0;
+    [[nodiscard]] virtual Pipeline* createPipeline(PipelineDesc&) noexcept                = 0;
 
     virtual bool destroySemaphore(Semaphore*&) noexcept                                   = 0;
     virtual bool destroyFence(Fence*&) noexcept                                           = 0;
@@ -82,6 +92,7 @@ public:
     virtual bool destroyShader(Shader*&) noexcept                                         = 0;
     virtual bool destroyRootSignature(RootSignature*&) noexcept                           = 0;
     virtual bool destroyDescriptorSet(DescriptorSet*&) noexcept                           = 0;
+    virtual bool destroyPipeline(Pipeline*&) noexcept                                     = 0;
 };
 
 ///////////////////////////////////////////////
@@ -125,6 +136,7 @@ public:
     virtual ~SwapChain() noexcept                                                  = default;
     virtual void acquireNextImage(Semaphore* pSignalSemaphore, u32& outImageIndex) = 0;
     virtual void acquireNextImage(Fence* pFence, u32& outImageIndex)               = 0;
+    virtual RenderTarget* getRenderTarget(u32 index) noexcept                      = 0;
 };
 
 ///////////////////////////////////////////////
@@ -207,7 +219,10 @@ public:
 class RenderTarget : public RhiObjectBase
 {
 public:
-    virtual ~RenderTarget() noexcept = default;
+    virtual TinyImageFormat format() const noexcept      = 0;
+    virtual MSAASampleCount sampleCount() const noexcept = 0;
+    virtual u32 sampleQuality() const noexcept           = 0;
+    virtual ~RenderTarget() noexcept                     = default;
 };
 
 ///////////////////////////////////////////////
@@ -239,6 +254,16 @@ class DescriptorSet : public RhiObjectBase
 public:
     virtual ~DescriptorSet() noexcept                                                 = default;
     virtual void update(u32 index, std::pmr::vector<DescriptorData*> params) noexcept = 0;
+};
+
+///////////////////////////////////////////////
+//                    Pipeline
+///////////////////////////////////////////////
+
+class Pipeline : public RhiObjectBase
+{
+public:
+    virtual ~Pipeline() noexcept = default;
 };
 
 }  // namespace axe::rhi

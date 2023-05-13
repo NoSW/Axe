@@ -21,6 +21,9 @@ class VulkanRenderTarget : public RenderTarget
 
 public:
     AXE_PUBLIC ~VulkanRenderTarget() noexcept override { AXE_CHECK(_mpVkDescriptor == VK_NULL_HANDLE); }
+    AXE_PUBLIC TinyImageFormat format() const noexcept override { return _mFormat; }
+    AXE_PUBLIC MSAASampleCount sampleCount() const noexcept override { return _mSampleCount; }
+    AXE_PUBLIC u32 sampleQuality() const noexcept override { return _mSampleQuality; }
 
 public:
     constexpr static VkObjectType getVkTypeId() noexcept { return VulkanTexture::getVkTypeId(); }
@@ -34,7 +37,7 @@ private:
 
     VkImageView _mpVkDescriptor   = VK_NULL_HANDLE;
     std::pmr::vector<VkImageView> _mpVkSliceDescriptors;
-    u32 _mId = 0;
+    u32 _mId = 0;  // global created-id for this render target
 
     ClearValue _mClearValue;
     u32 _mArraySize     : 16;

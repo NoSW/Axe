@@ -19,6 +19,10 @@ public:
     void draw() noexcept override;
 
 private:
+    void _addPipelines() noexcept;
+    void _removePipelines() noexcept;
+
+private:
     u32 _mWidth                       = 0;
     u32 _mHeight                      = 0;
     window::Window* _mpWindow         = nullptr;
@@ -47,6 +51,9 @@ private:
     rhi::RootSignature* _mpRootSignature        = nullptr;
     rhi::DescriptorSet* _mpDescriptorSetTexture = nullptr;
     rhi::DescriptorSet* _mpDescriptorSetUniform = nullptr;
+
+    rhi::Pipeline* _mpBasicPipeline             = nullptr;
+    rhi::Pipeline* _mpSkyboxPipeline            = nullptr;
 };
 
 }  // namespace axe::pipeline

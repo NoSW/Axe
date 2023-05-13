@@ -18,6 +18,7 @@
 #include "VulkanShader.hxx"
 #include "VulkanRootSignature.hxx"
 #include "VulkanDescriptorSet.hxx"
+#include "VulkanPipeline.hxx"
 
 #include "00Core/Memory/Memory.hpp"
 
@@ -139,6 +140,7 @@ public:
     AXE_PUBLIC [[nodiscard]] Shader* createShader(ShaderDesc& desc) noexcept override { return (Shader*)_createHelper<VulkanShader>(desc); }
     AXE_PUBLIC [[nodiscard]] RootSignature* createRootSignature(RootSignatureDesc& desc) noexcept override { return (RootSignature*)_createHelper<VulkanRootSignature>(desc); }
     AXE_PUBLIC [[nodiscard]] DescriptorSet* createDescriptorSet(DescriptorSetDesc& desc) noexcept override { return (DescriptorSet*)_createHelper<VulkanDescriptorSet>(desc); }
+    AXE_PUBLIC [[nodiscard]] Pipeline* createPipeline(PipelineDesc& desc) noexcept override { return (Pipeline*)_createHelper<VulkanPipeline>(desc); }
     AXE_PUBLIC bool destroySemaphore(Semaphore*& p) noexcept override { return _destroyHelper<VulkanSemaphore>(p); }
     AXE_PUBLIC bool destroyFence(Fence*& p) noexcept override { return _destroyHelper<VulkanFence>(p); }
     AXE_PUBLIC bool releaseQueue(Queue*& p) noexcept override { return _destroyHelper<VulkanQueue>(p); }
@@ -152,6 +154,7 @@ public:
     AXE_PUBLIC bool destroyShader(Shader*& p) noexcept override { return _destroyHelper<VulkanShader>(p); }
     AXE_PUBLIC bool destroyRootSignature(RootSignature*& p) noexcept override { return _destroyHelper<VulkanRootSignature>(p); }
     AXE_PUBLIC bool destroyDescriptorSet(DescriptorSet*& p) noexcept override { return _destroyHelper<VulkanDescriptorSet>(p); }
+    AXE_PUBLIC bool destroyPipeline(Pipeline*& p) noexcept override { return _destroyHelper<VulkanPipeline>(p); }
 
 public:
     constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_DEVICE; }

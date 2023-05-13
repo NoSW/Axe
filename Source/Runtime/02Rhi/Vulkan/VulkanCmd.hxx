@@ -58,8 +58,8 @@ private:
     VkCommandBuffer _mpHandle               = VK_NULL_HANDLE;
     VkRenderPass _mpVkActiveRenderPass      = VK_NULL_HANDLE;
     VkPipelineLayout _mpBoundPipelineLayout = VK_NULL_HANDLE;
-    VulkanQueue* _mpQueue                   = nullptr;
     VulkanDevice* const _mpDevice           = nullptr;
+    VulkanQueue* _mpQueue                   = nullptr;
     VulkanCmdPool* _mpCmdPool               = nullptr;
 
     u32 _mCmdBufferCount                    = 0;

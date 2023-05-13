@@ -22,6 +22,19 @@
 - circular reference, use make_weak, (but this should be avoided when design)
 - no ownership, use raw ptr
 
+PS: we use a simple alias of raw pointer to diff nonnull and nullable:
+```c++
+template <typename T>
+using nullable = T*;
+
+float* pSomething1;          // NOT allowed to be nullptr
+nullable<float> pSomething2; // allowed to be nullptr, in other word, we need
+                             // to write some codes like `if (pSomething2 == nullptr) {...}`
+
+
+                             
+```
+
 ## Naming Convention
 
 ### File Extensions

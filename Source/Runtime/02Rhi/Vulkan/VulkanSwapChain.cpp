@@ -227,26 +227,34 @@ bool VulkanSwapChain::_create(SwapChainDesc& desc) noexcept
     {
         char buf[32]{};
         sprintf(buf, "Swapchain RT[%u]", i);
-        renderTargetDesc.mpName         = buf;
-        renderTargetDesc.mpNativeHandle = (void*)swapchainImages[i];
-        // TODO: addRenderTargets
+        renderTargetDesc.name          = std::string_view{buf, 32};
+        renderTargetDesc.pNativeHandle = (void*)swapchainImages[i];
+        RenderTarget* pRenderTarget    = _mpDevice->createRenderTarget(renderTargetDesc);
+        if (AXE_SUCCEEDED(pRenderTarget != nullptr))
+        {
+            _mpRenderTargets.push_back(pRenderTarget);
+        }
+        else
+        {
+            _destroy();
+            return false;
+        }
     }
 
     // populate this object
     _mpPresentQueueHandle     = presentQueueHandle;
     _mEnableVsync             = desc.enableVsync;
-    _mImageCount              = availableImageCount;
     _mVkSwapchainFormat       = desiredSurfaceFormat.format;
     _mPresentQueueFamilyIndex = finalPresentQuFamIndex;
     return true;
-}  // namespace axe::rhi
+}
 
 bool VulkanSwapChain::_destroy() noexcept
 {
-    // for (uint32_t i = 0; i < pSwapChain->imageCount; ++i)
-    // {
-    //     removeRenderTarget(pDevice, pSwapChain->ppRenderTargets[i]);
-    // }
+    for (RenderTarget*& pRenderTarget : _mpRenderTargets)
+    {
+        _mpDevice->destroyRenderTarget(pRenderTarget);
+    }
 
     vkDestroySwapchainKHR(_mpDevice->handle(), _mpHandle, nullptr);
     vkDestroySurfaceKHR(_mpDevice->_mpAdapter->backendHandle(), _mpVkSurface, nullptr);

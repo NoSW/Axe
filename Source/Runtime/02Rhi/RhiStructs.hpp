@@ -73,6 +73,7 @@ class RenderTarget;
 class Shader;
 class RootSignature;
 class DescriptorSet;
+class Pipeline;
 
 struct DescBase
 {
@@ -219,7 +220,7 @@ struct SamplerDesc : public DescBase
 struct TextureDesc : public DescBase
 {
     const void* pNativeHandle = nullptr;     // Pointer to native texture handle if the texture does not own underlying resource
-    const char* pName         = "Untitled";  // Debug name used in gpu profile
+    std::string_view pName    = "Untitled";  // Debug name used in gpu profile
     ClearValue clearValue{};                 // Optimized clear value (recommended to use this same value when clearing the render target)
     // #if defined(VULKAN)
     //     VkSamplerYcbcrConversionInfo* pVkSamplerYcbcrConversionInfo;
@@ -286,8 +287,8 @@ struct RenderTargetDesc : public DescBase
     ClearValue clearValue{.rgba = {0, 0, 0, 0}};                        // Optimized clear value (recommended to use this same value when clearing the RenderTarget)
     u32 sampleQuality                 = 1;                              // The image quality level. The higher the quality, the lower the performance. The valid range is between zero and the value appropriate for sampleCount
     DescriptorTypeFlag descriptorType = DescriptorTypeFlag::UNDEFINED;  // Descriptor creation
-    const void* mpNativeHandle        = nullptr;
-    const char* mpName                = "Untitled";  // Debug name used in gpu profile
+    const void* pNativeHandle         = nullptr;
+    std::string_view name             = "Untitled";
 };
 
 struct ShaderStageDesc
@@ -398,7 +399,7 @@ struct BlendStateDesc
 {
     struct
     {
-        BlendConstant srcFactor      = BlendConstant::ONE;
+        BlendConstant srcFactor      = BlendConstant::ONE;  // TODO: rename
         BlendConstant dstFactor      = BlendConstant::ZERO;
         BlendConstant srcAlphaFactor = BlendConstant::ONE;
         BlendConstant dstAlphaFactor = BlendConstant::ZERO;
@@ -409,7 +410,6 @@ struct BlendStateDesc
 
     u8 attachmentCount                     = 0;                                  /// The render target attachment to set the blend state for.
     BlendStateTargetsFlag renderTargetMask = BlendStateTargetsFlag::TARGET_ALL;  /// Mask that identifies the render targets affected by the blend state.
-    bool isAlphaToCoverage                 = false;                              /// Set whether alpha to coverage should be enabled.
     bool isIndependentBlend                = false;                              /// Set whether each render target has an unique blend function.
                                                                                  /// When false the blend function in slot 0 will be used for all render targets.
 };
@@ -451,6 +451,97 @@ struct BufferBarrier
 {
     BarrierInfo barrierInfo{};
     Buffer* pBuffer = nullptr;
+};
+
+struct VertexAttrib
+{
+    ShaderSemantic semantic       = ShaderSemantic::UNDEFINED;
+    std::string_view semanticName = "Untitled";
+    TinyImageFormat format        = TinyImageFormat_UNDEFINED;
+    u32 binding                   = U32_MAX;
+    u32 location                  = U32_MAX;
+    u32 offset                    = 0;
+    VertexAttribRate rate         = VertexAttribRate::VERTEX;
+};
+
+struct VertexLayout
+{
+    u32 attrCount = 0;
+    VertexAttrib attrs[MAX_VERTEX_ATTRIBS];
+    // u32 strides[MAX_VERTEX_BINDINGS]; // not used yet
+};
+
+struct RasterizerStateDesc
+{
+    CullMode cullMode          = CullMode::BACK;
+    i32 depthBias              = 0;
+    float slopeScaledDepthBias = 0.0;
+    FillMode fillMode          = FillMode::SOLID;
+    FrontFace frontFace        = FrontFace::CCW;
+    bool enableMultiSample     = false;
+    bool enableScissor         = false;
+    bool enableDepthClamp      = false;
+};
+
+struct DepthStateDesc
+{
+    bool enableDepthTest         = false;
+    bool enableDepthWrite        = false;
+    bool enableStencilTest       = false;
+    CompareMode depthFunc        = CompareMode::ALWAYS;
+    u8 stencilReadMask           = 0xff;
+    u8 stencilWriteMask          = 0xff;
+    CompareMode stencilFrontFunc = CompareMode::ALWAYS;
+    StencilOp stencilFrontFail   = StencilOp::KEEP;
+    StencilOp depthFrontFail     = StencilOp::KEEP;
+    StencilOp stencilFrontPass   = StencilOp::KEEP;
+    CompareMode stencilBackFunc  = CompareMode::ALWAYS;
+    StencilOp stencilBackFail    = StencilOp::KEEP;
+    StencilOp depthBackFail      = StencilOp::KEEP;
+    StencilOp stencilBackPass    = StencilOp::KEEP;
+};
+
+struct PipelineCache
+{
+    nullable<void> pLibrary = nullptr;
+    void* pCacheData        = nullptr;
+};
+
+struct GraphicsPipelineDesc
+{
+    Shader* pShaderProgram                = nullptr;
+    RootSignature* pRootSignature         = nullptr;
+    VertexLayout* pVertexLayout           = nullptr;
+    BlendStateDesc* pBlendState           = nullptr;
+    DepthStateDesc* pDepthState           = nullptr;
+    RasterizerStateDesc* pRasterizerState = nullptr;
+    TinyImageFormat* pColorFormats        = nullptr;
+
+    u32 renderTargetCount                 = 0;
+    MSAASampleCount sampleCount           = MSAASampleCount::COUNT_1;
+    u32 sampleQuality                     = 0;
+    TinyImageFormat depthStencilFormat    = TinyImageFormat_UNDEFINED;
+    PrimitiveTopology primitiveTopology   = PrimitiveTopology::TRI_LIST;
+    bool supportIndirectCommandBuffer     = false;
+};
+
+struct ComputePipelineDesc
+{
+    Shader* pShaderProgram        = nullptr;
+    RootSignature* pRootSignature = nullptr;
+};
+
+struct PipelineDesc : public DescBase
+{
+    std::string_view name          = "Untitled";
+    PipelineType type              = PipelineType::UNDEFINED;
+    nullable<PipelineCache> pCache = nullptr;
+    std::pmr::vector<void*> pPipelineExtensions;
+    union
+    {
+        GraphicsPipelineDesc* pGraphicsDesc = nullptr;
+        ComputePipelineDesc* pComputeDesc;
+    };
 };
 
 }  // namespace axe::rhi

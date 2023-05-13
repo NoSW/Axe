@@ -241,8 +241,7 @@ bool VulkanShader::_create(ShaderDesc& desc) noexcept
     shaderReflections.reserve(desc.mStages.size());
     for (const auto& stageDesc : desc.mStages)
     {
-        AXE_ASSERT(std::has_single_bit((u32)stageDesc.mStage));
-        u8 index                     = std::countr_zero((u32)stageDesc.mStage);
+        u8 index                     = bit2id(stageDesc.mStage);
         std::span<u8> shaderByteCode = resource::get_spv_byte_code(stageDesc.mRelaFilePath);
         if (!shaderByteCode.empty())
         {
@@ -267,8 +266,6 @@ bool VulkanShader::_create(ShaderDesc& desc) noexcept
         {
             return false;
         }
-
-        _mStages |= stageDesc.mStage;
     }
 
     // record constants

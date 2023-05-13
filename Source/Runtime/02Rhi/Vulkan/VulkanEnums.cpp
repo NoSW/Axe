@@ -389,7 +389,110 @@ VkBlendOp to_vk_enum(BlendMode bm) noexcept
     }
 }
 
+VkAttachmentLoadOp to_vk_enum(LoadActionType t) noexcept
+{
+    switch(t)
+    {
+        case LoadActionType::LOAD:      return VK_ATTACHMENT_LOAD_OP_LOAD;
+        case LoadActionType::CLEAR:     return VK_ATTACHMENT_LOAD_OP_CLEAR;
+        case LoadActionType::DONT_CARE: return VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        default: AXE_ASSERT(false, "Invalid Type"); return VK_ATTACHMENT_LOAD_OP_MAX_ENUM;
+    }
+}
+
+VkAttachmentStoreOp to_vk_enum(StoreActionType t) noexcept
+{
+    switch (t)
+    {
+        case StoreActionType::STORE:             return VK_ATTACHMENT_STORE_OP_STORE;
+        case StoreActionType::DONT_CARE:         return VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        case StoreActionType::NONE:              return VK_ATTACHMENT_STORE_OP_NONE_QCOM;
+        default: AXE_ASSERT(false, "Invalid Type"); return VK_ATTACHMENT_STORE_OP_MAX_ENUM;
+    }
+}
+
+VkVertexInputRate to_vk_enum(VertexAttribRate t) noexcept
+{
+    switch (t)
+    {
+        case VertexAttribRate::VERTEX:   return VK_VERTEX_INPUT_RATE_VERTEX;
+        case VertexAttribRate::INSTANCE: return VK_VERTEX_INPUT_RATE_INSTANCE;
+        default: AXE_ASSERT(false, "Invalid Type"); return VK_VERTEX_INPUT_RATE_MAX_ENUM;
+    }
+}
+
 // clang-format on
+VkPrimitiveTopology to_vk_enum(PrimitiveTopology type) noexcept
+{
+    switch (type)
+    {
+        case PrimitiveTopology::POINT_LIST: return VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+        case PrimitiveTopology::LINE_LIST: return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+        case PrimitiveTopology::LINE_STRIP: return VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
+        case PrimitiveTopology::TRI_LIST: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        case PrimitiveTopology::TRI_STRIP: return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
+        case PrimitiveTopology::PATCH_LIST: return VK_PRIMITIVE_TOPOLOGY_PATCH_LIST;
+        default: AXE_ASSERT(false, "Invalid Type"); return VK_PRIMITIVE_TOPOLOGY_MAX_ENUM;
+    }
+}
+
+VkPolygonMode to_vk_enum(FillMode type) noexcept
+{
+    switch (type)
+    {
+        case FillMode::SOLID: return VK_POLYGON_MODE_FILL;
+        case FillMode::WIREFRAME: return VK_POLYGON_MODE_LINE;
+        default: AXE_ASSERT(false, "Invalid Type"); return VK_POLYGON_MODE_MAX_ENUM;
+    }
+}
+
+VkCullModeFlags to_vk_enum(CullMode type) noexcept
+{
+    switch (type)
+    {
+        case CullMode::NONE: return VK_CULL_MODE_NONE;
+        case CullMode::BACK: return VK_CULL_MODE_BACK_BIT;
+        case CullMode::FRONT: return VK_CULL_MODE_FRONT_BIT;
+        case CullMode::BOTH: return VK_CULL_MODE_FRONT_AND_BACK;
+        default: AXE_ASSERT(false, "Invalid Type"); return VK_CULL_MODE_FLAG_BITS_MAX_ENUM;
+    }
+}
+
+VkFrontFace to_vk_enum(FrontFace type) noexcept
+{
+    switch (type)
+    {
+        case FrontFace::CCW: return VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        case FrontFace::CW: return VK_FRONT_FACE_CLOCKWISE;
+        default: AXE_ASSERT(false, "Invalid Type"); return VK_FRONT_FACE_MAX_ENUM;
+    }
+}
+
+VkStencilOp to_vk_enum(StencilOp type) noexcept
+{
+    switch (type)
+    {
+        case StencilOp::KEEP: return VK_STENCIL_OP_KEEP;
+        case StencilOp::SET_ZERO: return VK_STENCIL_OP_ZERO;
+        case StencilOp::REPLACE: return VK_STENCIL_OP_REPLACE;
+        case StencilOp::INVERT: return VK_STENCIL_OP_INVERT;
+        case StencilOp::INCR: return VK_STENCIL_OP_INCREMENT_AND_WRAP;
+        case StencilOp::DECR: return VK_STENCIL_OP_DECREMENT_AND_WRAP;
+        case StencilOp::INCR_SAT: return VK_STENCIL_OP_INCREMENT_AND_CLAMP;
+        case StencilOp::DECR_SAT: return VK_STENCIL_OP_DECREMENT_AND_CLAMP;
+        default: AXE_ASSERT(false, "Invalid Type"); return VK_STENCIL_OP_MAX_ENUM;
+    }
+}
+
+VkColorComponentFlags to_vk_enum(Channel chs) noexcept
+{
+    VkColorComponentFlags flags = 0;
+    if ((bool)(chs & Channel::RED)) { flags |= VK_COLOR_COMPONENT_R_BIT; }
+    if ((bool)(chs & Channel::GREEN)) { flags |= VK_COLOR_COMPONENT_G_BIT; }
+    if ((bool)(chs & Channel::BLUE)) { flags |= VK_COLOR_COMPONENT_B_BIT; }
+    if ((bool)(chs & Channel::ALPHA)) { flags |= VK_COLOR_COMPONENT_A_BIT; }
+    return flags;
+}
 
 VkPipelineColorBlendStateCreateInfo to_vk_struct(const BlendStateDesc& blendDesc) noexcept
 {
