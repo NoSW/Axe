@@ -8,12 +8,12 @@
 | [**spdlog**](https://github.com/gabime/spdlog)| a very **fast, header-only/compiled**, C++ logging library.| MIT  |header-only, no custom modification|
 |[**glm**](https://github.com/g-truc/glm)| a header only C++ mathematics library **for graphics software** based on the OpenGL Shading Language (GLSL) specifications. | MIT  |header-only, no custom modification |
 |[**tiny_imageformat**](https://github.com/DeanoC/tiny_imageformat)| a header only library implementing the common image pixel formats that are used in real-time graphics (including Vulkan, D3D, etc.) |MIT  | header-only, lots of custom modification |
+|**[stb](https://github.com/nothings/stb)** | single-file public domain (or MIT licensed) libraries for C/C++ |  MIT  | header-only |
 |[json](https://github.com/nlohmann/json) | a easy-to-use json parser, **serious tested**, trivial integrated | MIT  | not added yet| 
 |[yaml-cpp](https://github.com/jbeder/yaml-cpp) | a yaml parser |  MIT  | not added yet|
 |[doctest](https://github.com/doctest/doctest) | a new C++ testing framework but is by far the fastest both in compile times (by orders of magnitude) and runtime compared to other feature-rich alternatives. |  MIT  | not added yet| 
 |[assimp](https://github.com/assimp/assimp) | a library to import and export various 3d-model-formats including scene-post-processing to generate missing render data. | modified, 3-clause BSD | not added yet|
 |[LZ4](https://github.com/lz4/lz4) | library implementing lossless compression algorithm LZ4   | BSD 2-Clause , GPLv2  | not added yet|
-|[stb](https://github.com/nothings/stb) | single-file public domain (or MIT licensed) libraries for C/C++ |  MIT  | not added yet|
 |[CImg](https://github.com/GreycLab/CImg) | a small and open-source C++ library for image processing |   CeCILL FREE SOFTWARE  | not added yet|
 |[taskflow](https://github.com/taskflow/taskflow) | a faster, more expressive, and easier for drop-in integration than many of existing task programming frameworks in handling complex parallel workloads.| MIT  | not added yet|
 |[easy_profiler](https://github.com/yse/easy_profiler) | a lightweight cross-platform profiler library for c++ |   MIT  | not added yet|

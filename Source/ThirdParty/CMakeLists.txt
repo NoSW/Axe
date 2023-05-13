@@ -58,6 +58,12 @@ add_subdirectory(magic_enum)
 set_target_properties(magic_enum PROPERTIES FOLDER "ThirdParty")
 
 ##############################################################################
+#                                 magic_enum (header-only)
+##############################################################################
+add_subdirectory(stb)
+set_target_properties(stb PROPERTIES FOLDER "ThirdParty")
+
+##############################################################################
 #                                 glm (header-only)
 ##############################################################################
 add_subdirectory(glm)
