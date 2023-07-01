@@ -58,10 +58,16 @@ add_subdirectory(magic_enum)
 set_target_properties(magic_enum PROPERTIES FOLDER "ThirdParty")
 
 ##############################################################################
-#                                 magic_enum (header-only)
+#                                 stb (header-only)
 ##############################################################################
 add_subdirectory(stb)
 set_target_properties(stb PROPERTIES FOLDER "ThirdParty")
+
+##############################################################################
+#                                 tinydds (header-only)
+##############################################################################
+add_subdirectory(tinydds)
+set_target_properties(tinydds PROPERTIES FOLDER "ThirdParty")
 
 ##############################################################################
 #                                 glm (header-only)
@@ -88,3 +94,23 @@ set_target_properties(spirv-cross-msl PROPERTIES FOLDER "ThirdParty/SPIRV-Cross"
 set_target_properties(spirv-cross-hlsl PROPERTIES FOLDER "ThirdParty/SPIRV-Cross")
 set_target_properties(spirv-cross-util PROPERTIES FOLDER "ThirdParty/SPIRV-Cross")
 set_target_properties(spirv-cross-c PROPERTIES FOLDER "ThirdParty/SPIRV-Cross")
+
+##############################################################################
+#              disable all warnings of targets from thrid party
+##############################################################################
+get_property(subdirectories DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY SUBDIRECTORIES)
+foreach(subdir ${subdirectories})
+    get_property(targets DIRECTORY ${subdir} PROPERTY BUILDSYSTEM_TARGETS)
+    foreach(target ${targets})
+        if(MSVC)
+            set(disable_warnings_falg /W0)
+        else()
+            set(disable_warnings_falg -w)
+        endif()
+        get_target_property(target_type ${target} TYPE)
+        if((NOT target_type STREQUAL "INTERFACE_LIBRARY") AND (NOT target_type STREQUAL "UTILITY"))
+            message(STATUS "disable warnings for (thrid party) target: TYPE=${target_type} NAME=${target}")
+            target_compile_options(${target} PRIVATE ${disable_warnings_falg})
+        endif()
+    endforeach()
+endforeach()
