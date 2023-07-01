@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e" pages="1">
     <diagram id="azZ1bFGg1ElHCUa85jIB" name="第 1 页">
-        <mxGraphModel dx="1403" dy="1588" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="1">
+        <mxGraphModel dx="524" dy="705" grid="0" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="1">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -10,7 +10,7 @@
                 <mxCell id="2" value="Hardware(PC&lt;font color=&quot;#808080&quot;&gt;, Xbox One, PS4, Quest, Switch, mobile device, etc.&lt;/font&gt;&lt;font color=&quot;#4d4d4d&quot;&gt; &lt;/font&gt;)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#999999;" parent="1" vertex="1">
                     <mxGeometry x="18" y="984" width="923" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="5" value="OS(Windows, Linux, MacOS&lt;font color=&quot;#999999&quot;&gt;, Android, IOS, etc.&amp;nbsp;&lt;/font&gt;)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#CCCCCC;" parent="1" vertex="1">
+                <mxCell id="5" value="OS(Windows, Linux, &lt;font color=&quot;#999999&quot;&gt;MacOS, Android, IOS, etc.&amp;nbsp;&lt;/font&gt;)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#CCCCCC;" parent="1" vertex="1">
                     <mxGeometry x="18" y="904" width="923" height="40" as="geometry"/>
                 </mxCell>
                 <mxCell id="6" value="Drivers" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#B3B3B3;" parent="1" vertex="1">

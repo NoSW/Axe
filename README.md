@@ -2,9 +2,9 @@
 Axe is a cross multi-platform game engine(a weekend project, not for production) , aiming at code readability and helping myself (and possibly others) learn:
  - C++11/17/20, OOP, STL, template, multi-threading, reflection, CMake cross-platform(Windows, Linux, ...)
  - underlying details about modern graphics apis (Vulkan, D3D12) and shader language: hlsl, glsl
- - software architecture of modern game engine (abstraction, layering, compile-time/edit-time/runtime/loop-time designs)
+ - software architecture of modern game engine (abstraction, layering, compile/edit/runtime/loop -time designs)
  - Various graphics features: forward, deferred pipeline, shadow, GI, ...
- - etc.
+ - ...
 
 > Learn by coding!
 
