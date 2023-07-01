@@ -6,7 +6,7 @@
 namespace axe::rhi
 {
 
-// DISCUSSION: switch vs hash_map
+// @DISCUSSION@: switch vs hash_map
 // A switch construct is faster (or at least not slower). That's mostly because a switch construct
 // gives static data to the compiler, while a runtime structure like a hash map doesn't.
 

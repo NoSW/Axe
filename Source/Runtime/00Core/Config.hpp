@@ -1,5 +1,5 @@
 /*
-DISCUSSION: Difference between `#pragma once` and include guard (i.e., #ifndef ...)
+@DISCUSSION@: Difference between `#pragma once` and include guard (i.e., #ifndef ...)
 see https://stackoverflow.com/questions/787533/is-pragma-once-a-safe-include-guard
     #pragma once
         - pros
@@ -25,13 +25,21 @@ see https://stackoverflow.com/questions/787533/is-pragma-once-a-safe-include-gua
 #include <limits>
 #include <memory_resource>
 
-// DISCUSSION: constexpr v.s. inline constexpr, see https://quuxplusone.github.io/blog/2022/07/08/inline-constexpr/
+// @DISCUSSION@: constexpr v.s. inline constexpr, see https://quuxplusone.github.io/blog/2022/07/08/inline-constexpr/
 // constexpr, internal linkage, one entity per TU(Translation Unit, namely, a .cpp file)
 // inline constexpr, external linkage, one entity for the entire program
 
+//! @CONVENTION@: macros defined in Axe
+//!     - all macros defined in Axe must start with AXE_
+//!            - for avoiding name collision and easy to use
+//!     - all macros defined in Axe must be upper snake case
+//!           - like AXE_MY_MACRO
+//!     - all macros defined in Axe must be defined in 0XLayer/Config.hpp except for temporary-and-dedicated macros defined in .cpp
+//!         - for quick to find and easy to maintain
+//!         - for provide a read-friendly overview
+
 namespace axe
 {
-
 using i8                           = std::int8_t;
 using i16                          = std::int16_t;
 using i32                          = std::int32_t;
@@ -58,44 +66,7 @@ inline constexpr float FLOAT_MAX   = std::numeric_limits<float>::max();
 inline constexpr double DOUBLE_MIN = std::numeric_limits<double>::min();
 inline constexpr double DOUBLE_MAX = std::numeric_limits<double>::max();
 
-template <typename T>
-using nullable = T *;  // an alias of raw pointer used to indicate that nullptr is allowed.
-                       // It's not allowed to be nullptr by default (i.e., raw pointer).
-
 }  // namespace axe
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-//                             benchmark
-//////////////////////////////////////////////////////////////////////////////////////////////
-#define AXE_BENCHMARK(ITERATIONS, baseline, testFunc, ...)                                             \
-    {                                                                                                  \
-        const auto start = std::chrono::system_clock::now();                                           \
-        for (u64 i = 0; i < ITERATIONS; ++i)                                                           \
-        {                                                                                              \
-            testFunc(__VA_ARGS__);                                                                     \
-        }                                                                                              \
-        const auto stop = std::chrono::system_clock::now();                                            \
-        const auto secs = std::chrono::duration<double>(stop - start);                                 \
-        const auto sec  = secs.count();                                                                \
-        baseline        = baseline == 0.0 ? sec : baseline;                                            \
-        std::cout << std::format("{:<20}: {} sec; speed up: {:.3}\n", #testFunc, sec, baseline / sec); \
-    }
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-//                             class helpers
-//////////////////////////////////////////////////////////////////////////////////////////////
-#define AXE_NON_COPYABLE(CLASS)                      \
-    CLASS(const CLASS &&)                  = delete; \
-    CLASS(const CLASS &)                   = delete; \
-    const CLASS &operator=(const CLASS &)  = delete; \
-    const CLASS &operator=(const CLASS &&) = delete;
-
-//////////////////////////////////////////////////////////////////////////////////////////////
-//                             misc
-//////////////////////////////////////////////////////////////////////////////////////////////
-
-// used for comment on an active/inactive piece of code
-#define AXE_(enable, comment) enable
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 //                             un-windows
@@ -108,18 +79,18 @@ using nullable = T *;  // an alias of raw pointer used to indicate that nullptr 
 //////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef NDEBUG
 #ifndef _DEBUG
-#define _DEBUG 1
+#define _DEBUG 1  // make sure global debug macro is always defined
 #endif
 #endif
 
 #ifdef DEBUG
 #ifndef _DEBUG
-#define _DEBUG 1
+#define _DEBUG 1  // make sure global debug macro is always defined
 #endif
 #endif
 
 #if _DEBUG
-#define AXE_CORE_IO_DEBUG_ENABLE      1
+#define AXE_CORE_IO_DEBUG_ENABLE      1  // used for controlling module-specified debugging
 #define AXE_CORE_LOG_DEBUG_ENABLE     1
 #define AXE_CORE_MATH_DEBUG_ENABLE    1
 #define AXE_CORE_MEM_DEBUG_ENABLE     1
@@ -131,12 +102,43 @@ using nullable = T *;  // an alias of raw pointer used to indicate that nullptr 
 #endif
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-//                            layer visibility marker
+//                            readable marker
 //////////////////////////////////////////////////////////////////////////////////////////////
-#define AXE_PUBLIC  // interface that can be accessed from higher layer
+#define AXE_PRIVATE                   // empty definition without any side effects, class member function marker,
+                                      // indicates layer internal public interface that can be accessed only from current layer
+#define AXE_THREAD_SAFE               // empty definition without any side effects,  function marker indicates that it should and must be thread-safe
+#define AXE_(enable, comment) enable  // used for comment on an active/inactive piece of code
+
+#define AXE_NON_COPYABLE(CLASS)               \
+    CLASS(const CLASS &)            = delete; \
+    CLASS(CLASS &&)                 = delete; \
+    CLASS &operator=(const CLASS &) = delete; \
+    CLASS &operator=(CLASS &&)      = delete;
+
+namespace axe
+{
+
+struct NonCopyableNonMovable
+{
+    constexpr NonCopyableNonMovable() noexcept                      = default;
+    ~NonCopyableNonMovable() noexcept                               = default;
+
+    NonCopyableNonMovable(NonCopyableNonMovable &&)                 = delete;
+    NonCopyableNonMovable &operator=(NonCopyableNonMovable &&)      = delete;
+    NonCopyableNonMovable(const NonCopyableNonMovable &)            = delete;
+    NonCopyableNonMovable &operator=(const NonCopyableNonMovable &) = delete;
+};
+
+// an alias of raw pointer used to indicate that nullptr is allowed, (e.g., nullable<const char> pOptionalName = nullptr;)
+// which means we need to write some code like `if (pOptionalName == nullptr) {...}`.
+// Otherwise, it's not allowed to be nullptr by default,(e.g., const char *pRequiredName = nullptr;)
+// which means need to do some checks like `AXE_ASSERT(pRequiredName != nullptr);`
+template <typename T>
+using nullable = T *;
+}  // namespace axe
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-//                             platform, os, compiler, arch, hardware
+//                             platform, os, arch, hardware
 //////////////////////////////////////////////////////////////////////////////////////////////
 /*
  * There lots of macros to identify platform, compilers etc, which usually added by selected compiler.
@@ -147,20 +149,70 @@ using nullable = T *;  // an alias of raw pointer used to indicate that nullptr 
  *   - using `__cplusplus > 201703L` to check support of c++20  (usually, it needs Clang>=10, GCC>=11, MSVC>=19)
  *   - using `_DEBUG` to check global build type
  */
-#if !defined(_WIN32) && !defined(__linux__)
+#ifdef _WIN32
+#define AXE_OS_WINDOWS 1
+#elif defined(__linux__)
+#define AXE_OS_LINUX 1
+#else
 #error "unsupported platform"
 #endif
 
-#if AXE_(0, "not used yet")
-#if _MSC_VER
-#define AXE_API_EXPORT __declspec(dllexport)
-#define AXE_API_IMPORT __declspec(dllimport)
-#define AXE_API_LOCAL
-#elif __clang__ || __GNUC__
-#define AXE_API_EXPORT __attribute__((visibility("default")))
-#define AXE_API_LOCAL  __attribute__((visibility("hidden")))
-#define AXE_API_IMPORT
+//////////////////////////////////////////////////////////////////////////////////////////////
+//                             compiler
+//////////////////////////////////////////////////////////////////////////////////////////////
+#ifdef _MSC_VER
+#define AXE_COMPILER_MSVC 1
+#define AXE_DLL_IMPORT    __declspec(dllimport)  // For example, class AXE_DLL_IMPORT X {};
+#define AXE_DLL_EXPORT    __declspec(dllexport)
+#define AXE_DLL_HIDDEN
+#define AXE_NON_NULL
+#define AXE_NULLABLE
+
+#elif defined(__clang__) || defined(__GNUC__)
+
+#define AXE_DLL_IMPORT __attribute__((visibility("default")))
+#define AXE_DLL_EXPORT __attribute__((visibility("default")))
+#define AXE_DLL_HIDDEN __attribute__((visibility("hidden")))
+
+#ifdef __clang__
+#define AXE_COMPILER_CLANG 1
+#define AXE_NONNULL        _Nonnull
+#define AXE_NULLABLE       _Nullable
 #else
-#error "unsupported compiler"
+#define AXE_COMPILER_GCC 1
+#define AXE_NONNULL
+#define AXE_NULLABLE
 #endif
+
+#else
+#error "Unknown compiler"
 #endif
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+//      compile-time configs (constants at compile times)
+//////////////////////////////////////////////////////////////////////////////////////////////
+#define CORE_CCT_EXAMPLE_DATA 0
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+//  runtime-time configs (init at start time and some members can be changed at any time)
+//////////////////////////////////////////////////////////////////////////////////////////////
+namespace axe::core
+{
+class RuntimeConfig
+{
+public:
+    u32 getA() const { return _mExampleDataA; }
+    void setA(u32 a) { _mExampleDataA = a; }
+
+public:
+    u32 getB() const { return _mExampleDataB; }
+
+private:  // cna be changed at any time
+    u32 _mExampleDataA = 0;
+
+private:  // only set at start time
+    u32 _mExampleDataB = 0;
+};
+}  // namespace axe::core
+
+// TODO: un-destroyed buffer in VMA?

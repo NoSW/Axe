@@ -20,16 +20,16 @@ class VulkanRenderTarget : public RenderTarget
     bool _destroy() noexcept;
 
 public:
-    AXE_PUBLIC ~VulkanRenderTarget() noexcept override { AXE_CHECK(_mpVkDescriptor == VK_NULL_HANDLE); }
-    AXE_PUBLIC TinyImageFormat format() const noexcept override { return _mFormat; }
-    AXE_PUBLIC MSAASampleCount sampleCount() const noexcept override { return _mSampleCount; }
-    AXE_PUBLIC u32 sampleQuality() const noexcept override { return _mSampleQuality; }
+    ~VulkanRenderTarget() noexcept override { AXE_CHECK(_mpVkDescriptor == VK_NULL_HANDLE); }
+    TinyImageFormat format() const noexcept override { return _mFormat; }
+    MSAASampleCount sampleCount() const noexcept override { return _mSampleCount; }
+    u32 sampleQuality() const noexcept override { return _mSampleQuality; }
 
 public:
-    constexpr static VkObjectType getVkTypeId() noexcept { return VulkanTexture::getVkTypeId(); }
+    AXE_PRIVATE constexpr static auto VK_TYPE_ID = VulkanTexture::VK_TYPE_ID;
 
 public:
-    auto handle() noexcept { return _mpTexture->handle(); }
+    AXE_PRIVATE auto handle() noexcept { return _mpTexture->handle(); }
 
 private:
     VulkanDevice* const _mpDevice = nullptr;
@@ -39,16 +39,16 @@ private:
     std::pmr::vector<VkImageView> _mpVkSliceDescriptors;
     u32 _mId = 0;  // global created-id for this render target
 
-    ClearValue _mClearValue;
-    u32 _mArraySize     : 16;
-    u32 _mDepth         : 16;
-    u32 _mWidth         : 16;
-    u32 _mHeight        : 16;
-    u32 _mDescriptors   : 20;
-    u32 _mMipLevels     : 10;
-    u32 _mSampleQuality : 5;
-    TinyImageFormat _mFormat;
-    MSAASampleCount _mSampleCount;
+    ClearValue _mClearValue{};
+    u32 _mArraySize     : 16      = 0;
+    u32 _mDepth         : 16      = 0;
+    u32 _mWidth         : 16      = 0;
+    u32 _mHeight        : 16      = 0;
+    u32 _mDescriptors   : 20      = 0;
+    u32 _mMipLevels     : 10      = 0;
+    u32 _mSampleQuality : 5       = 0;
+    TinyImageFormat _mFormat      = TinyImageFormat_UNDEFINED;
+    MSAASampleCount _mSampleCount = MSAASampleCount::COUNT_1;
 };
 
 }  // namespace axe::rhi

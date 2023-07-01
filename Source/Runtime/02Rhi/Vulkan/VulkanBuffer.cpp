@@ -38,15 +38,18 @@ bool VulkanBuffer::_create(const BufferDesc& desc) noexcept
     VmaAllocationCreateInfo allocCreateInfo{
         .flags          = 0,
         .usage          = (VmaMemoryUsage)desc.memoryUsage,
-        .requiredFlags  = (VkMemoryPropertyFlags)(((bool)(desc.flags & BufferCreationFlags::OWN_MEMORY_BIT) ? VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT : 0) |
-                                                 (bool(desc.flags & BufferCreationFlags::PERSISTENT_MAP_BIT) ? VMA_ALLOCATION_CREATE_MAPPED_BIT : 0)),
+        .requiredFlags  = 0,
         .preferredFlags = 0,
-        .memoryTypeBits = (VkMemoryPropertyFlags)((bool(desc.flags & BufferCreationFlags::HOST_VISIBLE_VKONLY) ? VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT : 0) |
-                                                  (bool(desc.flags & BufferCreationFlags::HOST_COHERENT_VKONLY) ? VK_MEMORY_PROPERTY_HOST_COHERENT_BIT : 0)),
+        .memoryTypeBits = 0,
         .pool           = nullptr,
         .pUserData      = nullptr,
         .priority       = 0,  // ignored
     };
+
+    if ((bool)(desc.flags & BufferCreationFlags::OWN_MEMORY_BIT)) { allocCreateInfo.flags |= VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT; }
+    if ((bool)(desc.flags & BufferCreationFlags::PERSISTENT_MAP_BIT)) { allocCreateInfo.flags |= VMA_ALLOCATION_CREATE_MAPPED_BIT; }
+    if ((bool)(desc.flags & BufferCreationFlags::HOST_VISIBLE_VKONLY)) { allocCreateInfo.requiredFlags |= VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT; }
+    if ((bool)(desc.flags & BufferCreationFlags::HOST_COHERENT_VKONLY)) { allocCreateInfo.requiredFlags |= VK_MEMORY_PROPERTY_HOST_COHERENT_BIT; }
 
     VmaAllocationInfo allocInfo{};
     if (VK_FAILED(vmaCreateBuffer(_mpDevice->_mpVmaAllocator, &bufCreateInfo, &allocCreateInfo, &_mpHandle, &_mpVkAllocation, &allocInfo)))
@@ -98,8 +101,8 @@ bool VulkanBuffer::_create(const BufferDesc& desc) noexcept
     }
 
     _mSize              = desc.size;
-    _mMemoryUsage       = (u32)desc.memoryUsage;
-    _mDescriptors       = (u32)desc.descriptorType;
+    _mMemoryUsage       = desc.memoryUsage;
+    _mDescriptorType    = desc.descriptorType;
     _mpCPUMappedAddress = allocInfo.pMappedData;
     if ((desc.descriptorType & DescriptorTypeFlag::BUFFER) || (desc.descriptorType & DescriptorTypeFlag::BUFFER_RAW))
     {
@@ -123,6 +126,21 @@ bool VulkanBuffer::_destroy() noexcept
     }
     vmaDestroyBuffer(_mpDevice->_mpVmaAllocator, _mpHandle, _mpVkAllocation);
     return true;
+}
+
+void* VulkanBuffer::map() noexcept
+{
+    AXE_ASSERT(_mpCPUMappedAddress == nullptr, "already mapped");
+    AXE_ASSERT(_mMemoryUsage != ResourceMemoryUsage::GPU_ONLY, "cannot map GPU_ONLY buffer");
+    return VK_SUCCEEDED(vmaMapMemory(_mpDevice->_mpVmaAllocator, _mpVkAllocation, &_mpCPUMappedAddress)) ? _mpCPUMappedAddress : nullptr;
+}
+
+void VulkanBuffer::unmap() noexcept
+{
+    AXE_ASSERT(_mpCPUMappedAddress != nullptr, "It's not mapped yet");
+    AXE_ASSERT(_mMemoryUsage != ResourceMemoryUsage::GPU_ONLY, "cannot unmap GPU_ONLY buffer");
+    vmaUnmapMemory(_mpDevice->_mpVmaAllocator, _mpVkAllocation);
+    _mpCPUMappedAddress = nullptr;
 }
 
 }  // namespace axe::rhi

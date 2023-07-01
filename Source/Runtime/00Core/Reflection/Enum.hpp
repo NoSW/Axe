@@ -17,6 +17,7 @@
 #endif
 
 #include "00Core/Config.hpp"
+#include "00Core/Utils/Concepts.hpp"
 
 #include <concepts>
 #include <bit>
@@ -24,15 +25,6 @@
 #ifdef _MSC_VER
 #pragma warning(disable : 4067)  // warning C4067: unexpected tokens following preprocessor directive - expected a newline
 #endif
-
-template <typename E>
-concept T_enum = std::is_enum_v<E>;
-
-template <typename E>
-concept T_enum_or_integral = std::is_enum_v<E> || std::is_integral_v<E>;
-
-template <typename T>
-concept T_boolable = std::convertible_to<T, bool>;
 
 namespace axe::reflection
 {
@@ -118,7 +110,7 @@ inline constexpr E id2bit(u8 index)  // return a flag that has single bit, ee.g.
 
 namespace std
 {
-[[nodiscard]] inline string to_string(T_enum auto value)
+[[nodiscard]] inline string to_string(axe::T_enum auto value)
 {
     return string(axe::reflection::enum_name(value));
 }

@@ -15,8 +15,8 @@ struct RenderPassDesc
     u32 renderTargetCount                              = 0;
     MSAASampleCount sampleCount                        = MSAASampleCount::COUNT_1;
     TinyImageFormat depthStencilFormat                 = TinyImageFormat_UNDEFINED;
-    const nullable<LoadActionType> pLoadActionsColor   = nullptr;  // if nullptr, all set to LoadActionType::DONT_CARE by default
-    const nullable<StoreActionType> pStoreActionsColor = nullptr;  // if nullptr, all set to StoreActionType::DONT_CARE by default
+    nullable<const LoadActionType> pLoadActionsColor   = nullptr;  // if nullptr, all set to LoadActionType::DONT_CARE by default
+    nullable<const StoreActionType> pStoreActionsColor = nullptr;  // if nullptr, all set to StoreActionType::DONT_CARE by default
     LoadActionType loadActionDepth                     = LoadActionType::COUNT;
     LoadActionType loadActionStencil                   = LoadActionType::COUNT;
     StoreActionType storeActionDepth                   = StoreActionType::COUNT;

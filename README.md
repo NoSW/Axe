@@ -1,15 +1,12 @@
 # Axe
-Axe is a cross multi-platform ai-driven game engine(round 1, also an learning project about *[Game Engine Architecture, Third Edition](https://www.gameenginebook.com/)*).
+Axe is a cross multi-platform game engine(a weekend project, not for production) , aiming at code readability and helping myself (and possibly others) learn:
+ - C++11/17/20, OOP, STL, template, multi-threading, reflection, CMake cross-platform(Windows, Linux, ...)
+ - underlying details about modern graphics apis (Vulkan, D3D12) and shader language: hlsl, glsl
+ - software architecture of modern game engine (abstraction, layering, compile-time/edit-time/runtime/loop-time designs)
+ - Various graphics features: forward, deferred pipeline, shadow, GI, ...
+ - etc.
 
-> Learn by coding
-
-## Goal
-
-- practice modern c++ programming skills: C++20, OOP, STL, template, multi-threading, reflection, cross-platform(Windows, Linux, ...) etc
-- dive into more underlying details about modern graphics apis (Vulkan, D3D12)
-- explore architecture of modern game engine (abstraction, layering, compile-time/edit-time/runtime/loop-time designs)
-- experiment some fundamental and interested graphics features(forward, deferred pipeline, shadow, GI,  etc)
-- try to integrate various AIGC techniques (e.g., AIG shaders/models/textures/audio/animation ...)
+> Learn by coding!
 
 ## Platform
 
@@ -18,7 +15,7 @@ Axe is a cross multi-platform ai-driven game engine(round 1, also an learning pr
 |Windows| MSVC>=17, Clang>=15, GCC>=11 | Vulkan>=1.3, Direct3D 12|
 |Linux| Clang>=15, GCC>=11  | Vulkan>=1.3|
 
-Other platform won't be supported since it just a learning project.
+No support plan for platforms other than the above.
 
 ## Requirements
 - [CMake>=3.20](https://cmake.org/download/)
@@ -49,7 +46,7 @@ PS: The supporting facilities(build system, insight, etc.) for C++20 module are 
 
 <img src="Documents/Images/Arch.png" alt="Game Engine Architecture" width=360 align="right"/>
 
-Axe is basically designed according to the architecture shown right. Thanks to the powerful standard libraries, and lots of high-quality open source third-party libraries, it can be built directly from the core layer. Runtime of Axe has x well-designed layers:
+Axe is basically designed according to the architecture shown right. Thanks to the powerful standard libraries, and lots of high-quality open source third-party libraries, it can be built directly from the core layer. Runtime of Axe has # well-designed layers:
 
 - **00Core**
    - (WIP) High performance math library for graphics based on [glm](https://github.com/g-truc/glm)
@@ -57,32 +54,32 @@ Axe is basically designed according to the architecture shown right. Thanks to t
    - (WIP) Cross-platform logging system based on [spdlog](https://github.com/gabime/spdlog)
    - (WIP) Cross-platform windows management based on [SDL](https://github.com/libsdl-org/SDL)
    - (WIP) Reflection of C++ based on ...
-- **01Resource**
-  - (WIP) Multi-threaded and asynchronous resource loading
-  - (WIP) Cross-compile Shader based on [DirectXShaderCompiler](https://github.com/microsoft/DirectXShaderCompiler), [glslang](https://github.com/KhronosGroup/glslang)/[shaderc](https://github.com/google/shaderc) and [SPIRV-Cross](https://github.com/KhronosGroup/SPIRV-Cross).
-  - (WIP) Universal scene description based on [USD](https://github.com/PixarAnimationStudios/USD) of pixar
-  - (WIP) Universal material description based on [MaterialX](https://github.com/AcademySoftwareFoundation/MaterialX)
 - **02Rhi**(Rendering Hardware Interface)
   - (WIP) wrap multi modern rendering apis with [WebGPU](https://www.w3.org/TR/webgpu/) style, supporting D3D12, Vulkan
   - (WIP) Dynamic Descriptor Management.
   - (WIP) Memory Management based on [VulkanMemoryAllocation](https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator).
   - (WIP) Multi-threaded Command Buffer Generation
-- **03RenderGraph**
-- **04Pipeline**
+- **03Resource**
+  - (WIP) Multi-threaded and asynchronous resource loading
+  - (WIP) Cross-compile Shader based on [DirectXShaderCompiler](https://github.com/microsoft/DirectXShaderCompiler), [glslang](https://github.com/KhronosGroup/glslang)/[shaderc](https://github.com/google/shaderc) and [SPIRV-Cross](https://github.com/KhronosGroup/SPIRV-Cross).
+  - (WIP) Universal scene description based on [USD](https://github.com/PixarAnimationStudios/USD) of pixar
+  - (WIP) Universal material description based on [MaterialX](https://github.com/AcademySoftwareFoundation/MaterialX)
+- **04RenderGraph**
+- **06Pipeline**
   - (WIP) Modern deferred rendering pipeline based on visibility buffer
   - (WIP) Global Illumination system with an unlimited number of light sources and minimal memory footprint
   - (WIP) Integrated with shadertoy seamlessly
-- **05System**
+- **08System**
   - (WIP) Animation System based on ...
   - (WIP) Physics System based on ...
   - (WIP) ECS(Entity-Component-System) base on [entt](https://github.com/skypjack/entt)
   - (WIP) GUI system based on [Dear imgui](https://github.com/ocornut/imgui)
-- **06Scene**
-  - Partitioning, Culling ...
-- **07GamePlay**
+- **10Scene**
+  - (WIP) Partitioning, Culling ...
+- **12GamePlay**
   - (WIP) Lua Scripting System based on ...
   - (WIP) Camera ...
-- **08App**
+- **14App**
   - .
 
 See [Documents/Runtime.md](/Documents/Runtime.md) and [Documents/AssetSystem.md](/Documents/AssetSystem.md) for more details.

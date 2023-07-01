@@ -4,6 +4,10 @@
 #include "00Core/Math/Math.hpp"
 #include "00Core/Memory/Memory.hpp"
 
+#include "03Resource/Image/Image.hpp"
+
+#include "00Core/Utils/Utils.hpp"
+
 #include <iostream>
 
 using namespace axe;

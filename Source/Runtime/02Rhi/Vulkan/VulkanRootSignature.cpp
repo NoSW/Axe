@@ -224,7 +224,7 @@ bool VulkanRootSignature::_create(RootSignatureDesc& desc) noexcept
         if (!needToCreateLayout && layoutIndex < MAX_LAYOUT_COUNT - 1)
         {
             needToCreateLayout = _mpDescriptorSetLayouts[layoutIndex + 1] != VK_NULL_HANDLE;  // create if next set is not empty (namely, the current is a hole)
-            if (needToCreateLayout) { AXE_WARN("there is a hole(set={}) during descriptor binding, (label={})", layoutIndex, desc.getDebugLabel()); }
+            if (needToCreateLayout) { AXE_WARN("there is a hole(set={}) during descriptor binding, (label={})", layoutIndex, desc.getLabel_DebugActiveOnly()); }
         }
 
         if (needToCreateLayout)

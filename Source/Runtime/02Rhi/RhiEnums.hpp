@@ -564,6 +564,7 @@ enum class AdapterType
     _COUNT
 };
 
+inline constexpr u32 GRAPHICS_API_COUNT = 2;
 enum class GraphicsApiFlag
 {
     UNDEFINED = AXE_02RHI_API_FLAG_NULL,
@@ -572,19 +573,6 @@ enum class GraphicsApiFlag
     AVAILABLE = AXE_02RHI_API_FLAG_AVAILABLE,
 };
 using GraphicsApiFlagOneBit = GraphicsApiFlag;
-
-inline constexpr ShaderStageFlag get_shader_stage(std::string_view ext)
-{
-    if (ext == ".vert") { return ShaderStageFlag::VERT; }
-    else if (ext == ".tesc") { return ShaderStageFlag::TESC; }
-    else if (ext == ".tese") { return ShaderStageFlag::TESE; }
-    else if (ext == ".geom") { return ShaderStageFlag::GEOM; }
-    else if (ext == ".frag") { return ShaderStageFlag::FRAG; }
-    else if (ext == ".comp") { return ShaderStageFlag::COMP; }
-    else if (ext == ".rgen" || ext == ".rmiss" || ext == ".rchit" ||
-             ext == ".rint" || ext == ".rahit" || ext == "rcall") { return ShaderStageFlag::RAYTRACING; }
-    else { return ShaderStageFlag::NONE; }
-};
 
 struct VertexInput
 {

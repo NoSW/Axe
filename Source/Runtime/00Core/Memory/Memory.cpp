@@ -58,9 +58,9 @@ DefaultMemoryResource::~DefaultMemoryResource() noexcept
 
     uint32_t totalValidFreeCount = totalFreeCount - totalFreeNullCount;
 
-    printf("all: alloc/free count %u/%u, accum bytes %u\n", totalAllocCount, totalFreeCount, totalBytes);
-    printf("pmr: alloc/free count %u/%u, accum bytes %u\n", pmrAllocCount, pmrFreeCount, pmrBytes);
-    printf("new: alloc/free count %u/%u, accum bytes %u\n", totalAllocCount - pmrAllocCount, totalFreeCount - pmrFreeCount, totalBytes - pmrBytes);
+    printf("all: alloc/free count %u/(%u+%u), accum bytes %u\n", totalAllocCount, totalValidFreeCount, totalFreeNullCount, totalBytes);
+    printf("pmr: alloc/free count %u/(%u+0), accum bytes %u\n", pmrAllocCount, pmrFreeCount, pmrBytes);
+    printf("new: alloc/free count %u/(%u+%u), accum bytes %u\n", totalAllocCount - pmrAllocCount, totalValidFreeCount - pmrFreeCount, totalFreeNullCount, totalBytes - pmrBytes);
 
     assert(totalAllocCount >= totalValidFreeCount);
     assert(pmrAllocCount >= pmrFreeCount);

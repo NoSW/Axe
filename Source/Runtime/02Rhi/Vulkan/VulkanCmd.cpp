@@ -6,6 +6,7 @@
 #include "VulkanDescriptorSet.hxx"
 #include "VulkanDevice.hxx"
 
+#include <tiny_imageformat/tinyimageformat_query.h>
 #include <volk.h>
 
 namespace axe::rhi
@@ -234,14 +235,14 @@ void VulkanCmd::resourceBarrier(
         }
     }
 
-    auto srcStageMask = determine_pipeline_stage_flags(
+    VkPipelineStageFlags srcStageMask = determine_pipeline_stage_flags(
         DeterminePipelineStageOption{.mAccessFlags      = srcAccessFlags,
                                      .queueType         = (QueueTypeFlag)_mType,
                                      .supportGeomShader = (bool)_mpDevice->_mpAdapter->requestGPUSettings().geometryShaderSupported,
                                      .supportTeseShader = (bool)_mpDevice->_mpAdapter->requestGPUSettings().tessellationSupported,
                                      .supportRayTracing = (bool)_mpDevice->_mRaytracingSupported});
 
-    auto dstStageMask = determine_pipeline_stage_flags(
+    VkPipelineStageFlags dstStageMask = determine_pipeline_stage_flags(
         DeterminePipelineStageOption{.mAccessFlags      = dstAccessFlags,
                                      .queueType         = (QueueTypeFlag)_mType,
                                      .supportGeomShader = (bool)_mpDevice->_mpAdapter->requestGPUSettings().geometryShaderSupported,
@@ -254,11 +255,114 @@ void VulkanCmd::resourceBarrier(
                          (u32)imgMemBarriers.size(), imgMemBarriers.data());
 }
 
-void VulkanCmd::updateBuffer() noexcept {}
+void VulkanCmd::copyBuffer(Buffer* pDst, Buffer* pSrc, u64 srcOffset, u64 dstOffset, u64 size) noexcept
+{
+    AXE_ASSERT(pDst != nullptr);
+    AXE_ASSERT(pSrc != nullptr);
+    AXE_ASSERT(size > 0);
+    AXE_ASSERT(dstOffset + size <= pDst->size());
+    AXE_ASSERT(srcOffset + size <= pSrc->size());
 
-void VulkanCmd::updateSubresource() noexcept {}
+    VkBufferCopy copy{
+        .srcOffset = srcOffset,
+        .dstOffset = dstOffset,
+        .size      = size,
+    };
+    vkCmdCopyBuffer(_mpHandle, ((VulkanBuffer*)pSrc)->handle(), ((VulkanBuffer*)pDst)->handle(), 1, &copy);
+}
 
-void VulkanCmd::copySubresource() noexcept {}
+static void update_subresource_impl(VulkanTexture* pVulkanTexture, VulkanBuffer* pVulkanBuffer, const SubresourceDataDesc& subresourceDesc,
+                                    std::pmr::vector<VkBufferImageCopy>& regions) noexcept
+{
+    const TinyImageFormat fmt = (TinyImageFormat)pVulkanTexture->format();
+    const bool isSinglePlane  = TinyImageFormat_IsSinglePlane(fmt);
+
+    const u32 width           = pVulkanTexture->width();
+    const u32 height          = pVulkanTexture->height();
+    const u32 depth           = pVulkanTexture->depth();
+    if (isSinglePlane)
+    {
+        const u32 w             = std::max<u32>(1, width >> subresourceDesc.mipLevel);
+        const u32 h             = std::max<u32>(1, height >> subresourceDesc.mipLevel);
+        const u32 d             = std::max<u32>(1, depth >> subresourceDesc.mipLevel);
+        const u32 numBlocksWide = subresourceDesc.rowPitch / byte_count_of_format(fmt);
+        const u32 numBlocksHigh = (subresourceDesc.slicePitch / subresourceDesc.rowPitch);
+
+        regions.push_back(VkBufferImageCopy{
+            .bufferOffset      = (VkDeviceSize)subresourceDesc.srcOffset,
+            .bufferRowLength   = numBlocksWide * TinyImageFormat_WidthOfBlock(fmt),
+            .bufferImageHeight = numBlocksHigh * TinyImageFormat_HeightOfBlock(fmt),
+            .imageSubresource{
+                .aspectMask     = (VkImageAspectFlags)pVulkanTexture->aspectMask(),
+                .mipLevel       = subresourceDesc.mipLevel,
+                .baseArrayLayer = subresourceDesc.arrayLayer,
+                .layerCount     = 1,
+            },
+            .imageOffset{
+                .x = 0,
+                .y = 0,
+                .z = 0,
+            },
+            .imageExtent{
+                .width  = w,
+                .height = h,
+                .depth  = d,
+            },
+        });
+    }
+    else
+    {
+        const u32 numOfPlanes = TinyImageFormat_NumOfPlanes(fmt);
+
+        uint64_t offset       = subresourceDesc.srcOffset;
+
+        for (u32 i = 0; i < numOfPlanes; ++i)
+        {
+            regions.push_back(
+                VkBufferImageCopy{
+                    .bufferOffset      = (VkDeviceSize)offset,
+                    .bufferRowLength   = 0u,
+                    .bufferImageHeight = 0u,
+                    .imageSubresource{
+                        .aspectMask     = (u32)((VkImageAspectFlagBits)(VK_IMAGE_ASPECT_PLANE_0_BIT << i)),
+                        .mipLevel       = subresourceDesc.mipLevel,
+                        .baseArrayLayer = subresourceDesc.arrayLayer,
+                        .layerCount     = 1,
+                    },
+                    .imageOffset{
+                        .x = 0,
+                        .y = 0,
+                        .z = 0,
+                    },
+                    .imageExtent{
+                        .width  = TinyImageFormat_PlaneWidth(fmt, i, width),
+                        .height = TinyImageFormat_PlaneHeight(fmt, i, height),
+                        .depth  = depth,
+                    },
+                });
+            VkBufferImageCopy& copy = regions.back();
+            offset += copy.imageExtent.width * copy.imageExtent.height * TinyImageFormat_PlaneSizeOfBlock(fmt, i);
+        }
+    }
+}
+
+void VulkanCmd::updateSubresource(Texture* pDstTexture, Buffer* pSrcBuffer, const SubresourceDataDesc& subresourceDesc) noexcept
+{
+    auto* pVulkanTexture = static_cast<VulkanTexture*>(pDstTexture);
+    auto* pVulkanBuffer  = static_cast<VulkanBuffer*>(pSrcBuffer);
+    std::pmr::vector<VkBufferImageCopy> regions;
+    update_subresource_impl(pVulkanTexture, pVulkanBuffer, subresourceDesc, regions);
+    vkCmdCopyBufferToImage(_mpHandle, pVulkanBuffer->handle(), pVulkanTexture->handle(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, (u32)regions.size(), regions.data());
+}
+
+void VulkanCmd::updateSubresource(Buffer* pDstBuffer, Texture* pSrcTexture, const SubresourceDataDesc& subresourceDesc) noexcept
+{
+    auto* pVulkanTexture = static_cast<VulkanTexture*>(pSrcTexture);
+    auto* pVulkanBuffer  = static_cast<VulkanBuffer*>(pDstBuffer);
+    std::pmr::vector<VkBufferImageCopy> regions;
+    update_subresource_impl(pVulkanTexture, pVulkanBuffer, subresourceDesc, regions);
+    vkCmdCopyImageToBuffer(_mpHandle, pVulkanTexture->handle(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, pVulkanBuffer->handle(), (u32)regions.size(), regions.data());
+}
 
 void VulkanCmd::resetQueryPool() noexcept {}
 

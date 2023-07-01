@@ -4,10 +4,10 @@ ALLSRCLIST(SRCLIST)
 add_library(${TARGET_NAME} STATIC ${SRCLIST})
 
 if (AXE_USE_DYNAMIC_MIMALLOC)
-    message(STATUS "[Axe] using mimalloc (dynamic)")
+    message("[${CMAKE_CURRENT_LIST_DIR}:${CMAKE_CURRENT_LIST_LINE}] using mimalloc (dynamic)")
     target_link_libraries(${TARGET_NAME} PUBLIC mimalloc)
 else()
-    message(STATUS "[Axe] using mimalloc-static")
+    message("[${CMAKE_CURRENT_LIST_DIR}:${CMAKE_CURRENT_LIST_LINE}]  using mimalloc-static")
     target_link_libraries(${TARGET_NAME} PUBLIC mimalloc-static)
 endif()
 

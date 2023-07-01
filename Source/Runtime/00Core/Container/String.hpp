@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace axe::con
+namespace axe::str
 {
 
 //  utils string functions
@@ -28,4 +28,15 @@ std::size_t find_substr_case_insensitive(const T& mainStr, const T& subStr, cons
     else { return mainStr.size(); }
 }
 
-}  // namespace axe::con
+// return string_view removing last extension, e.g., "console.log.txt" return "console.log"
+constexpr std::string_view rm_ext(const std::string_view filename) noexcept
+{
+    return filename.substr(0, filename.find_last_of('.'));
+}
+
+constexpr std::string_view last_ext(const std::string_view filename) noexcept
+{
+    return filename.substr(filename.find_last_of('.'));
+}
+
+}  // namespace axe::str

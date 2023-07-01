@@ -29,7 +29,10 @@ vk_allocation(void* pUserData, size_t size, size_t alignment, VkSystemAllocation
 {
     return axe::memory::DefaultMemoryResource::get()->new_aligned(size, alignment);
 }
-static inline void* VKAPI_PTR vk_reallocation(void* pUserData, void* pOriginal, size_t size, size_t alignment, VkSystemAllocationScope allocationScope) { return axe::memory::DefaultMemoryResource::get()->realloc(pOriginal, size); }
+static inline void* VKAPI_PTR vk_reallocation(void* pUserData, void* pOriginal, size_t size, size_t alignment, VkSystemAllocationScope allocationScope)
+{
+    return axe::memory::DefaultMemoryResource::get()->realloc(pOriginal, size);
+}
 static inline void VKAPI_PTR vk_free(void* pUserData, void* pMemory) { axe::memory::DefaultMemoryResource::get()->free(pMemory); }
 static inline void VKAPI_PTR vk_internal_allocation(void* pUserData, size_t size, VkInternalAllocationType allocationType, VkSystemAllocationScope allocationScope) { AXE_ASSERT(false, "never used"); }
 static inline void VKAPI_PTR vk_internal_free(void* pUserData, size_t size, VkInternalAllocationType allocationType, VkSystemAllocationScope allocationScope) { AXE_ASSERT(false, "never used"); }
@@ -75,23 +78,23 @@ private:
 public:
     VulkanDevice(VulkanAdapter*, DeviceDesc& desc) noexcept;
 
-    bool queryAvailableQueueIndex(QueueTypeFlag quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) const noexcept;
+    AXE_PRIVATE bool queryAvailableQueueIndex(QueueTypeFlag quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) const noexcept;
 
-    void requestQueueIndex(QueueTypeFlag quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) noexcept;
+    AXE_PRIVATE void requestQueueIndex(QueueTypeFlag quType, u8& outQuFamIndex, u8& outQuIndex, u8& outFlag) noexcept;
 
-    auto handle() noexcept { return _mpHandle; }
+    AXE_PRIVATE auto handle() noexcept { return _mpHandle; }
 
-    VkSampler getDefaultSamplerHandle() noexcept { return ((VulkanSampler*)_mNullDescriptors.pDefaultSampler)->handle(); }
-    VkBuffer getDefaultBufferSRVHandle() noexcept { return ((VulkanBuffer*)_mNullDescriptors.pDefaultBufferSRV)->handle(); }
-    VkBuffer getDefaultBufferUAVHandle() noexcept { return ((VulkanBuffer*)_mNullDescriptors.pDefaultBufferUAV)->handle(); }
-    VkImage getDefaultTextureSRVHandle(TextureDimension dim) noexcept { return ((VulkanTexture*)_mNullDescriptors.pDefaultTextureSRV[(u8)dim])->handle(); }
-    VkImage getDefaultTextureUAVHandle(TextureDimension dim) noexcept { return ((VulkanTexture*)_mNullDescriptors.pDefaultTextureUAV[(u8)dim])->handle(); }
+    AXE_PRIVATE VkSampler getDefaultSamplerHandle() noexcept { return ((VulkanSampler*)_mNullDescriptors.pDefaultSampler)->handle(); }
+    AXE_PRIVATE VkBuffer getDefaultBufferSRVHandle() noexcept { return ((VulkanBuffer*)_mNullDescriptors.pDefaultBufferSRV)->handle(); }
+    AXE_PRIVATE VkBuffer getDefaultBufferUAVHandle() noexcept { return ((VulkanBuffer*)_mNullDescriptors.pDefaultBufferUAV)->handle(); }
+    AXE_PRIVATE VkImage getDefaultTextureSRVHandle(TextureDimension dim) noexcept { return ((VulkanTexture*)_mNullDescriptors.pDefaultTextureSRV[(u8)dim])->handle(); }
+    AXE_PRIVATE VkImage getDefaultTextureUAVHandle(TextureDimension dim) noexcept { return ((VulkanTexture*)_mNullDescriptors.pDefaultTextureUAV[(u8)dim])->handle(); }
 
-    void initial_transition(Texture* pTexture, ResourceStateFlags startState) noexcept;
+    AXE_PRIVATE void initial_transition(Texture* pTexture, ResourceStateFlags startState) noexcept;
+
+    AXE_PRIVATE void setGpuMarker_DebugActiveOnly(void* handle, VkObjectType, std::string_view) noexcept;
 
 private:
-    void _setDebugLabel(void* handle, VkObjectType, std::string_view) noexcept;
-
     template <typename T, typename Desc>
     [[nodiscard]] T* _createHelper(Desc& desc) noexcept
     {
@@ -106,8 +109,8 @@ private:
 #if AXE_RHI_VULKAN_ENABLE_DEBUG
             static_assert(std::is_base_of_v<RhiObjectBase, T>, "T must be derived from RhiObjectBase for using _mLabel");
             static_assert(std::is_base_of_v<DescBase, Desc>, "Desc must be derived from DescBase for using label");
-            p->_mLabel = desc.getDebugLabel();
-            _setDebugLabel((void*)p->handle(), T::getVkTypeId(), p->_mLabel);
+            p->_mLabel = desc.getLabel_DebugActiveOnly();
+            setGpuMarker_DebugActiveOnly((void*)p->handle(), T::VK_TYPE_ID, p->_mLabel);
 #endif
         }
 
@@ -126,38 +129,39 @@ private:
     }
 
 public:
-    AXE_PUBLIC ~VulkanDevice() noexcept override;
-    AXE_PUBLIC [[nodiscard]] Semaphore* createSemaphore(SemaphoreDesc& desc) noexcept override { return (Semaphore*)_createHelper<VulkanSemaphore>(desc); }
-    AXE_PUBLIC [[nodiscard]] Fence* createFence(FenceDesc& desc) noexcept override { return (Fence*)_createHelper<VulkanFence>(desc); }
-    AXE_PUBLIC [[nodiscard]] Queue* requestQueue(QueueDesc& desc) noexcept override { return (Queue*)_createHelper<VulkanQueue>(desc); }
-    AXE_PUBLIC [[nodiscard]] SwapChain* createSwapChain(SwapChainDesc& desc) noexcept override { return (SwapChain*)_createHelper<VulkanSwapChain>(desc); }
-    AXE_PUBLIC [[nodiscard]] CmdPool* createCmdPool(CmdPoolDesc& desc) noexcept override { return (CmdPool*)_createHelper<VulkanCmdPool>(desc); }
-    AXE_PUBLIC [[nodiscard]] Cmd* createCmd(CmdDesc& desc) noexcept override { return (Cmd*)_createHelper<VulkanCmd>(desc); }
-    AXE_PUBLIC [[nodiscard]] Sampler* createSampler(SamplerDesc& desc) noexcept override { return (Sampler*)_createHelper<VulkanSampler>(desc); }
-    AXE_PUBLIC [[nodiscard]] Texture* createTexture(TextureDesc& desc) noexcept override { return (Texture*)_createHelper<VulkanTexture>(desc); }
-    AXE_PUBLIC [[nodiscard]] Buffer* createBuffer(BufferDesc& desc) noexcept override { return (Buffer*)_createHelper<VulkanBuffer>(desc); }
-    AXE_PUBLIC [[nodiscard]] RenderTarget* createRenderTarget(RenderTargetDesc& desc) noexcept override { return (RenderTarget*)_createHelper<VulkanRenderTarget>(desc); }
-    AXE_PUBLIC [[nodiscard]] Shader* createShader(ShaderDesc& desc) noexcept override { return (Shader*)_createHelper<VulkanShader>(desc); }
-    AXE_PUBLIC [[nodiscard]] RootSignature* createRootSignature(RootSignatureDesc& desc) noexcept override { return (RootSignature*)_createHelper<VulkanRootSignature>(desc); }
-    AXE_PUBLIC [[nodiscard]] DescriptorSet* createDescriptorSet(DescriptorSetDesc& desc) noexcept override { return (DescriptorSet*)_createHelper<VulkanDescriptorSet>(desc); }
-    AXE_PUBLIC [[nodiscard]] Pipeline* createPipeline(PipelineDesc& desc) noexcept override { return (Pipeline*)_createHelper<VulkanPipeline>(desc); }
-    AXE_PUBLIC bool destroySemaphore(Semaphore*& p) noexcept override { return _destroyHelper<VulkanSemaphore>(p); }
-    AXE_PUBLIC bool destroyFence(Fence*& p) noexcept override { return _destroyHelper<VulkanFence>(p); }
-    AXE_PUBLIC bool releaseQueue(Queue*& p) noexcept override { return _destroyHelper<VulkanQueue>(p); }
-    AXE_PUBLIC bool destroySwapChain(SwapChain*& p) noexcept override { return _destroyHelper<VulkanSwapChain>(p); }
-    AXE_PUBLIC bool destroyCmdPool(CmdPool*& p) noexcept override { return _destroyHelper<VulkanCmdPool>(p); }
-    AXE_PUBLIC bool destroyCmd(Cmd*& p) noexcept override { return _destroyHelper<VulkanCmd>(p); }
-    AXE_PUBLIC bool destroySampler(Sampler*& p) noexcept override { return _destroyHelper<VulkanSampler>(p); }
-    AXE_PUBLIC bool destroyTexture(Texture*& p) noexcept override { return _destroyHelper<VulkanTexture>(p); }
-    AXE_PUBLIC bool destroyBuffer(Buffer*& p) noexcept override { return _destroyHelper<VulkanBuffer>(p); }
-    AXE_PUBLIC bool destroyRenderTarget(RenderTarget*& p) noexcept override { return _destroyHelper<VulkanRenderTarget>(p); }
-    AXE_PUBLIC bool destroyShader(Shader*& p) noexcept override { return _destroyHelper<VulkanShader>(p); }
-    AXE_PUBLIC bool destroyRootSignature(RootSignature*& p) noexcept override { return _destroyHelper<VulkanRootSignature>(p); }
-    AXE_PUBLIC bool destroyDescriptorSet(DescriptorSet*& p) noexcept override { return _destroyHelper<VulkanDescriptorSet>(p); }
-    AXE_PUBLIC bool destroyPipeline(Pipeline*& p) noexcept override { return _destroyHelper<VulkanPipeline>(p); }
+    ~VulkanDevice() noexcept override;
+    [[nodiscard]] Adapter* getAdapter() noexcept override { return (Adapter*)_mpAdapter; }
+    [[nodiscard]] Semaphore* createSemaphore(SemaphoreDesc& desc) noexcept override { return (Semaphore*)_createHelper<VulkanSemaphore>(desc); }
+    [[nodiscard]] Fence* createFence(FenceDesc& desc) noexcept override { return (Fence*)_createHelper<VulkanFence>(desc); }
+    [[nodiscard]] Queue* requestQueue(QueueDesc& desc) noexcept override { return (Queue*)_createHelper<VulkanQueue>(desc); }
+    [[nodiscard]] SwapChain* createSwapChain(SwapChainDesc& desc) noexcept override { return (SwapChain*)_createHelper<VulkanSwapChain>(desc); }
+    [[nodiscard]] CmdPool* createCmdPool(CmdPoolDesc& desc) noexcept override { return (CmdPool*)_createHelper<VulkanCmdPool>(desc); }
+    [[nodiscard]] Cmd* createCmd(CmdDesc& desc) noexcept override { return (Cmd*)_createHelper<VulkanCmd>(desc); }
+    [[nodiscard]] Sampler* createSampler(SamplerDesc& desc) noexcept override { return (Sampler*)_createHelper<VulkanSampler>(desc); }
+    [[nodiscard]] Texture* createTexture(TextureDesc& desc) noexcept override { return (Texture*)_createHelper<VulkanTexture>(desc); }
+    [[nodiscard]] Buffer* createBuffer(BufferDesc& desc) noexcept override { return (Buffer*)_createHelper<VulkanBuffer>(desc); }
+    [[nodiscard]] RenderTarget* createRenderTarget(RenderTargetDesc& desc) noexcept override { return (RenderTarget*)_createHelper<VulkanRenderTarget>(desc); }
+    [[nodiscard]] Shader* createShader(ShaderDesc& desc) noexcept override { return (Shader*)_createHelper<VulkanShader>(desc); }
+    [[nodiscard]] RootSignature* createRootSignature(RootSignatureDesc& desc) noexcept override { return (RootSignature*)_createHelper<VulkanRootSignature>(desc); }
+    [[nodiscard]] DescriptorSet* createDescriptorSet(DescriptorSetDesc& desc) noexcept override { return (DescriptorSet*)_createHelper<VulkanDescriptorSet>(desc); }
+    [[nodiscard]] Pipeline* createPipeline(PipelineDesc& desc) noexcept override { return (Pipeline*)_createHelper<VulkanPipeline>(desc); }
+    bool destroySemaphore(Semaphore*& p) noexcept override { return _destroyHelper<VulkanSemaphore>(p); }
+    bool destroyFence(Fence*& p) noexcept override { return _destroyHelper<VulkanFence>(p); }
+    bool releaseQueue(Queue*& p) noexcept override { return _destroyHelper<VulkanQueue>(p); }
+    bool destroySwapChain(SwapChain*& p) noexcept override { return _destroyHelper<VulkanSwapChain>(p); }
+    bool destroyCmdPool(CmdPool*& p) noexcept override { return _destroyHelper<VulkanCmdPool>(p); }
+    bool destroyCmd(Cmd*& p) noexcept override { return _destroyHelper<VulkanCmd>(p); }
+    bool destroySampler(Sampler*& p) noexcept override { return _destroyHelper<VulkanSampler>(p); }
+    bool destroyTexture(Texture*& p) noexcept override { return _destroyHelper<VulkanTexture>(p); }
+    bool destroyBuffer(Buffer*& p) noexcept override { return _destroyHelper<VulkanBuffer>(p); }
+    bool destroyRenderTarget(RenderTarget*& p) noexcept override { return _destroyHelper<VulkanRenderTarget>(p); }
+    bool destroyShader(Shader*& p) noexcept override { return _destroyHelper<VulkanShader>(p); }
+    bool destroyRootSignature(RootSignature*& p) noexcept override { return _destroyHelper<VulkanRootSignature>(p); }
+    bool destroyDescriptorSet(DescriptorSet*& p) noexcept override { return _destroyHelper<VulkanDescriptorSet>(p); }
+    bool destroyPipeline(Pipeline*& p) noexcept override { return _destroyHelper<VulkanPipeline>(p); }
 
 public:
-    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_DEVICE; }
+    constexpr static auto VK_TYPE_ID = VK_OBJECT_TYPE_DEVICE;
 
 private:
     static constexpr u32 MAX_QUEUE_FLAG = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT |

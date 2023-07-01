@@ -10,7 +10,6 @@
 #include "VulkanAdapter.hxx"
 #include "VulkanDevice.hxx"
 
-#include "01Resource/Shader/Shader.hpp"
 #include "00Core/Memory/Memory.hpp"
 #include "00Core/OS/OS.hpp"
 #include <00Core/IO/IO.hpp>

@@ -24,24 +24,32 @@ public:
     ~VulkanBuffer() noexcept override = default;
 
 public:
-    auto handle() noexcept { return _mpHandle; }
+    AXE_PRIVATE auto handle() noexcept { return _mpHandle; }
 
 public:
-    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_BUFFER; }
+    [[nodiscard]] void* addressOfCPU() noexcept override { return _mpCPUMappedAddress; }
+    [[nodiscard]] u64 offset() const noexcept override { return _mOffset; }
+    [[nodiscard]] u64 size() const noexcept override { return _mSize; }
+    [[nodiscard]] ResourceMemoryUsage memoryUsage() const noexcept override { return _mMemoryUsage; }
+    void* map() noexcept override;
+    void unmap() noexcept override;
+
+public:
+    constexpr static auto VK_TYPE_ID = VK_OBJECT_TYPE_BUFFER;
 
 private:
-    VulkanDevice* const _mpDevice      = nullptr;
-    VkBuffer _mpHandle                 = VK_NULL_HANDLE;
-    VkBufferView _mpVkStorageTexelView = VK_NULL_HANDLE;
-    VkBufferView _mpVkUniformTexelView = VK_NULL_HANDLE;
-    VmaAllocation _mpVkAllocation;  // Contains resource allocation info such as parent heap, offset in heap
-    uint64_t _mOffset;
+    VulkanDevice* const _mpDevice             = nullptr;
+    VkBuffer _mpHandle                        = VK_NULL_HANDLE;
+    VkBufferView _mpVkStorageTexelView        = VK_NULL_HANDLE;
+    VkBufferView _mpVkUniformTexelView        = VK_NULL_HANDLE;
+    VmaAllocation _mpVkAllocation             = nullptr;  // Contains resource allocation info such as parent heap, offset in heap
 
-    void* _mpCPUMappedAddress = nullptr;
+    void* _mpCPUMappedAddress                 = nullptr;
+    u32 _mSize                                = 0;
+    u64 _mOffset                              = 0;
 
-    u32 _mSize                = 0;
-    u32 _mDescriptors : 20    = 0;
-    u32 _mMemoryUsage : 3     = 0;
+    DescriptorTypeFlagOneBit _mDescriptorType = DescriptorTypeFlag::UNDEFINED;
+    ResourceMemoryUsage _mMemoryUsage         = ResourceMemoryUsage::UNKNOWN;
 };
 
 }  // namespace axe::rhi

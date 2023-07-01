@@ -275,21 +275,20 @@ void VulkanDevice::_createDefaultResource() noexcept
         //// Buffer
         BufferDesc bufDesc{
             .size               = sizeof(u32),
+            .alignment          = 0,
+            .memoryUsage        = ResourceMemoryUsage::GPU_ONLY,
+            .flags              = BufferCreationFlags::NONE,
             .pCounterBuffer     = nullptr,
             .firstElement       = 0,
             .elementCount       = 1,
             .structStride       = sizeof(u32),
-            .name               = "Dummy Buffer",
-            .alignment          = 0,
-            .memoryUsage        = ResourceMemoryUsage::GPU_ONLY,
-            .flags              = BufferCreationFlags::NONE,
             .queueType          = QueueTypeFlag::UNDEFINED,
             .startState         = ResourceStateFlags::COMMON,
             .ICBDrawType        = IndirectArgumentType::INVALID,
             .ICBMaxCommandCount = 0,
             .format             = TinyImageFormat_R32_UINT,
         };
-
+        bufDesc.setLabel_DebugActiveOnly("DummyBuffer");
         bufDesc.descriptorType              = DescriptorTypeFlag::BUFFER | DescriptorTypeFlag::UNIFORM_BUFFER;
         _mNullDescriptors.pDefaultBufferSRV = this->createBuffer(bufDesc);
         bufDesc.descriptorType              = DescriptorTypeFlag::RW_BUFFER;
@@ -518,7 +517,7 @@ void VulkanDevice::initial_transition(Texture* pTexture, ResourceStateFlags star
     // TODO: release mutex
 }
 
-void VulkanDevice::_setDebugLabel(void* handle, VkObjectType type, std::string_view name) noexcept
+void VulkanDevice::setGpuMarker_DebugActiveOnly(void* handle, VkObjectType type, std::string_view name) noexcept
 {
 #if AXE_RHI_VULKAN_ENABLE_DEBUG
     if (type != VK_OBJECT_TYPE_UNKNOWN && !name.empty() && handle != nullptr)

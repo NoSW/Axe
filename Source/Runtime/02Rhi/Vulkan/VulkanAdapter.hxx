@@ -14,36 +14,36 @@ class VulkanAdapter final : public Adapter
 public:
     VulkanAdapter(VulkanBackend* backend, VkPhysicalDevice handle, u8 nodeIndex) noexcept;
     ~VulkanAdapter() noexcept { busy2idle(); }
-    u8 nodeIndex() const noexcept { return _mNodeIndex; }
-    bool idle2busy() noexcept { return _mIdle ? !(_mIdle = 0) : false; }
-    void busy2idle() noexcept
+    AXE_PRIVATE u8 nodeIndex() const noexcept { return _mNodeIndex; }
+    AXE_PRIVATE bool idle2busy() noexcept { return _mIdle ? !(_mIdle = 0) : false; }
+    AXE_PRIVATE void busy2idle() noexcept
     {
         for (auto& d : _mDevices) { AXE_ASSERT(d.get() == nullptr); }
         _mIdle = true;
     }
-    auto handle() const noexcept { return _mpHandle; }
-    auto* features() const noexcept { return &_mpFeatures; }
-    AdapterType type() const noexcept { return (AdapterType)_mpProperties.properties.deviceType; }
-    auto backendHandle() const noexcept { return _mpBackend->handle(); }
+    AXE_PRIVATE auto handle() const noexcept { return _mpHandle; }
+    AXE_PRIVATE auto* features() const noexcept { return &_mpFeatures; }
+    AXE_PRIVATE AdapterType type() const noexcept { return (AdapterType)_mpProperties.properties.deviceType; }
+    AXE_PRIVATE auto backendHandle() const noexcept { return _mpBackend->handle(); }
 
-    bool isSupportRead(TinyImageFormat format) const noexcept { return _mGPUCapBits.canShaderReadFrom[format]; }
-    bool isSupportWrite(TinyImageFormat format) const noexcept { return _mGPUCapBits.canShaderWriteTo[format]; }
-    bool isSupportRenderTargetWrite(TinyImageFormat format) const noexcept { return _mGPUCapBits.canRenderTargetWriteTo[format]; }
-    bool isSupportQueue(QueueTypeFlag) noexcept;
-    u32 maxUniformBufferRange() const noexcept { return _mpProperties.properties.limits.maxUniformBufferRange; }
-    u32 maxStorageBufferRange() const noexcept { return _mpProperties.properties.limits.maxStorageBufferRange; }
+    AXE_PRIVATE bool isSupportRead(TinyImageFormat format) const noexcept { return _mGPUCapBits.canShaderReadFrom[format]; }
+    AXE_PRIVATE bool isSupportWrite(TinyImageFormat format) const noexcept { return _mGPUCapBits.canShaderWriteTo[format]; }
+    AXE_PRIVATE bool isSupportRenderTargetWrite(TinyImageFormat format) const noexcept { return _mGPUCapBits.canRenderTargetWriteTo[format]; }
+    AXE_PRIVATE bool isSupportQueue(QueueTypeFlag) noexcept;
+    AXE_PRIVATE u32 maxUniformBufferRange() const noexcept { return _mpProperties.properties.limits.maxUniformBufferRange; }
+    AXE_PRIVATE u32 maxStorageBufferRange() const noexcept { return _mpProperties.properties.limits.maxStorageBufferRange; }
 
-    static bool isBetterGpu(const VulkanAdapter& a, const VulkanAdapter& b) noexcept;
+    AXE_PRIVATE static bool isBetterGpu(const VulkanAdapter& a, const VulkanAdapter& b) noexcept;
 
-    static bool isDedicatedQueue(VkQueueFlags quFlags) noexcept;
-
-public:
-    AXE_PUBLIC Device* requestDevice(DeviceDesc&) noexcept override;
-    AXE_PUBLIC void releaseDevice(Device*&) noexcept override;
-    AXE_PUBLIC const GPUSettings& requestGPUSettings() const noexcept override { return _mpGPUSettings; };
+    AXE_PRIVATE static bool isDedicatedQueue(VkQueueFlags quFlags) noexcept;
 
 public:
-    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_PHYSICAL_DEVICE; }
+    Device* requestDevice(DeviceDesc&) noexcept override;
+    void releaseDevice(Device*&) noexcept override;
+    const GPUSettings& requestGPUSettings() const noexcept override { return _mpGPUSettings; };
+
+public:
+    constexpr static auto VK_TYPE_ID = VK_OBJECT_TYPE_PHYSICAL_DEVICE;
 
 private:
     // ref

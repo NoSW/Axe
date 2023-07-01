@@ -26,16 +26,16 @@ class VulkanQueue final : public Queue
     bool _destroy() noexcept;
 
 public:
-    AXE_PUBLIC ~VulkanQueue() noexcept override = default;
-    AXE_PUBLIC void submit(QueueSubmitDesc& desc) noexcept override;
-    AXE_PUBLIC void present(QueuePresentDesc& desc) noexcept override;
-    AXE_PUBLIC void waitIdle() noexcept override;
+    ~VulkanQueue() noexcept override = default;
+    void submit(QueueSubmitDesc& desc) noexcept override;
+    void present(QueuePresentDesc& desc) noexcept override;
+    void waitIdle() noexcept override;
 
 public:
-    auto handle() noexcept { return _mpHandle; }
+    AXE_PRIVATE auto handle() noexcept { return _mpHandle; }
 
 public:
-    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_QUEUE; }
+    AXE_PRIVATE constexpr static auto VK_TYPE_ID = VK_OBJECT_TYPE_QUEUE;
 
 private:
     VkQueue _mpHandle             = VK_NULL_HANDLE;

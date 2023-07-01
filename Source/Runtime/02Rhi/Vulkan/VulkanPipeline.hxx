@@ -26,7 +26,7 @@ public:
     auto handle() noexcept { return _mpHandle; }
 
 public:
-    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_PIPELINE; }
+    constexpr static auto VK_TYPE_ID = VK_OBJECT_TYPE_PIPELINE;
 
 private:
     VulkanDevice* const _mpDevice = nullptr;

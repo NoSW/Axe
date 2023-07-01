@@ -20,13 +20,13 @@ class VulkanSemaphore final : public Semaphore
 public:
     VulkanSemaphore() noexcept;
 
-    AXE_PUBLIC ~VulkanSemaphore() noexcept override { AXE_ASSERT(_mpHandle == VK_NULL_HANDLE); }
+    ~VulkanSemaphore() noexcept override { AXE_ASSERT(_mpHandle == VK_NULL_HANDLE); }
 
 public:
-    auto handle() noexcept { return _mpHandle; }
+    AXE_PRIVATE auto handle() noexcept { return _mpHandle; }
 
 public:
-    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_SEMAPHORE; }
+    AXE_PRIVATE constexpr static auto VK_TYPE_ID = VK_OBJECT_TYPE_SEMAPHORE;
 
 private:
     VulkanDevice* const _mpDevice = nullptr;

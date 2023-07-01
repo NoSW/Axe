@@ -1,6 +1,7 @@
 #pragma once
 #include "02Rhi/RhiEnums.hpp"
 #include <bitset>
+#include <span>
 
 namespace axe::window
 {
@@ -83,19 +84,18 @@ private:
 
 public:
     // only do actual work in Debug, do nothing in Release
-    void setDebugLabel(std::string_view s) noexcept { label = s; }
+    void setLabel_DebugActiveOnly(std::string_view s) noexcept { label = s; }
 
     // return label in Debug, return null string in Release
-    std::string_view getDebugLabel() const noexcept { return label; }
+    std::string_view getLabel_DebugActiveOnly() const noexcept { return label; }
 #else
     // only do actual work in Debug, do nothing in Release
-    void setDebugLabel(std::string_view s) noexcept
-    {
-        /* do nothing */
+    void setLabel_DebugActiveOnly(std::string_view s) noexcept
+    { /* do nothing */
     }
 
     // return label in Debug, return null string in Release
-    std::string_view getDebugLabel() const noexcept { return ""; }
+    std::string_view getLabel_DebugActiveOnly() const noexcept { return {}; }
 
 #endif
 };
@@ -219,9 +219,9 @@ struct SamplerDesc : public DescBase
 
 struct TextureDesc : public DescBase
 {
-    const void* pNativeHandle = nullptr;     // Pointer to native texture handle if the texture does not own underlying resource
-    std::string_view pName    = "Untitled";  // Debug name used in gpu profile
-    ClearValue clearValue{};                 // Optimized clear value (recommended to use this same value when clearing the render target)
+    nullable<const void> pNativeHandle = nullptr;     // Pointer to native texture handle if the texture does not own underlying resource
+    std::string_view pName             = "Untitled";  // Debug name used in gpu profile
+    ClearValue clearValue{};                          // Optimized clear value (recommended to use this same value when clearing the render target)
     // #if defined(VULKAN)
     //     VkSamplerYcbcrConversionInfo* pVkSamplerYcbcrConversionInfo;
     // #endif
@@ -239,10 +239,32 @@ struct TextureDesc : public DescBase
     DescriptorTypeFlag descriptorType = DescriptorTypeFlag::UNDEFINED;  // Descriptor creation
 };
 
+struct TextureUpdateDesc
+{
+    rhi::Buffer* pSrcBuffer = nullptr;
+    rhi::Cmd* pCmd          = nullptr;
+    u32 baseMipLevel        = 0;
+    u32 mipLevels           = 0;
+    u32 baseArrayLayer      = 0;
+    u32 layerCount          = 0;
+};
+
+struct SubresourceDataDesc
+{
+    u64 srcOffset;
+    u32 mipLevel;
+    u32 arrayLayer;
+    u32 rowPitch;
+    u32 slicePitch;
+};
+
 struct BufferDesc : public DescBase
 {
-    /// Size of the buffer (in bytes)
-    u64 size                          = 0;
+    u64 size                          = 0;                             // (in bytes)
+    u32 alignment                     = 0;                             // alignment of the buffer (in bytes)
+    ResourceMemoryUsage memoryUsage   = ResourceMemoryUsage::UNKNOWN;  // Decides which memory heap buffer will use (default, upload, readback)
+    BufferCreationFlags flags         = BufferCreationFlags::NONE;     // create flags
+
     /// Set this to specify a counter buffer for this buffer (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
     Buffer* pCounterBuffer            = nullptr;
     /// Index of the first element accessible by the SRV/UAV (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
@@ -251,14 +273,7 @@ struct BufferDesc : public DescBase
     u64 elementCount                  = 0;
     /// Size of each element (in bytes) in the buffer (applicable to BUFFER_USAGE_STORAGE_SRV, BUFFER_USAGE_STORAGE_UAV)
     u64 structStride                  = 0;
-    /// Debug name used in gpu profile
-    std::string_view name             = "Untitled";
-    /// Alignment
-    u32 alignment                     = 0;
-    /// Decides which memory heap buffer will use (default, upload, readback)
-    ResourceMemoryUsage memoryUsage   = ResourceMemoryUsage::UNKNOWN;
-    /// Creation flags of the buffer
-    BufferCreationFlags flags         = BufferCreationFlags::NONE;
+
     /// What type of queue the buffer is owned by
     QueueTypeFlag queueType           = QueueTypeFlag::UNDEFINED;
     /// What state will the buffer get created in
@@ -282,19 +297,20 @@ struct RenderTargetDesc : public DescBase
     u32 arraySize                    = 1;  // Texture array size (Should be 1 if texture is not a texture array or cubemap)
     u32 mipLevels                    = 0;  // Number of mip levels
     MSAASampleCount mMSAASampleCount = MSAASampleCount::COUNT_1;
-    TinyImageFormat format           = TinyImageFormat_UNDEFINED;       // Internal image format
-    ResourceStateFlags startState    = ResourceStateFlags::UNDEFINED;   // What flag will the texture get created in
-    ClearValue clearValue{.rgba = {0, 0, 0, 0}};                        // Optimized clear value (recommended to use this same value when clearing the RenderTarget)
-    u32 sampleQuality                 = 1;                              // The image quality level. The higher the quality, the lower the performance. The valid range is between zero and the value appropriate for sampleCount
-    DescriptorTypeFlag descriptorType = DescriptorTypeFlag::UNDEFINED;  // Descriptor creation
-    const void* pNativeHandle         = nullptr;
-    std::string_view name             = "Untitled";
+    TinyImageFormat format           = TinyImageFormat_UNDEFINED;        // Internal image format
+    ResourceStateFlags startState    = ResourceStateFlags::UNDEFINED;    // What flag will the texture get created in
+    ClearValue clearValue{.rgba = {0, 0, 0, 0}};                         // Optimized clear value (recommended to use this same value when clearing the RenderTarget)
+    u32 sampleQuality                  = 1;                              // The image quality level. The higher the quality, the lower the performance. The valid range is between zero and the value appropriate for sampleCount
+    DescriptorTypeFlag descriptorType  = DescriptorTypeFlag::UNDEFINED;  // Descriptor creation
+    nullable<const void> pNativeHandle = nullptr;
+    std::string_view name              = "Untitled";
 };
 
 struct ShaderStageDesc
 {
+    std::string_view name        = "Untitled";
     ShaderStageFlagOneBit mStage = ShaderStageFlag::NONE;
-    std::string_view mRelaFilePath;  // **relative** glsl filepath under Source/, e.g. Shaders/Basic.vert.glsl
+    std::array<std::span<u8>, GRAPHICS_API_COUNT> byteCode;
     std::string_view mEntryPoint = "main";
     ShaderStageLoadFlag flags    = ShaderStageLoadFlag::NONE;
 };

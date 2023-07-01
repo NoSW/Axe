@@ -26,15 +26,15 @@ public:
 
     ~VulkanBackend() noexcept;
 
-    auto handle() const noexcept { return _mpHandle; }
+    AXE_PRIVATE auto handle() const noexcept { return _mpHandle; }
 
 public:
-    AXE_PUBLIC Adapter* requestAdapter(AdapterDesc&) noexcept override;
+    Adapter* requestAdapter(AdapterDesc&) noexcept override;
 
-    AXE_PUBLIC void releaseAdapter(Adapter*&) noexcept override;
+    void releaseAdapter(Adapter*&) noexcept override;
 
 public:
-    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_INSTANCE; }
+    AXE_PRIVATE constexpr static auto VK_TYPE_ID = VK_OBJECT_TYPE_INSTANCE;
 
 public:
     // handle

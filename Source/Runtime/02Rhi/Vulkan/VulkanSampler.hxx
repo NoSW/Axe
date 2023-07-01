@@ -18,13 +18,13 @@ private:
     friend class VulkanRootSignature;
 
 public:
-    AXE_PUBLIC ~VulkanSampler() noexcept override { AXE_ASSERT(_mpHandle == VK_NULL_HANDLE); }
+    ~VulkanSampler() noexcept override { AXE_ASSERT(_mpHandle == VK_NULL_HANDLE); }
 
 public:
-    auto handle() noexcept { return _mpHandle; }
+    AXE_PRIVATE auto handle() noexcept { return _mpHandle; }
 
 public:
-    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_SAMPLER; }
+    AXE_PRIVATE constexpr static auto VK_TYPE_ID = VK_OBJECT_TYPE_SAMPLER;
 
 private:
     VulkanDevice* const _mpDevice                        = nullptr;

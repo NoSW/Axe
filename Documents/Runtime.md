@@ -24,7 +24,7 @@ Axe has lots of configurable options, which can be grouped into a few types:
 | compile-time options | load from CMakeLists.txt and `Config.hpp` of each layer; No saving | build type is release or debug |
 | per-engine(runtime)  | yaml files saved under engine source folders(`Configs/**/*.yaml `) |                                |
 | per-game(runtime)    | yaml files saved under game project source folders           | player's maximum walk speed    |
-| per-player (runtime) | yaml files saved under environment variable folders(e.g., `getenv("AppData")`) | quality of anti-aliasing       |
+| per-player (runtime) | yaml files saved under environment variable folders(e.g., `getenv("AppData")`) | quality option of anti-aliasing       |
 
 
 
@@ -110,7 +110,25 @@ a wrapper for SDL_Window
 
 ---
 
-## **01Resource**
+## **02Rhi**
+
+Based on webGPU draft([online doc](https://www.w3.org/TR/webgpu/)) and open source framework The-Forge([github](https://github.com/ConfettiFX/The-Forge)).
+
+### **Interface**
+
+### **Vulkan**
+
+helpful overview:
+![VulkanApi](Images/VulkanAPI.png)
+
+### **D3D12**
+
+helpful overview:
+![d3d12](Images/d3d12-graphics-pipeline.png)
+![d3d12](Images/d3d12-compute-pipeline.png)
+
+
+## **03Resource**
 
 NOTE: "Resource" refers to all files except for source code; "Asset" and "Resource" have similar meanings, but "Asset" emphasizes more on art resources.
 
@@ -139,15 +157,3 @@ Choose one of hlsl and glsl as handwritten, and then run it on all platforms.
 ![](Images/cross_shader_compile.png)
 
 ---
-
-## **02Rhi**
-
-Based on webGPU draft([online doc](https://www.w3.org/TR/webgpu/)) and open source framework The-Forge([github](https://github.com/ConfettiFX/The-Forge)).
-
-### **Interface**
-
-### **Vulkan**
-
-![VulkanApi](Images/VulkanAPI.png)
-
-### **D3D12**

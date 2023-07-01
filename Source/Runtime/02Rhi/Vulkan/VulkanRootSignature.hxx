@@ -20,13 +20,13 @@ private:
     friend class VulkanDescriptorSet;
 
 public:
-    AXE_PUBLIC ~VulkanRootSignature() noexcept override { AXE_ASSERT(_mpPipelineLayout == VK_NULL_HANDLE); }
+    ~VulkanRootSignature() noexcept override { AXE_ASSERT(_mpPipelineLayout == VK_NULL_HANDLE); }
 
 public:
-    auto handle() noexcept { return _mpPipelineLayout; }
+    AXE_PRIVATE auto handle() noexcept { return _mpPipelineLayout; }
 
 public:
-    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_PIPELINE_LAYOUT; }
+    AXE_PRIVATE constexpr static auto VK_TYPE_ID = VK_OBJECT_TYPE_PIPELINE_LAYOUT;
 
 private:
     // created from

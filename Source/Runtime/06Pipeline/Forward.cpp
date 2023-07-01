@@ -1,5 +1,9 @@
-#include <06Pipeline/Forward.hpp>
-#include <00Core/Window/Window.hpp>
+#include "06Pipeline/Forward.hpp"
+#include "03Resource/Image/Image.hpp"
+#include "03Resource/Shader/Shader.hpp"
+#include "00Core/Window/Window.hpp"
+#include "00Core/Container/String.hpp"
+#include "03Resource/ResourceLoader.hpp"
 
 namespace axe::pipeline
 {
@@ -62,7 +66,7 @@ bool Forward::init(PipelineDesc& desc) noexcept
     // frameIndex
     _mFrameIndex = 0;
 
-    // set textures
+    // set samplers
     rhi::SamplerDesc samplerDesc{
         .minFilter  = rhi::FilterType::LINEAR,
         .magFilter  = rhi::FilterType::LINEAR,
@@ -71,31 +75,60 @@ bool Forward::init(PipelineDesc& desc) noexcept
         .addressV   = rhi::AddressMode::CLAMP_TO_EDGE,
         .addressW   = rhi::AddressMode::CLAMP_TO_EDGE,
     };
-    _mpStaticSampler = _mpDevice->createSampler(samplerDesc);
+    _mpStaticSampler                              = _mpDevice->createSampler(samplerDesc);
 
     // set vertex buffers
 
+    // set textures
+    const std::filesystem::path IMAGE_FOLDER      = "E:/Axe/Assets/Textures/Skybox";
+    constexpr std::string_view IMAGE_FILENAMES[6] = {
+        "Skybox_right1.dds",
+        "Skybox_left2.dds",
+        "Skybox_top3.dds",
+        "Skybox_bottom4.dds",
+        "Skybox_front5.dds",
+        "Skybox_back6.dds",
+    };
+
+    resource::ResourceLoaderDesc copyEngineDesc{
+        .pDevice          = _mpDevice,
+        .stageBufferCount = 2,
+        .stageBufferSize  = 1u << 23,
+    };
+    resource::ResourceLoader copyEngine(copyEngineDesc);
+
+    for (u32 i = 0; i < 0; ++i)
+    {
+        resource::RequestLoadTextureDesc loadDesc{
+            .filepath               = IMAGE_FOLDER / IMAGE_FILENAMES[i],
+            .ppOutRegisteredTexture = &_mpSkyboxTextures[i],
+        };
+        copyEngine.pushRequest(loadDesc);
+        if (_mpSkyboxTextures[i] == nullptr) { return false; }
+    }
+
+    copyEngine.waitIdle();
     return true;
 }
 
 bool Forward::exit() noexcept
 {
-    bool succ = true;
+    for (rhi::Texture*& pTex : _mpSkyboxTextures) { _mpDevice->destroyTexture(pTex); }
     _mpDevice->destroySampler(_mpStaticSampler);
     _mpDevice->destroySemaphore(_mpImageAcquiredSemaphore);
     for (u32 i = 0; i < _IMAGE_COUNT; ++i)
     {
-        succ = _mpDevice->destroySemaphore(_mpRenderCompleteSemaphores[i]) ? succ : false;
-        succ = _mpDevice->destroyFence((_mpRenderCompleteFences[i])) ? succ : false;
-        succ = _mpDevice->destroyCmd(_mpCmds[i]) ? succ : false;
-        succ = _mpDevice->destroyCmdPool(_mpCmdPools[i]) ? succ : false;
+        _mpDevice->destroySemaphore(_mpRenderCompleteSemaphores[i]);
+        _mpDevice->destroyFence((_mpRenderCompleteFences[i]));
+        _mpDevice->destroyCmd(_mpCmds[i]);
+        _mpDevice->destroyCmdPool(_mpCmdPools[i]);
     }
-    succ = _mpDevice->releaseQueue(_mpGraphicsQueue) ? succ : false;
+    _mpDevice->releaseQueue(_mpGraphicsQueue);
 
     _mpAdapter->releaseDevice(_mpDevice);
     _mpBackend->releaseAdapter(_mpAdapter);
     rhi::destroyBackend(_mpBackend);
-    return succ;
+    return true;
 }
 
 bool Forward::load(LoadFlag loadFlag) noexcept
@@ -105,17 +138,15 @@ bool Forward::load(LoadFlag loadFlag) noexcept
         // addShader
         {
             rhi::ShaderDesc shaderDesc;
-            shaderDesc.mStages.push_back(rhi::ShaderStageDesc{.mStage = rhi::ShaderStageFlag::VERT});
-            shaderDesc.mStages.push_back(rhi::ShaderStageDesc{.mStage = rhi::ShaderStageFlag::FRAG});
+            shaderDesc.mStages.push_back(resource::get_shader_stage("Shaders/Basic.vert.glsl"));
+            shaderDesc.mStages.push_back(resource::get_shader_stage("Shaders/Basic.frag.glsl"));
+            shaderDesc.setLabel_DebugActiveOnly("Basic");
+            _mpBasicShader        = _mpDevice->createShader(shaderDesc);
 
-            shaderDesc.mStages[0].mRelaFilePath = "Shaders/Basic.vert.glsl";
-            shaderDesc.mStages[1].mRelaFilePath = "Shaders/Basic.frag.glsl";
-            shaderDesc.setDebugLabel("Basic");
-            _mpBasicShader                      = _mpDevice->createShader(shaderDesc);
+            shaderDesc.mStages[0] = resource::get_shader_stage("Shaders/Skybox/Skybox.vert.glsl");
+            shaderDesc.mStages[1] = resource::get_shader_stage("Shaders/Skybox/Skybox.frag.glsl");
+            shaderDesc.setLabel_DebugActiveOnly("Skybox");
 
-            shaderDesc.mStages[0].mRelaFilePath = "Shaders/Skybox/Skybox.vert.glsl";
-            shaderDesc.mStages[1].mRelaFilePath = "Shaders/Skybox/Skybox.frag.glsl";
-            shaderDesc.setDebugLabel("Skybox");
             _mpSkyboxShader = _mpDevice->createShader(shaderDesc);
         }
 
@@ -134,13 +165,13 @@ bool Forward::load(LoadFlag loadFlag) noexcept
                 .mpRootSignature = _mpRootSignature,
                 .mMaxSet         = 1,
                 .updateFrequency = rhi::DescriptorUpdateFrequency::NONE};
-            descSetDesc.setDebugLabel("Texture");
+            descSetDesc.setLabel_DebugActiveOnly("Texture");
 
             _mpDescriptorSetTexture     = _mpDevice->createDescriptorSet(descSetDesc);
 
             descSetDesc.mMaxSet         = _IMAGE_COUNT * 2;
             descSetDesc.updateFrequency = rhi::DescriptorUpdateFrequency::PER_FRAME;
-            descSetDesc.setDebugLabel("Uniform");
+            descSetDesc.setLabel_DebugActiveOnly("Uniform");
             _mpDescriptorSetUniform = _mpDevice->createDescriptorSet(descSetDesc);
         }
     }
@@ -395,6 +426,36 @@ void Forward::_removePipelines() noexcept
 {
     _mpDevice->destroyPipeline(_mpSkyboxPipeline);
     _mpDevice->destroyPipeline(_mpBasicPipeline);
+}
+
+void Forward::_prepareDescriptorSets() noexcept
+{
+    // rhi::DescriptorData params[6]    = {};
+    // params[0].pName                  = "RightText";
+    // params[0].pResources.push_back() = &pSkyBoxTextures[0];
+    // params[1].pName                  = "LeftText";
+    // params[1].ppTextures             = &pSkyBoxTextures[1];
+    // params[2].pName                  = "TopText";
+    // params[2].ppTextures             = &pSkyBoxTextures[2];
+    // params[3].pName                  = "BotText";
+    // params[3].ppTextures             = &pSkyBoxTextures[3];
+    // params[4].pName                  = "FrontText";
+    // params[4].ppTextures             = &pSkyBoxTextures[4];
+    // params[5].pName                  = "BackText";
+    // params[5].ppTextures             = &pSkyBoxTextures[5];
+    // updateDescriptorSet(pRenderer, 0, pDescriptorSetTexture, 6, params);
+
+    // for (uint32_t i = 0; i < gImageCount; ++i)
+    // {
+    //     DescriptorData params[1] = {};
+    //     params[0].pName          = "uniformBlock";
+    //     params[0].ppBuffers      = &pSkyboxUniformBuffer[i];
+    //     updateDescriptorSet(pRenderer, i * 2 + 0, pDescriptorSetUniforms, 1, params);
+
+    //     params[0].pName     = "uniformBlock";
+    //     params[0].ppBuffers = &pProjViewUniformBuffer[i];
+    //     updateDescriptorSet(pRenderer, i * 2 + 1, pDescriptorSetUniforms, 1, params);
+    // }
 }
 
 }  // namespace axe::pipeline

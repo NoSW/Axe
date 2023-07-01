@@ -37,7 +37,7 @@ public:
     ~VulkanShader() noexcept override = default;
 
 public:
-    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_UNKNOWN; }
+    constexpr static auto VK_TYPE_ID = VK_OBJECT_TYPE_UNKNOWN;
 
 private:
     std::pmr::list<std::pmr::string> _mNamePool;  // all strings reflected from spirv byte code

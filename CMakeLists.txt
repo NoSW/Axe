@@ -21,7 +21,7 @@ define_property(GLOBAL PROPERTY ALL_SAHRED_BINARY BRIEF_DOCS "all shared binary"
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-message("C++ compiler flags: ${CMAKE_CXX_FLAGS}")
+message("[${CMAKE_CURRENT_LIST_DIR}:${CMAKE_CURRENT_LIST_LINE}] C++ compiler flags: ${CMAKE_CXX_FLAGS}")
 
 #############################################################################################
 # helpr functions
@@ -87,12 +87,16 @@ endif()
 
 if (MSVC)
     add_compile_options(/MP)
+    message("[${CMAKE_CURRENT_LIST_DIR}:${CMAKE_CURRENT_LIST_LINE}] enable /MP for MSVC")
+    add_compile_options(/we4834) # warning C4834: discarding return value of function with 'nodiscard' attribute
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     #    add_compile_options(-fsanitize-address-use-after-return=runtime)
     #    add_compile_options(-fsanitize=undefined)
     add_compile_options(-Wno-nullability-completeness)
-    if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+    if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND CMAKE_BUILD_TYPE MATCHES "Debug")
         add_compile_options(-fsanitize=thread)
+        add_link_options(-fsanitize=thread)
+        message("[${CMAKE_CURRENT_LIST_DIR}:${CMAKE_CURRENT_LIST_LINE}] enable thread sanitizer for clang under ${CMAKE_BUILD_TYPE} mode")
     endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 else()

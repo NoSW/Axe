@@ -396,4 +396,68 @@ bool VulkanTexture::_destroy() noexcept
     return true;
 }
 
+bool VulkanTexture::update(TextureUpdateDesc& updateDesc) noexcept
+{
+    const u32 layerStart                      = updateDesc.baseArrayLayer;
+    const u32 layerEnd                        = updateDesc.baseArrayLayer + updateDesc.layerCount;  // not working for ktx which stores mip size before the mip data
+    const u32 mipStart                        = updateDesc.baseMipLevel;
+    const u32 mipEnd                          = updateDesc.baseMipLevel + updateDesc.mipLevels;
+    const auto format                         = (TinyImageFormat)_mFormat;
+    const auto [rowAlignment, sliceAlignment] = get_alignment(_mpDevice, format);
+
+    VulkanBuffer* pBuf                        = (VulkanBuffer*)updateDesc.pSrcBuffer;
+    VulkanCmd* pCmd                           = (VulkanCmd*)updateDesc.pCmd;
+
+    std::pmr::vector<TextureBarrier> textureBarriers(1);
+    textureBarriers.back().pTexture                              = this;
+    textureBarriers.back().imageBarrier.barrierInfo.currentState = ResourceStateFlags::UNDEFINED;
+    textureBarriers.back().imageBarrier.barrierInfo.newState     = ResourceStateFlags::COPY_DEST;
+
+    pCmd->resourceBarrier(&textureBarriers, nullptr, nullptr);
+
+    u32 offset = 0;
+    for (u32 layer = layerStart; layer < layerEnd; ++layer)
+    {
+        for (u32 mip = mipStart; mip < mipEnd; ++mip)
+        {
+            u32 w        = std::max(1u, (u32)_mWidth >> mip);
+            u32 h        = std::max(1u, (u32)_mHeight >> mip);
+            u32 d        = std::max(1u, (u32)_mDepth >> mip);
+
+            u32 numBytes = 0;
+            u32 rowBytes = 0;
+            u32 numRows  = 0;
+            if (!get_surface_info(w, h, format, numBytes, rowBytes, numRows))
+            {
+                AXE_ERROR("Failed to get surface info for texture update");
+                return false;
+            }
+
+            u32 subRowPitch   = math::round_up(rowBytes, rowAlignment);
+            u32 subSlicePitch = math::round_up(subRowPitch * numRows, sliceAlignment);
+            u32 subNumRows    = numRows;
+            u32 subDepth      = d;
+            u32 subRowSize    = rowBytes;
+            u8* data          = (u8*)pBuf->addressOfCPU() + offset;
+
+            SubresourceDataDesc subresourceDesc{
+                .srcOffset  = pBuf->offset() + offset,
+                .mipLevel   = mip,
+                .arrayLayer = layer,
+                .rowPitch   = subRowPitch,
+                .slicePitch = subSlicePitch,
+            };
+
+            pCmd->updateSubresource(this, pBuf, subresourceDesc);
+            offset += subDepth * subSlicePitch;
+        }
+    }
+
+    textureBarriers.back().pTexture                              = this;
+    textureBarriers.back().imageBarrier.barrierInfo.currentState = ResourceStateFlags::COPY_DEST;
+    textureBarriers.back().imageBarrier.barrierInfo.newState     = ResourceStateFlags::SHADER_RESOURCE;
+    pCmd->resourceBarrier(&textureBarriers, nullptr, nullptr);
+    return true;
+}
+
 }  // namespace axe::rhi

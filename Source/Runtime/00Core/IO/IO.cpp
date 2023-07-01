@@ -7,7 +7,7 @@
 namespace axe::io
 {
 // Returns true only when a non-empty file is successfully read.
-bool read_file_binary(const std::filesystem::path& filePath, std::vector<u8>& out) noexcept
+bool read_file_binary(const std::filesystem::path& filePath, std::pmr::vector<u8>& out) noexcept
 {
     if (std::filesystem::exists(filePath) && std::filesystem::is_regular_file(filePath))
     {
@@ -31,7 +31,7 @@ bool read_file_binary(const std::filesystem::path& filePath, std::vector<u8>& ou
     }
 }
 
-bool read_file_binary_ext(const std::filesystem::path& filePath, const std::string_view extension, std::vector<u8>& out) noexcept
+bool read_file_binary_ext(const std::filesystem::path& filePath, const std::string_view extension, std::pmr::vector<u8>& out) noexcept
 {
     if (extension == filePath.extension().string())
     {
@@ -44,7 +44,7 @@ bool read_file_binary_ext(const std::filesystem::path& filePath, const std::stri
     }
 }
 
-bool read_file_binary_ext(const std::filesystem::path& filePath, const std::vector<std::string_view> extensions, std::vector<u8>& out) noexcept
+bool read_file_binary_ext(const std::filesystem::path& filePath, const std::vector<std::string_view> extensions, std::pmr::vector<u8>& out) noexcept
 {
     std::string fileExt = filePath.extension().string();
     bool foundExt       = false;

@@ -22,13 +22,21 @@ class VulkanTexture final : public Texture
     bool _destroy() noexcept;
 
 public:
-    AXE_PUBLIC ~VulkanTexture() noexcept override = default;
+    ~VulkanTexture() noexcept override = default;
+    bool update(TextureUpdateDesc&) noexcept override;
 
 public:
-    auto handle() noexcept { return _mpHandle; }
+    AXE_PRIVATE auto handle() noexcept { return _mpHandle; }
+    AXE_PRIVATE u32 width() const noexcept { return _mWidth; }
+    AXE_PRIVATE u32 height() const noexcept { return _mHeight; }
+    AXE_PRIVATE u32 depth() const noexcept { return _mDepth; }
+    AXE_PRIVATE u32 mipLevels() const noexcept { return _mMipLevels; }
+    AXE_PRIVATE u32 arraySize() const noexcept { return _mArraySizeMinusOne + 1; }
+    AXE_PRIVATE auto format() const noexcept { return (TinyImageFormat)_mFormat; }
+    AXE_PRIVATE u32 aspectMask() const noexcept { return _mAspectMask; }
 
 public:
-    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_IMAGE; }
+    constexpr static auto VK_TYPE_ID = VK_OBJECT_TYPE_IMAGE;
 
 private:
     VulkanDevice* const _mpDevice         = nullptr;

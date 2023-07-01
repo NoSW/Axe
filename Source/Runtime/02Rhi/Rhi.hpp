@@ -12,6 +12,10 @@ namespace axe::rhi
 // return the size in bytes of a given format
 u32 byte_count_of_format(TinyImageFormat) noexcept;
 
+bool get_surface_info(const u32 width, const u32 height, const TinyImageFormat fmt,
+                      u32& outNumBytes, u32& outRowBytes, u32& outNumRows) noexcept;
+
+std::pair<u32, u32> get_alignment(rhi::Device* pDevice, TinyImageFormat format) noexcept;
 ///////////////////////////////////////////////
 //                    base
 ///////////////////////////////////////////////
@@ -37,8 +41,8 @@ public:
     virtual void releaseAdapter(Adapter*&) noexcept        = 0;
 };
 
-AXE_PUBLIC Backend* createBackend(GraphicsApiFlag, BackendDesc&) noexcept;
-AXE_PUBLIC void destroyBackend(Backend*&) noexcept;
+Backend* createBackend(GraphicsApiFlag, BackendDesc&) noexcept;
+void destroyBackend(Backend*&) noexcept;
 
 ///////////////////////////////////////////////
 //                    Adapter
@@ -64,6 +68,7 @@ class Device : public RhiObjectBase
 {
 public:
     virtual ~Device() noexcept                                                            = default;
+    [[nodiscard]] virtual Adapter* getAdapter() noexcept                                  = 0;
     [[nodiscard]] virtual Semaphore* createSemaphore(SemaphoreDesc&) noexcept             = 0;
     [[nodiscard]] virtual Fence* createFence(FenceDesc&) noexcept                         = 0;
     [[nodiscard]] virtual Queue* requestQueue(QueueDesc&) noexcept                        = 0;
@@ -173,9 +178,9 @@ public:
     virtual void drawIndexedInstanced(u32 indexCount, u32 firstIndex, u32 instanceCount, u32 firstInstance, u32 firstVertex) noexcept         = 0;
     virtual void dispatch(u32 groupCountX, u32 groupCountY, u32 groupCountZ) noexcept                                                         = 0;
     virtual void resourceBarrier(std::pmr::vector<TextureBarrier>*, std::pmr::vector<BufferBarrier>*, std::pmr::vector<RenderTargetBarrier>*) = 0;
-    virtual void updateBuffer() noexcept                                                                                                      = 0;
-    virtual void updateSubresource() noexcept                                                                                                 = 0;
-    virtual void copySubresource() noexcept                                                                                                   = 0;
+    virtual void copyBuffer(Buffer* pDst, Buffer* pSrc, u64 srcOffset, u64 dstOffset, u64 size) noexcept                                      = 0;
+    virtual void updateSubresource(Texture* pDstTexture, Buffer* pSrcBuffer, const SubresourceDataDesc&) noexcept                             = 0;
+    virtual void updateSubresource(Buffer* pDstBuffer, Texture* pSrcTexture, const SubresourceDataDesc&) noexcept                             = 0;
     virtual void resetQueryPool() noexcept                                                                                                    = 0;
     virtual void beginQuery() noexcept                                                                                                        = 0;
     virtual void endQuery() noexcept                                                                                                          = 0;
@@ -201,7 +206,8 @@ public:
 class Texture : public RhiObjectBase
 {
 public:
-    virtual ~Texture() noexcept = default;
+    virtual ~Texture() noexcept                      = default;
+    virtual bool update(TextureUpdateDesc&) noexcept = 0;
 };
 ///////////////////////////////////////////////
 //                    Buffer
@@ -209,7 +215,13 @@ public:
 class Buffer : public RhiObjectBase
 {
 public:
-    virtual ~Buffer() noexcept = default;
+    virtual ~Buffer() noexcept                                    = default;
+    virtual void* addressOfCPU() noexcept                         = 0;  // return cpu address mapped to this buffer
+    virtual u64 offset() const noexcept                           = 0;  //
+    virtual u64 size() const noexcept                             = 0;  // byte count of this buffer
+    virtual rhi::ResourceMemoryUsage memoryUsage() const noexcept = 0;  //
+    virtual void* map() noexcept                                  = 0;  // map this buffer to a CPU memory, and return it
+    virtual void unmap() noexcept                                 = 0;  // unmap this buffer from CPU memory
 };
 
 ///////////////////////////////////////////////

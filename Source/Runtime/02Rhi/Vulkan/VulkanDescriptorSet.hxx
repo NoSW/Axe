@@ -33,7 +33,7 @@ public:
     void update(u32 index, std::pmr::vector<DescriptorData*> params) noexcept override;
 
 public:
-    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_DESCRIPTOR_POOL; }
+    constexpr static auto VK_TYPE_ID = VK_OBJECT_TYPE_DESCRIPTOR_POOL;
 
 private:
     std::pmr::vector<VkDescriptorSet> _mpHandles;

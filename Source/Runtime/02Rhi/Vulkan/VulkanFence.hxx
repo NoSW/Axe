@@ -20,15 +20,15 @@ class VulkanFence final : public Fence
     bool _destroy() noexcept;
 
 public:
-    AXE_PUBLIC ~VulkanFence() noexcept override = default;
-    AXE_PUBLIC void wait() noexcept override;
-    AXE_PUBLIC FenceStatus status() noexcept override;
+    ~VulkanFence() noexcept override = default;
+    void wait() noexcept override;
+    FenceStatus status() noexcept override;
 
 public:
-    auto handle() noexcept { return _mpHandle; }
+    AXE_PRIVATE auto handle() noexcept { return _mpHandle; }
 
 public:
-    constexpr static VkObjectType getVkTypeId() noexcept { return VK_OBJECT_TYPE_FENCE; }
+    AXE_PRIVATE constexpr static auto VK_TYPE_ID = VK_OBJECT_TYPE_FENCE;
 
 private:
     VulkanDevice* const _mpDevice = nullptr;

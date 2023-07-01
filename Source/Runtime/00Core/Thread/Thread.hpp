@@ -1,3 +1,8 @@
 #pragma once
 
-#include "00Core/Thread/Thread.hpp"
+#include "00Core/Config.hpp"
+
+namespace axe::thread
+{
+
+}

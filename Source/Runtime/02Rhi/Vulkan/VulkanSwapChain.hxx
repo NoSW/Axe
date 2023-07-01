@@ -19,25 +19,21 @@ class VulkanSwapChain final : public SwapChain
     bool _destroy() noexcept;
 
 public:
-    AXE_PUBLIC ~VulkanSwapChain() noexcept override = default;
-    AXE_PUBLIC void acquireNextImage(Semaphore* pSignalSemaphore, u32& outImageIndex) noexcept override;
-    AXE_PUBLIC void acquireNextImage(Fence* pFence, u32& outImageIndex) noexcept override;
+    ~VulkanSwapChain() noexcept override = default;
+    void acquireNextImage(Semaphore* pSignalSemaphore, u32& outImageIndex) noexcept override;
+    void acquireNextImage(Fence* pFence, u32& outImageIndex) noexcept override;
 
 public:
-    auto handle() noexcept { return _mpHandle; }
+    AXE_PRIVATE auto handle() noexcept { return _mpHandle; }
 
-    RenderTarget* getRenderTarget(u32 index) noexcept override
+    AXE_PRIVATE RenderTarget* getRenderTarget(u32 index) noexcept override
     {
         AXE_ASSERT(index < _mpRenderTargets.size());
         return _mpRenderTargets[index];
     }
 
 public:
-    constexpr static VkObjectType
-    getVkTypeId() noexcept
-    {
-        return VK_OBJECT_TYPE_SWAPCHAIN_KHR;
-    }
+    AXE_PRIVATE constexpr static auto VK_TYPE_ID = VK_OBJECT_TYPE_SWAPCHAIN_KHR;
 
 private:
     std::pmr::vector<RenderTarget*> _mpRenderTargets;  // created from the swapchain back buffers

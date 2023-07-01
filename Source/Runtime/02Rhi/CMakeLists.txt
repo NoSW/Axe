@@ -14,7 +14,7 @@ endif()
 set_target_properties(${TARGET_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "Runtime")
 target_link_libraries(${TARGET_NAME} PRIVATE spirv-cross-core spirv-cross-glsl spirv-cross-cpp spirv-cross-reflect spirv-cross-msl spirv-cross-hlsl spirv-cross-util spirv-cross-c)
-target_link_libraries(${TARGET_NAME} PUBLIC 01Resource)
+target_link_libraries(${TARGET_NAME} PUBLIC 00Core)
 target_include_directories(${TARGET_NAME} PUBLIC ${TNIY_IMAGEFORMAT_INCLUDE_DIR})
 
 ############################################################################################
@@ -27,7 +27,7 @@ target_include_directories(${TARGET_NAME} PUBLIC ${TNIY_IMAGEFORMAT_INCLUDE_DIR}
 option(AUTO_LOCATE_VULKAN "AUTO_LOCATE_VULKAN" ON)
 
 if(AUTO_LOCATE_VULKAN)
-	message(STATUS "Attempting auto locate Vulkan using CMake......")
+	message("[${CMAKE_CURRENT_LIST_DIR}:${CMAKE_CURRENT_LIST_LINE}] Attempting auto locate Vulkan using CMake......")
 	
 	# Find Vulkan Path using CMake's Vulkan Module
 	# This will return Boolean 'Vulkan_FOUND' indicating the status of find as success(ON) or fail(OFF).
@@ -44,25 +44,25 @@ if(AUTO_LOCATE_VULKAN)
 		# CMake may fail to locate the libraries but could be able to 
 		# provide some path in Vulkan SDK include directory variable
 		# 'Vulkan_INCLUDE_DIRS', try to extract path from this.
-		message(STATUS "Failed to locate Vulkan SDK, retrying again...")
+		message("[${CMAKE_CURRENT_LIST_DIR}:${CMAKE_CURRENT_LIST_LINE}] Failed to locate Vulkan SDK, retrying again...")
 		if(EXISTS "${VULKAN_PATH}")
-			message(STATUS "Successfully located the Vulkan SDK: ${VULKAN_PATH}")
+			message("[${CMAKE_CURRENT_LIST_DIR}:${CMAKE_CURRENT_LIST_LINE}] Successfully located the Vulkan SDK: ${VULKAN_PATH}")
 		else()
-			message("Error: Unable to locate Vulkan SDK. Please turn off auto locate option by specifying 'AUTO_LOCATE_VULKAN' as 'OFF'")
-			message("and specify manually path using 'VULKAN_SDK' and 'VULKAN_VERSION' variables in the CMakeLists.txt.")
+			message("[${CMAKE_CURRENT_LIST_DIR}:${CMAKE_CURRENT_LIST_LINE}] Error: Unable to locate Vulkan SDK. Please turn off auto locate option by specifying 'AUTO_LOCATE_VULKAN' as 'OFF'")
+			message("[${CMAKE_CURRENT_LIST_DIR}:${CMAKE_CURRENT_LIST_LINE}] and specify manually path using 'VULKAN_SDK' and 'VULKAN_VERSION' variables in the CMakeLists.txt.")
 			return()
 		endif()
 	endif()
 else()
-	message(STATUS "Attempting to locate Vulkan SDK using manual path......")
+	message("[${CMAKE_CURRENT_LIST_DIR}:${CMAKE_CURRENT_LIST_LINE}] Attempting to locate Vulkan SDK using manual path......")
 	set(VULKAN_SDK "C:/VulkanSDK")
 	set(VULKAN_VERSION "1.3.243.0")
 	set(VULKAN_PATH "${VULKAN_SDK}/${VULKAN_VERSION}")
-	message(STATUS "Using manual specified path: ${VULKAN_PATH}")
+	message("[${CMAKE_CURRENT_LIST_DIR}:${CMAKE_CURRENT_LIST_LINE}] Using manual specified path: ${VULKAN_PATH}")
 
 	# Check if manual set path exists
 	if(NOT EXISTS "${VULKAN_PATH}")
-		message("Error: Unable to locate this Vulkan SDK path VULKAN_PATH: ${VULKAN_PATH}, please specify correct path.
+		message("[${CMAKE_CURRENT_LIST_DIR}:${CMAKE_CURRENT_LIST_LINE}] Error: Unable to locate this Vulkan SDK path VULKAN_PATH: ${VULKAN_PATH}, please specify correct path.
 		For more information on correct installation process, please refer to subsection 'Getting started with Lunar-G SDK'
 		and 'Setting up first project with CMake' in Chapter 3, 'Shaking hands with the device' in this book 'Learning Vulkan', ISBN - 9781786469809.")
 	   return()

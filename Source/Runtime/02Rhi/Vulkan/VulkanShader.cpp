@@ -1,9 +1,9 @@
 #include "VulkanShader.hxx"
 #include "VulkanDevice.hxx"
 
-#include "01Resource/Shader/Shader.hpp"
 #include "00Core/IO/IO.hpp"
 #include "00Core/Reflection/Enum.hpp"
+#include "00Core/Container/String.hpp"
 
 #include <spirv_common.hpp>
 #include <spirv_cross.hpp>
@@ -34,7 +34,7 @@ static TextureDimension to_TextureDimension(spirv_cross::SPIRType::ImageType ima
 
 static bool create_shader_reflection(const std::span<u8>& byteCode,  // spv coe
                                      ShaderStageFlagOneBit shaderStage,
-                                     std::string_view glslFilePath,                  // used for print error msg
+                                     std::string_view glslName,                      // used for print error msg
                                      std::pmr::list<std::pmr::string>& outNamePool,  // all strings will from  shader reflection (i.e., output from this func)
                                      ShaderReflection& outReflection) noexcept
 {
@@ -105,7 +105,7 @@ static bool create_shader_reflection(const std::span<u8>& byteCode,  // spv coe
     std::pmr::vector<ShaderResource> shaderResources;
     std::pmr::vector<ShaderVariable> shaderVariables;
     std::pmr::vector<u32> parentIndex;
-    const auto extractShaderResource = [shaderStage, &glslFilePath, &compiler, &usedResources, &outNamePool, &shaderResources](
+    const auto extractShaderResource = [shaderStage, &glslName, &compiler, &usedResources, &outNamePool, &shaderResources](
                                            const spirv_cross::SmallVector<spirv_cross::Resource>& resources, DescriptorTypeFlag descriptorType)
     {
         for (const auto& res : resources)
@@ -113,7 +113,7 @@ static bool create_shader_reflection(const std::span<u8>& byteCode,  // spv coe
             if (usedResources.find(res.id) == usedResources.end())
             {
 #if _DEBUG
-                AXE_WARN("{} is not used in {}", res.name, glslFilePath);
+                AXE_WARN("{} is not used in {}", res.name, glslName);
 #endif
                 continue;
             }
@@ -179,7 +179,7 @@ static bool create_shader_reflection(const std::span<u8>& byteCode,  // spv coe
         if (usedResources.find(res.id) == usedResources.end())
         {
 #if _DEBUG
-            AXE_WARN("{} is not used in {}", res.name, glslFilePath);
+            AXE_WARN("{} is not used in {}", res.name, glslName);
 #endif
             continue;
         }
@@ -239,14 +239,14 @@ bool VulkanShader::_create(ShaderDesc& desc) noexcept
     // create module
     std::pmr::vector<ShaderReflection> shaderReflections;
     shaderReflections.reserve(desc.mStages.size());
-    for (const auto& stageDesc : desc.mStages)
+    for (const ShaderStageDesc& stageDesc : desc.mStages)
     {
         u8 index                     = bit2id(stageDesc.mStage);
-        std::span<u8> shaderByteCode = resource::get_spv_byte_code(stageDesc.mRelaFilePath);
+        std::span<u8> shaderByteCode = stageDesc.byteCode[bit2id(GraphicsApiFlag::VULKAN)];
         if (!shaderByteCode.empty())
         {
             shaderReflections.push_back({});
-            if (AXE_FAILED(create_shader_reflection(shaderByteCode, stageDesc.mStage, stageDesc.mRelaFilePath, _mNamePool, shaderReflections.back()))) { return false; }
+            if (AXE_FAILED(create_shader_reflection(shaderByteCode, stageDesc.mStage, stageDesc.name, _mNamePool, shaderReflections.back()))) { return false; }
             VkShaderModuleCreateInfo createInfo = {
                 .sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
                 .pNext    = nullptr,
@@ -257,8 +257,12 @@ bool VulkanShader::_create(ShaderDesc& desc) noexcept
             VkShaderModule shaderModule = VK_NULL_HANDLE;
             if (VK_FAILED(vkCreateShaderModule(_mpDevice->handle(), &createInfo, nullptr, &_mpHandles[index])))
             {
-                AXE_ERROR("Failed to create shader module for shader stage: {}", stageDesc.mRelaFilePath);
+                AXE_ERROR("Failed to create shader module for shader stage: {}", stageDesc.name);
                 return false;
+            }
+            else
+            {
+                _mpDevice->setGpuMarker_DebugActiveOnly(_mpHandles[index], VK_OBJECT_TYPE_SHADER_MODULE, stageDesc.name);
             }
             _mpEntryNames[index] = stageDesc.mEntryPoint;
         }

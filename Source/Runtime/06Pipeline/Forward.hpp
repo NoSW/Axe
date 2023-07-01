@@ -22,6 +22,8 @@ private:
     void _addPipelines() noexcept;
     void _removePipelines() noexcept;
 
+    void _prepareDescriptorSets() noexcept;
+
 private:
     u32 _mWidth                       = 0;
     u32 _mHeight                      = 0;
@@ -38,6 +40,8 @@ private:
     std::array<rhi::Cmd*, _IMAGE_COUNT> _mpCmds{};
     std::array<rhi::Fence*, _IMAGE_COUNT> _mpRenderCompleteFences{};
     std::array<rhi::Semaphore*, _IMAGE_COUNT> _mpRenderCompleteSemaphores{};
+
+    std::array<rhi::Texture*, 6> _mpSkyboxTextures{};
 
     rhi::Semaphore* _mpImageAcquiredSemaphore   = nullptr;
     rhi::SwapChain* _mpSwapChain                = nullptr;
