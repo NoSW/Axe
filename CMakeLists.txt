@@ -16,14 +16,6 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON) # Add property to allow making proj
 define_property(GLOBAL PROPERTY ALL_SAHRED_BINARY BRIEF_DOCS "all shared binary" FULL_DOCS "all shared binary")
 
 #############################################################################################
-# Lanuages
-#############################################################################################
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-message("[${CMAKE_CURRENT_LIST_DIR}:${CMAKE_CURRENT_LIST_LINE}] C++ compiler flags: ${CMAKE_CXX_FLAGS}")
-
-#############################################################################################
 # helpr functions
 #############################################################################################
 
@@ -72,22 +64,53 @@ function(copy_all_shared_to_target target)
   endforeach()
 endfunction()
 
+macro(AXE_LOG msg)
+    message("[${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt:${CMAKE_CURRENT_LIST_LINE}] ${msg}")
+endmacro()
+
+macro(AXE_ERROR msg)
+  message(FATAL_ERROR "[${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt:${CMAKE_CURRENT_LIST_LINE}] ${msg}")
+endmacro()
+
+AXE_LOG("CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
+AXE_LOG("CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
+AXE_LOG("CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}") 
+AXE_LOG("CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
+AXE_LOG("CMAKE_CXX_COMPILER_VERSION: ${CMAKE_CXX_COMPILER_VERSION}")
+AXE_LOG("CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}")
+AXE_LOG("CMAKE_C_COMPILER: ${CMAKE_C_COMPILER}")
+AXE_LOG("CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+AXE_LOG("CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
+
+#############################################################################################
+# Lanuages
+#############################################################################################
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 #############################################################################################
 # compilers
 #############################################################################################
+find_package(Python COMPONENTS Interpreter)
+if(Python_FOUND)
+  AXE_LOG("Python found: ${Python_EXECUTABLE}")
+  set(PYTHON_PATH ${Python_EXECUTABLE})
+else()
+  AXE_ERROR("Python not found")
+endif()
+
 if(WIN32)
   set(PLATFORM_NAME "Windows")
-  set(PYTHON_PATH python)
 elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
   set(PLATFORM_NAME "Linux")
-  set(PYTHON_PATH python3)
 else()
   message(FATAL_ERROR "Unsupported platform")
 endif()
 
 if (MSVC)
     add_compile_options(/MP)
-    message("[${CMAKE_CURRENT_LIST_DIR}:${CMAKE_CURRENT_LIST_LINE}] enable /MP for MSVC")
+    AXE_LOG("enable /MP for MSVC")
     add_compile_options(/we4834) # warning C4834: discarding return value of function with 'nodiscard' attribute
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     #    add_compile_options(-fsanitize-address-use-after-return=runtime)
@@ -96,7 +119,7 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND CMAKE_BUILD_TYPE MATCHES "Debug")
         add_compile_options(-fsanitize=thread)
         add_link_options(-fsanitize=thread)
-        message("[${CMAKE_CURRENT_LIST_DIR}:${CMAKE_CURRENT_LIST_LINE}] enable thread sanitizer for clang under ${CMAKE_BUILD_TYPE} mode")
+        AXE_LOG("enable thread sanitizer for clang under ${CMAKE_BUILD_TYPE} mode")
     endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 else()
@@ -115,5 +138,5 @@ add_subdirectory(Source/ThirdParty)
 # add_subdirectory(Source/AssetSystem)
 add_subdirectory(Source/Shaders)
 add_subdirectory(Source/Runtime)
-# add_subdirectory(Source/Tests)
+add_subdirectory(Tests)
 add_subdirectory(Examples)

@@ -14,7 +14,7 @@ D3D12Backend::D3D12Backend(BackendDesc& desc) noexcept
         {
             _mpDebug->EnableDebugLayer();
 
-            ID3D12Debug1* pDebug1 = NULL;
+            ID3D12Debug1* pDebug1 = nullptr;
             if (DX_SUCCEEDED(_mpDebug->QueryInterface(IID_PPV_ARGS(&pDebug1))))
             {
                 pDebug1->SetEnableGPUBasedValidation(true);

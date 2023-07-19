@@ -40,7 +40,7 @@ run the python script that wraps cmake&build commands: (NOTE: `cmake` added to P
 > python3 generate_project.py --msvc # VS2022 is required 
 ```
 
-PS: The supporting facilities(build system, insight, etc.) for C++20 module are not yet complete, axe still uses #include
+Axe still uses #include style, instead of c++20 module :(. See ["*When can we begin to use modules?*"](https://github.com/royjacobson/modules-report) for more details. 
 
 ## Features
 

@@ -10,8 +10,8 @@ namespace axe::rhi
 
 bool VulkanAdapter::isDedicatedQueue(VkQueueFlags quFlags) noexcept
 {
-    const auto allSupportedFalgs = quFlags & (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT);
-    return std::has_single_bit(allSupportedFalgs);
+    const auto allSupportedFlags = quFlags & (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT | VK_QUEUE_TRANSFER_BIT);
+    return std::has_single_bit(allSupportedFlags);
 }
 
 static const auto query_family_index = [](VkPhysicalDevice pHandle) -> std::tuple<int, int, int>

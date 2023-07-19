@@ -160,6 +160,14 @@ using nullable = T *;
 //////////////////////////////////////////////////////////////////////////////////////////////
 //                             compiler
 //////////////////////////////////////////////////////////////////////////////////////////////
+
+// https://stackoverflow.com/questions/172587/what-is-the-difference-between-g-and-gcc
+// @DISCUSSION@ gcc v.s. g++ (clang v.s. clang++ is also same)
+//     - gcc will compile: .c and .cpp files as C and C++ respectively.
+//     - g++ will compile: .c and .cpp files but they will all be treated as C++ files.
+//     - g++ will automatically links in the std C++ libraries (gcc does not do this).
+//     - g++ have more predefined macros. (e.g., __cplusplus )
+
 #ifdef _MSC_VER
 #define AXE_COMPILER_MSVC 1
 #define AXE_DLL_IMPORT    __declspec(dllimport)  // For example, class AXE_DLL_IMPORT X {};

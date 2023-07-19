@@ -365,6 +365,7 @@ bool VulkanPipeline::_crateGraphicsPipeline(const PipelineDesc& desc) noexcept
         .dynamicStateCount = dynamicStates.size(),
         .pDynamicStates    = dynamicStates.data()};
 
+    // prepare for pipeline creation
     VkGraphicsPipelineCreateInfo pipelineCreateInfo{
         .sType               = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
         .pNext               = nullptr,
@@ -382,11 +383,21 @@ bool VulkanPipeline::_crateGraphicsPipeline(const PipelineDesc& desc) noexcept
         .pDynamicState       = &dynamicStateCreateInfo,
         .layout              = pRootSignature->handle(),
         .renderPass          = renderPass.handle,
-        .subpass             = 0,
-        .basePipelineHandle  = VK_NULL_HANDLE,
+        .subpass             = 0,  // index of the subpass in the render pass where this pipeline will be used.
+
+        .basePipelineHandle  = VK_NULL_HANDLE,  // can’t be used with basePipelineIndex at same time
+                                                // we don't inherit from another pipeline here, so set it null
+
+        // index of pipeline creation info in this very array (just one element here).
+        // The “parent” pipeline must be earlier (must have a smaller index) in this array and
+        // it must be created with the “allow derivatives” flag set.
+        // we don't inherit from another pipeline here, so set it an invalid index
         .basePipelineIndex   = -1};
 
+    // Pipeline Cache
     VkPipelineCache pPipelineCache = desc.pCache ? (VkPipelineCache)desc.pCache->pCacheData : VK_NULL_HANDLE;
+
+    // return
     return VK_SUCCEEDED(vkCreateGraphicsPipelines(_mpDevice->handle(), pPipelineCache, 1, &pipelineCreateInfo, &g_VkAllocationCallbacks, &_mpHandle));
 }
 

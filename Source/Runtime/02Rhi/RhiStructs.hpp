@@ -80,14 +80,14 @@ struct DescBase
 {
 #if _DEBUG
 private:
-    std::pmr::string label;
+    std::pmr::string label;  // NOLINT
 
 public:
     // only do actual work in Debug, do nothing in Release
-    void setLabel_DebugActiveOnly(std::string_view s) noexcept { label = s; }
+    void setLabel_DebugActiveOnly(std::string_view s) noexcept { label = s; }  // NOLINT
 
     // return label in Debug, return null string in Release
-    std::string_view getLabel_DebugActiveOnly() const noexcept { return label; }
+    std::string_view getLabel_DebugActiveOnly() const noexcept { return label; }  // NOLINT
 #else
     // only do actual work in Debug, do nothing in Release
     void setLabel_DebugActiveOnly(std::string_view s) noexcept
@@ -279,9 +279,9 @@ struct BufferDesc : public DescBase
     /// What state will the buffer get created in
     ResourceStateFlags startState     = ResourceStateFlags::UNDEFINED;
     /// ICB draw type
-    IndirectArgumentType ICBDrawType  = IndirectArgumentType::INVALID;
+    IndirectArgumentType ICBDrawType  = IndirectArgumentType::INVALID;  // NOLINT
     /// ICB max vertex buffers slots count
-    u32 ICBMaxCommandCount            = 0;
+    u32 ICBMaxCommandCount            = 0;  // NOLINT
     /// Format of the buffer (applicable to typed storage buffers (Buffer<T>)
     TinyImageFormat format            = TinyImageFormat_UNDEFINED;
     /// Flags specifying the suitable usage of this buffer (Uniform buffer, Vertex Buffer, Index Buffer,...)
@@ -385,7 +385,7 @@ struct DescriptorData
         {
             // Bind MTLIndirectCommandBuffer along with the MTLBuffer
             const char* ICBName;  // TODO: type with constructor in anonymous aggregate is NOT allowed when using gcc
-            u32 ICBIndex;
+            u32 ICBIndex;         // NOLINT
             bool bindICB;
         };
     };

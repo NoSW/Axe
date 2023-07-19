@@ -205,7 +205,17 @@ void operator delete[](void* p, std::align_val_t al, const std::nothrow_t& tag) 
 #pragma warning(pop)
 #endif
 
-// void* malloc(size_t bytes)
-//{
-//     return mi_malloc(bytes);
-// }
+// @DISCUSSION@: how to hook a function? (STL, libc, syscall,...)
+//     - compile-time: use macro to replace the function name
+//     - link-time:
+//         - With gcc/clang on Unix-like OS, use --wrap func, which can resolve
+//           func as __wrap_func and resolve __real_func as func,for example,
+//           gcc -Wl,--wrap,malloc -Wl, --wrap,free -o main main.0 mymalloc.o
+//         - With MSVC on Windows, use /alternatename:@func@real_func, for example,
+//           cl /Femain.exe main.cpp /link /alternatename:malloc@my_malloc
+//     - runtime:
+//          - With gcc/clang on Unix-like OS, use LD_PRELOAD, for example,
+//            LD_PRELOAD=path/to/your_malloc.so;path/to/your_other.so
+//          - With MSVC on Windows, use AppInit_DLLs, for example,
+//            AppInit_DLLs=path/to/your_malloc.dll;path/to/your_other.dll
+//            , see https://learn.microsoft.com/en-us/windows/win32/dlls/secure-boot-and-appinit-dlls for more details

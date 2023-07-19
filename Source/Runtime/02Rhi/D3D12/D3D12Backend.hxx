@@ -4,7 +4,7 @@
 #error "Error cmake config: D3D12 is supported on Windows only!"
 #endif
 
-#include <02Rhi/Rhi.hpp>
+#include "02Rhi/Rhi.hpp"
 
 #include <d3d12.h>
 #include <d3d12sdklayers.h>
@@ -21,7 +21,7 @@ namespace axe::rhi
 class D3D12Backend : public Backend
 {
 public:
-    D3D12Backend(BackendDesc& desc) noexcept;
+    explicit D3D12Backend(BackendDesc& desc) noexcept;
     ~D3D12Backend() noexcept override;
     Adapter* requestAdapter(AdapterDesc&) noexcept override { return nullptr; }
     void releaseAdapter(Adapter*&) noexcept override {}
