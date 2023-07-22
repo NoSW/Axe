@@ -1,6 +1,6 @@
-#include "VulkanRenderTarget.hxx"
-#include "VulkanDevice.hxx"
-#include "VulkanTexture.hxx"
+#include "VulkanRenderTarget.internal.hpp"
+#include "VulkanDevice.internal.hpp"
+#include "VulkanTexture.internal.hpp"
 
 #include <volk.h>
 #include <tiny_imageformat/tinyimageformat_query.h>

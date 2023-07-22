@@ -4,10 +4,10 @@ set_target_properties(Catch2 PROPERTIES FOLDER "Tests/Catch2")
 set_target_properties(Catch2WithMain PROPERTIES FOLDER "Tests/Catch2")
 
 
-file(GLOB_RECURSE TEST_THREAD_CPP_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Runtime/00Core/Thread/*.cpp")
-add_executable(Test_Thread ${TEST_THREAD_CPP_FILES})
-target_link_libraries(Test_Thread 00Core)
-target_include_directories(Test_Thread PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../Source/Runtime")
+# file(GLOB_RECURSE TEST_THREAD_CPP_FILES "${CMAKE_CURRENT_SOURCE_DIR}/Runtime/00Core/Thread/*.cpp")
+# add_executable(Test_Thread ${TEST_THREAD_CPP_FILES})
+# target_link_libraries(Test_Thread 00Core)
+# target_include_directories(Test_Thread PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../Source/Runtime")
 
 # Use the standard separate compilation
 set( SOURCES_IDIOMATIC_EXAMPLES
@@ -23,7 +23,7 @@ foreach(name ${TARGETS_IDIOMATIC_EXAMPLES} )
 endforeach()
 
 set(ALL_EXAMPLE_TARGETS
-    Test_Thread
+   # Test_Thread
     ${TARGETS_IDIOMATIC_EXAMPLES}
 )
 

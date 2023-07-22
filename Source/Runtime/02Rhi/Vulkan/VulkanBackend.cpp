@@ -1,4 +1,4 @@
-#include "VulkanBackend.hxx"
+#include "VulkanBackend.internal.hpp"
 
 #ifndef VK_VERSION_1_3
 #error ""
@@ -7,8 +7,8 @@
 #define VOLK_IMPLEMENTATION
 #include <volk.h>
 
-#include "VulkanAdapter.hxx"
-#include "VulkanDevice.hxx"
+#include "VulkanAdapter.internal.hpp"
+#include "VulkanDevice.internal.hpp"
 
 #include "00Core/Memory/Memory.hpp"
 #include "00Core/OS/OS.hpp"

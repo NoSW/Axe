@@ -1,10 +1,10 @@
-#include "VulkanCmd.hxx"
-#include "VulkanCmdPool.hxx"
-#include "VulkanQueue.hxx"
-#include "VulkanTexture.hxx"
-#include "VulkanBuffer.hxx"
-#include "VulkanDescriptorSet.hxx"
-#include "VulkanDevice.hxx"
+#include "VulkanCmd.internal.hpp"
+#include "VulkanCmdPool.internal.hpp"
+#include "VulkanQueue.internal.hpp"
+#include "VulkanTexture.internal.hpp"
+#include "VulkanBuffer.internal.hpp"
+#include "VulkanDescriptorSet.internal.hpp"
+#include "VulkanDevice.internal.hpp"
 
 #include <tiny_imageformat/tinyimageformat_query.h>
 #include <volk.h>

@@ -1,6 +1,6 @@
 #pragma once
 #include "02Rhi/Rhi.hpp"
-#include "VulkanEnums.hxx"
+#include "VulkanEnums.internal.hpp"
 
 namespace axe::rhi
 {

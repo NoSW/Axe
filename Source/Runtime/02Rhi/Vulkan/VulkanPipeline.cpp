@@ -1,7 +1,7 @@
-#include "VulkanPipeline.hxx"
-#include "VulkanDevice.hxx"
-#include "VulkanShader.hxx"
-#include "VulkanRootSignature.hxx"
+#include "VulkanPipeline.internal.hpp"
+#include "VulkanDevice.internal.hpp"
+#include "VulkanShader.internal.hpp"
+#include "VulkanRootSignature.internal.hpp"
 
 #include <volk.h>
 

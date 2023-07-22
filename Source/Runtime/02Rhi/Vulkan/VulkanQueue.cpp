@@ -1,10 +1,10 @@
 
-#include "VulkanQueue.hxx"
-#include "VulkanSemaphore.hxx"
-#include "VulkanFence.hxx"
-#include "VulkanCmd.hxx"
-#include "VulkanSwapChain.hxx"
-#include "VulkanDevice.hxx"
+#include "VulkanQueue.internal.hpp"
+#include "VulkanSemaphore.internal.hpp"
+#include "VulkanFence.internal.hpp"
+#include "VulkanCmd.internal.hpp"
+#include "VulkanSwapChain.internal.hpp"
+#include "VulkanDevice.internal.hpp"
 #include <volk.h>
 
 namespace axe::rhi

@@ -1,7 +1,7 @@
-#include "VulkanDescriptorSet.hxx"
-#include "VulkanDevice.hxx"
-#include "VulkanRootSignature.hxx"
-#include "VulkanTexture.hxx"
+#include "VulkanDescriptorSet.internal.hpp"
+#include "VulkanDevice.internal.hpp"
+#include "VulkanRootSignature.internal.hpp"
+#include "VulkanTexture.internal.hpp"
 
 #include <volk.h>
 

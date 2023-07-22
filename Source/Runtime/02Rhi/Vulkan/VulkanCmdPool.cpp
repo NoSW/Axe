@@ -1,6 +1,6 @@
-#include "VulkanCmdPool.hxx"
-#include "VulkanQueue.hxx"
-#include "VulkanDevice.hxx"
+#include "VulkanCmdPool.internal.hpp"
+#include "VulkanQueue.internal.hpp"
+#include "VulkanDevice.internal.hpp"
 #include <volk.h>
 
 namespace axe::rhi

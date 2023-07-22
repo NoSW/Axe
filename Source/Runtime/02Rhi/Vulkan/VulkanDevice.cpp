@@ -1,4 +1,4 @@
-#include "VulkanDevice.hxx"
+#include "VulkanDevice.internal.hpp"
 
 #include <volk.h>
 

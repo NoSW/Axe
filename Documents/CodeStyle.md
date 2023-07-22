@@ -42,7 +42,7 @@ nullable<float> pSomething2; // Allowed to be nullptr, in other word, we need
 The project uses the following file extensions:
 - .cpp, c++ source file
 - .hpp, c++ public header file
-- .hxx, c++ private header file, only be include by the file in the same module or layer
+- .internal.hpp, c++ private header file, only be include by the file in the same module or layer
 - .inl, code snippet, only be included by some specified .cpp
   
 NOTE:

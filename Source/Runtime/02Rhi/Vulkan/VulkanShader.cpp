@@ -1,5 +1,5 @@
-#include "VulkanShader.hxx"
-#include "VulkanDevice.hxx"
+#include "VulkanShader.internal.hpp"
+#include "VulkanDevice.internal.hpp"
 
 #include "00Core/IO/IO.hpp"
 #include "00Core/Reflection/Enum.hpp"

@@ -1,6 +1,6 @@
-#include "VulkanSampler.hxx"
-#include "VulkanDevice.hxx"
-#include "VulkanEnums.hxx"
+#include "VulkanSampler.internal.hpp"
+#include "VulkanDevice.internal.hpp"
+#include "VulkanEnums.internal.hpp"
 #include <volk.h>
 
 #include <tiny_imageformat/tinyimageformat_apis.h>

@@ -1,4 +1,4 @@
-#include "VulkanEnums.hxx"
+#include "VulkanEnums.internal.hpp"
 
 #include <tiny_imageformat/tinyimageformat_apis.h>
 

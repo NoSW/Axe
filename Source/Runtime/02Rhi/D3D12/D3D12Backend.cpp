@@ -1,4 +1,4 @@
-#include "D3D12Backend.hxx"
+#include "D3D12Backend.internal.hpp"
 
 namespace axe::rhi
 {

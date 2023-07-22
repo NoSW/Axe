@@ -1,5 +1,5 @@
-#include "VulkanBuffer.hxx"
-#include "VulkanDevice.hxx"
+#include "VulkanBuffer.internal.hpp"
+#include "VulkanDevice.internal.hpp"
 
 #include "00Core/Math/Math.hpp"
 

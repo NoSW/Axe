@@ -1,7 +1,7 @@
 #pragma once
 
 #include "02Rhi/Rhi.hpp"
-#include "VulkanEnums.hxx"
+#include "VulkanEnums.internal.hpp"
 
 #include "00Core/Thread/Thread.hpp"
 
@@ -21,7 +21,7 @@ class VulkanQueue final : public Queue
     friend class VulkanCmd;
     friend class VulkanSwapChain;
     AXE_NON_COPYABLE(VulkanQueue);
-    VulkanQueue(VulkanDevice* device) noexcept : _mpDevice(device) {}
+    explicit VulkanQueue(VulkanDevice* pDevice) noexcept : _mpDevice(pDevice) {}
     bool _create(const QueueDesc&) noexcept;
     bool _destroy() noexcept;
 
