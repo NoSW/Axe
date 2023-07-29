@@ -78,6 +78,7 @@ endif()
 target_include_directories(${TARGET_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_include_directories(${TARGET_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS}/volk) # for diff dir-tree between windows and linux
 target_include_directories(${TARGET_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS}/vma) # ditto
+target_include_directories(${TARGET_NAME} PRIVATE ${VULKAN_HELPER_INCLUDE_DIR})
 target_link_libraries(${TARGET_NAME} PRIVATE ${Vulkan_LIB_LIST})
 
 ############################################################################################

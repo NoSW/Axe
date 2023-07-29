@@ -82,6 +82,12 @@ add_subdirectory(lockfreequeue)
 set_target_properties(lockfreequeue PROPERTIES FOLDER "ThirdParty")
 
 ##############################################################################
+#                             vulkan_helper (header-only)
+##############################################################################
+add_subdirectory(vulkan_helper)
+set_target_properties(vulkan_helper PROPERTIES FOLDER "ThirdParty")
+
+##############################################################################
 #                                 tiny_imageformat
 ##############################################################################
 add_subdirectory(tiny_imageformat)
