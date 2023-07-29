@@ -6,7 +6,7 @@
 #define VK_NO_PROTOTYPES  // used for volk
 #include <vulkan/vulkan.h>
 
-#include <vulkan_helper/vk_enum_string_helper.h>
+#include <vk_enum_string_helper.h>
 
 namespace axe::rhi
 {
