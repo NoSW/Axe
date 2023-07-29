@@ -25,6 +25,7 @@ Checks:  '-*,
          performance-inefficient-string-concatenation,
          readability-identifier-naming,
          readability-redundant-member-init,
+         readability-braces-around-statements,
          '
 
 # https://clang.llvm.org/extra/clang-tidy/checks/readability/identifier-naming.html

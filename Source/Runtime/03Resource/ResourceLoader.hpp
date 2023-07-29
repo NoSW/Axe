@@ -6,6 +6,7 @@
 #include "02Rhi/Rhi.hpp"
 
 #include "00Core/Thread/Thread.hpp"
+#include "00Core/Thread/LockfreeQueue.hpp"
 
 #include <thread>
 #include <queue>
@@ -15,9 +16,10 @@ namespace axe::resource
 
 struct ResourceLoaderDesc
 {
-    rhi::Device* pDevice = nullptr;
-    u32 stageBufferCount = 0;  // number of staging buffers,
-    u32 stageBufferSize  = 0;
+    rhi::Device* pDevice      = nullptr;
+    u32 stageBufferCount      = 0;  // number of staging buffers,
+    u32 stageBufferSize       = 0;
+    u32 estimatedRequestCount = 32;  // used to reduce dynamic memory allocation
 };
 
 struct RequestLoadTextureDesc
@@ -53,6 +55,8 @@ struct RequestUpdateBufferDesc
 
 struct Request
 {
+    explicit Request(RequestUpdateBufferDesc& desc) : type(UPDATE_BUFFER), bufferDesc(desc) {}
+    explicit Request(RequestUpdateTextureDesc& desc) : type(UPDATE_TEXTURE), textureDesc(desc) {}
     enum Type
     {
         INVALID,
@@ -88,21 +92,9 @@ class ResourceLoader
     };
 
 public:
-    void pushRequest(RequestUpdateBufferDesc& desc) noexcept
-    {
-        _mQueueMutex.lock();
-        _mRequestQueue.push({Request::UPDATE_BUFFER});
-        _mRequestQueue.back().bufferDesc = desc;
-        _mQueueMutex.unlock();
-    }
+    void pushRequest(RequestUpdateBufferDesc& desc) noexcept { _mRequestQueue.enqueue(Request(desc)); }
 
-    void pushRequest(RequestUpdateTextureDesc& desc) noexcept
-    {
-        _mQueueMutex.lock();
-        _mRequestQueue.push(Request{Request::UPDATE_TEXTURE});
-        _mRequestQueue.back().textureDesc = desc;
-        _mQueueMutex.unlock();
-    }
+    void pushRequest(RequestUpdateTextureDesc& desc) noexcept { _mRequestQueue.enqueue(Request(desc)); }
 
     void pushRequest(RequestLoadTextureDesc&) noexcept;
     void pushRequest(RequestLoadBufferDesc&) noexcept;
@@ -122,26 +114,12 @@ private:
 
     void _loop() noexcept;
 
-    [[nodiscard]] bool _popRequest(Request& outRequest) noexcept
-    {
-        _mQueueMutex.lock();
-        const bool isNonEmpty = !_mRequestQueue.empty();
-        if (isNonEmpty)
-        {
-            outRequest = _mRequestQueue.front();
-            _mRequestQueue.pop();
-        }
-        _mQueueMutex.unlock();
-        return isNonEmpty;
-    }
-
 private:
     rhi::Queue* _mpQueue = nullptr;                    // queue used to submit resources to gpu
     std::pmr::vector<CopyResourceSet> _mResourceSets;  // all resource sets that can be used concurrently
     u32 _mNextAvailableSet = 0;                        // index of next available resource set
 
-    std::queue<Request> _mRequestQueue;
-    std::mutex _mQueueMutex;  // TODO: remove mutex, and use lockfree queue
+    thread::QueueSPSC<Request> _mRequestQueue;
 
     rhi::Device* _mpDevice = nullptr;                     // which device attach to
     std::pmr::vector<rhi::Semaphore*> _mpWaitSemaphores;  // external semaphores need to be waited

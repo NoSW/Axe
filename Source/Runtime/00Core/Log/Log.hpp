@@ -36,19 +36,23 @@
 
 // a good program maybe trigger it due to various platform or hardware issues.
 // usually for checking third-party apis
-#define AXE_FAILED(expression) ((expression) ? false : axe::log::log2(spdlog::source_loc{__FILE__, __LINE__, SPDLOG_FUNCTION}, spdlog::level::err, "] " #expression, true)) // return expression, and print error msg if false
-#define AXE_SUCCEEDED(expression) ((expression) ? true : axe::log::log2(spdlog::source_loc{__FILE__, __LINE__, SPDLOG_FUNCTION}, spdlog::level::err, "] " #expression, false)) // return expression, and print error msg if false
+#define AXE_FAILED(expression) ((expression) ? false : axe::log::internal::log_return_value(spdlog::source_loc{__FILE__, __LINE__, SPDLOG_FUNCTION}, spdlog::level::err, "] " #expression, true)) // return expression, and print error msg if false
+#define AXE_SUCCEEDED(expression) ((expression) ? true : axe::log::internal::log_return_value(spdlog::source_loc{__FILE__, __LINE__, SPDLOG_FUNCTION}, spdlog::level::err, "] " #expression, false)) // return expression, and print error msg if false
 
 // clang-format on
 
 namespace axe::log
 {
 
-inline static bool log2(spdlog::source_loc loc, spdlog::level::level_enum lvl, spdlog::string_view_t msg, bool ret)
+namespace internal
+{
+// a log interface that has return value, only for AXE_FAILED and AXE_SUCCEEDED
+inline static bool log_return_value(spdlog::source_loc loc, spdlog::level::level_enum lvl, spdlog::string_view_t msg, bool ret) noexcept
 {
     spdlog::default_logger_raw()->log(loc, lvl, msg);
     return ret;
 }
+}  // namespace internal
 
 static void init() noexcept { spdlog::set_pattern("%^[%T] [%l] [%P:%t] [%s:%#] [%!%v%$"); }  // COLOR_BEGIN [time] [level] [PID:TID] [filename:line] [func] value COLOR_END
 

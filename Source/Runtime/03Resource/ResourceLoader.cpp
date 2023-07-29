@@ -12,7 +12,7 @@ void ResourceLoader::_loop() noexcept
     while (_mIsRunning)
     {
         Request req;
-        if (!_mRequestQueue.empty() && _popRequest(req))
+        if (_mRequestQueue.try_dequeue(req))
         {
             u32 activeSetIndex = U32_MAX;
             switch (req.type)
@@ -43,7 +43,7 @@ void ResourceLoader::_loop() noexcept
 }
 
 ResourceLoader::ResourceLoader(ResourceLoaderDesc& desc) noexcept
-    : _mpDevice(desc.pDevice), _mStreamerThread(&ResourceLoader::_loop, this)
+    : _mpDevice(desc.pDevice), _mRequestQueue(desc.estimatedRequestCount), _mStreamerThread(&ResourceLoader::_loop, this)
 {
     os::set_thread_name((void*)_mStreamerThread.native_handle(), L"ResourceLoader");
 
@@ -100,10 +100,10 @@ ResourceLoader::ResourceLoader(ResourceLoaderDesc& desc) noexcept
 
 ResourceLoader::~ResourceLoader() noexcept
 {
-    while (!_mRequestQueue.empty()) {}  // wait all pushed requests to be consumed
-    _mpQueue->waitIdle();               // wait all consumed requesst to be submitted
-    _mIsRunning = false;                // skip load loop
-                                        //   _mStreamerThread.join();            // wait ResourceLoaderThread to exit
+    while (_mRequestQueue.size_approx() != 0) {}  // wait all pushed requests to be consumed
+    _mpQueue->waitIdle();                         // wait all consumed requesst to be submitted
+    _mIsRunning = false;                          // skip load loop
+                                                  //   _mStreamerThread.join();            // wait ResourceLoaderThread to exit
 
     for (CopyResourceSet& resSet : _mResourceSets)  // destroy all resources held by this resource loader
     {
@@ -121,7 +121,7 @@ ResourceLoader::~ResourceLoader() noexcept
 
 void ResourceLoader::waitIdle() noexcept
 {
-    while (!_mRequestQueue.empty()) {}                                         // wait all pushed requests to be consumed
+    while (_mRequestQueue.size_approx() != 0) {}                               // wait all pushed requests to be consumed
     _mpQueue->waitIdle();                                                      // wait all consumed requesst to be submitted
     for (CopyResourceSet& resSet : _mResourceSets) { resSet.pFence->wait(); }  // wait all submitted requests to be done
 }

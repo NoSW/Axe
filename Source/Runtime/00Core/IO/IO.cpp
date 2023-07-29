@@ -14,7 +14,8 @@ bool read_file_binary(const std::filesystem::path& filePath, std::pmr::vector<u8
         std::ifstream ifs(filePath, std::ios::in | std::ios::binary);
         if (!ifs.fail())
         {
-            out.assign(std::istreambuf_iterator<char>(ifs), std::istreambuf_iterator<char>());
+            out.resize(ifs.seekg(0, std::ios::end).tellg());
+            ifs.seekg(0, std::ios::beg).read((char*)(out.data()), static_cast<std::streamsize>(out.size()));
             ifs.close();
             return !out.empty();
         }

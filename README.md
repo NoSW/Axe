@@ -1,9 +1,9 @@
 # Axe
-Axe is a cross multi-platform game engine(a weekend project, not for production) , aiming at code readability and helping myself (and possibly others) learn:
- - C++11/17/20, OOP, STL, template, multi-threading, reflection, CMake cross-platform(Windows, Linux, ...)
+Axe is a cross multi-platform game engine(a slowly-developed weekend project, not for production), aiming at code readability and learning:
+ - c++11/17/20, OOP, STL, template, multi-threading, reflection, CMake cross-platform(Windows, Linux, ...)
  - underlying details about modern graphics apis (Vulkan, D3D12) and shader language: hlsl, glsl
  - software architecture of modern game engine (abstraction, layering, compile/edit/runtime/loop -time designs)
- - Various graphics features: forward, deferred pipeline, shadow, GI, ...
+ - various graphics features: forward, deferred pipeline, shadow, GI, ...
  - ...
 
 > Learn by coding!
@@ -46,7 +46,7 @@ Axe still uses #include style, instead of c++20 module :(. See ["*When can we be
 
 <img src="Documents/Images/Arch.png" alt="Game Engine Architecture" width=360 align="right"/>
 
-Axe is basically designed according to the architecture shown right. Thanks to the powerful standard libraries, and lots of high-quality open source third-party libraries, it can be built directly from the core layer. Runtime of Axe has # well-designed layers:
+Axe is basically designed according to the architecture shown right. Thanks to the powerful standard libraries, and lots of high-quality open source third-party libraries, it can be built directly from the core layer. Runtime of Axe has # well-designed layers of one-way dependency:
 
 - **00Core**
    - (WIP) High performance math library for graphics based on [glm](https://github.com/g-truc/glm)
