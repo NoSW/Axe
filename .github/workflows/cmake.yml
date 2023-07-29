@@ -20,24 +20,33 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
-    - name: Configure Update
+    - name: Add lunarg key for the repository:
+      run: wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+    - name: Update vulkan package 
+      run: sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-focal.list http://packages.lunarg.com/vulkan/lunarg-vulkan-focal.list
+    - name: Configure apt update
       run: sudo apt update
+    - name: Configure apt upgrade
+      run: sudo apt upgrade
+    - name: Configure Vulkan 3
+      run: sudo apt install vulkan-sdk
       
     - name: Configure Python
       run: sudo apt install python3
-    
-    - name: Configure Vulkan 1
-      run: wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
-    - name: Configure Vulkan 2
-      run: sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-focal.list http://packages.lunarg.com/vulkan/lunarg-vulkan-focal.list
-    - name: Configure Vulkan 3
-      run: sudo apt install vulkan-sdk
 
     - name: Configure Ninja
       run: sudo apt install ninja-build
     
     - name: Configure clang
       run: sudo apt install clang
+    
+    - name: Configure chmod
+      run: chmod +x Tools/Linux/*
+      
+    - name: Check version of clang
+      run: clang --version
+    - name: Check version of gcc
+      run: gcc --version
 
     - name: Configure CMake clang
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
