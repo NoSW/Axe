@@ -20,15 +20,15 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
-    - name: Add lunarg key for the repository
-      run: wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
-    - name: Update vulkan package 
-      run: sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-focal.list http://packages.lunarg.com/vulkan/lunarg-vulkan-focal.list
+  #  - name: Add lunarg key for the repository
+  #    run: wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+  #  - name: Update vulkan package 
+   #   run: sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-focal.list http://packages.lunarg.com/vulkan/lunarg-vulkan-focal.list
     - name: Configure apt update
       run: sudo apt update
-    - name: Configure apt upgrade
-      run: sudo apt upgrade
-    - name: Configure Vulkan 3
+  #  - name: Configure apt upgrade
+  #    run: sudo apt upgrade
+    - name: Configure Vulkan
       run: sudo apt install libvulkan-dev
       
     - name: Configure Python
