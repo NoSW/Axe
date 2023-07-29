@@ -76,6 +76,12 @@ add_subdirectory(glm)
 set_target_properties(glm PROPERTIES FOLDER "ThirdParty")
 
 ##############################################################################
+#                             lockfreequeue (header-only)
+##############################################################################
+add_subdirectory(lockfreequeue)
+set_target_properties(lockfreequeue PROPERTIES FOLDER "ThirdParty")
+
+##############################################################################
 #                                 tiny_imageformat
 ##############################################################################
 add_subdirectory(tiny_imageformat)
