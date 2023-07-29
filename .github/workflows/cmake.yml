@@ -24,7 +24,7 @@ jobs:
       run: sudo apt update
       
     - name: Configure Python
-      run: apt install python
+      run: sudo apt install python
     
     - name: Configure Vulkan
       run: sudo apt install vulkan-sdk
