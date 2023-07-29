@@ -2,9 +2,9 @@ name: CMake
 
 on:
   push:
-    branches: [ "dev" ]
+    branches: [ "ci-debug" ]
   pull_request:
-    branches: [ "dev" ]
+    branches: [ "ci-debug" ]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
@@ -20,7 +20,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
-    - name: Add lunarg key for the repository:
+    - name: Add lunarg key for the repository
       run: wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
     - name: Update vulkan package 
       run: sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-focal.list http://packages.lunarg.com/vulkan/lunarg-vulkan-focal.list
