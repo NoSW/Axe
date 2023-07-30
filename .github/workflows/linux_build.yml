@@ -19,15 +19,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - name: Download vulkan SDK
+        working-directory: ~/
+        run: |
+          wget https://sdk.lunarg.com/sdk/download/1.3.243.0/linux/vulkansdk-linux-x86_64-1.3.243.0.tar.gz
+          tar -xf vulkan-sdk.tar.gz
+          source 1.3.243.0/setup-env.sh
+
       - name: Install required packages
         run: |
-          wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
-          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-focal.list http://packages.lunarg.com/vulkan/lunarg-vulkan-focal.list
           sudo apt-get update
           sudo apt-get upgrade
-          sudo apt-get install libjsoncpp1
-          sudo apt-get install qt5-default
-          sudo apt-get install vulkan-sdk
           sudo apt-get install python3
           sudo apt-get install cmake
           sudo apt-get install ninja-build
@@ -49,16 +51,18 @@ jobs:
           vulkaninfo
 
       - name: Build with clang/clang++
+        working-directory: ${{github.workspace}}/Axe
         run: |
-          cmake -B ${{github.workspace}}/Build_clang -G "Ninja Multi-Config" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
-          cmake --build ${{github.workspace}}/Build_clang --config Release -- -j8
-          cmake --build ${{github.workspace}}/Build_clang --config Debug -- -j8
+          cmake -B Build_clang -G "Ninja Multi-Config" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+          cmake --build Build_clang --config Release -- -j8
+          cmake --build Build_clang --config Debug -- -j8
 
       - name: Build with gcc/g++
+        working-directory: ${{github.workspace}}/Axe
         run: |
-          cmake -B ${{github.workspace}}/Build_gcc -G "Ninja Multi-Config" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
-          cmake --build ${{github.workspace}}/Build_gcc --config Release -- -j8
-          cmake --build ${{github.workspace}}/Build_gcc --config Debug -- -j8
+          cmake -B Build_gcc -G "Ninja Multi-Config" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+          cmake --build Build_gcc --config Release -- -j8
+          cmake --build Build_gcc --config Debug -- -j8
 
     #- name: Test
     # working-directory: ${{github.workspace}}/build
