@@ -21,7 +21,7 @@ jobs:
       - name: Download VulkanSDK-1.3.243.0
         run: |
           curl -O https://sdk.lunarg.com/sdk/download/1.3.243.0/windows/VulkanSDK-1.3.243.0-Installer.exe
-          .\VulkanSDK-1.3.243.0-Installer.exe --accept-licenses --default-answer --confirm-command install
+          .\VulkanSDK-1.3.243.0-Installer.exe --accept-licenses --default-answer --confirm-command install --select-features=all
 
       - name: Download Python-3.11.4
         run: |
