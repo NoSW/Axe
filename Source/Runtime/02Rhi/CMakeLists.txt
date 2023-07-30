@@ -28,7 +28,7 @@ AXE_LOG("Attempting auto locate Vulkan using CMake......")
 find_package(Vulkan)
 	 
 if(NOT Vulkan_FOUND AND WIN32)
-    if (${VK_SDK_PATH} STREQUAL "")
+    if ("${VK_SDK_PATH}" STREQUAL "")
         set(VK_SDK_PATH "C:/VulkanSDK/1.3.243.0")
         set(${Vulkan_INCLUDE_DIRS} ${VK_SDK_PATH}/Include)
         set(${Vulkan_LIBRARY} ${VK_SDK_PATH}/Lib/vulkan-1.lib)
