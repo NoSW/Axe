@@ -1,0 +1,63 @@
+name: linux_build
+
+on:
+  push:
+    branches: ["ci-debug"]
+  pull_request:
+    branches: ["ci-debug"]
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
+    # You can convert this to a matrix build if you need cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Configure required packages
+        run: |
+          sudo apt update
+          sudo apt upgrade
+          sudo apt install vulkan-sdk
+          sudo apt install python3
+          sudo apt install cmake
+          sudo apt install ninja-build
+          sudo apt install clang
+          sudo apt install gcc
+          sudo apt install g++
+
+      - name: Configure execution permission
+        run: chmod +x Tools/Linux/*
+
+      - name: Check version of compiler
+        run: |
+          lsb_release -a
+          python3 --version
+          cmake--version
+          ninja --version
+          clang --version
+          gcc --version
+          vulkaninfo
+
+      - name: Build with clang/clang++
+        run: |
+          cmake -B ${{github.workspace}}/Build_clang -G "Ninja Multi-Config" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+          cmake --build ${{github.workspace}}/Build_clang --config Release -- -j8
+          cmake --build ${{github.workspace}}/Build_clang --config Debug -- -j8
+
+      - name: Build with gcc/g++
+        run: |
+          cmake -B ${{github.workspace}}/Build_gcc -G "Ninja Multi-Config" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
+          cmake --build ${{github.workspace}}/Build_gcc --config Release -- -j8
+          cmake --build ${{github.workspace}}/Build_gcc --config Debug -- -j8
+
+    #- name: Test
+    # working-directory: ${{github.workspace}}/build
+    ## Execute tests defined by the CMake configuration.
+    ## See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+    #run: ctest -C ${{env.BUILD_TYPE}}
