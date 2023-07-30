@@ -2,9 +2,11 @@ name: windows_build
 
 on:
   push:
-    branches: ["ci-debug"]
+    branches:
+      - $default-branch
   pull_request:
-    branches: ["ci-debug"]
+    branches:
+      - $default-branch
 
 env:
   UNUSED_VAR: "This variable is unused, but is here to demonstrate how to set environment variables in a workflow"
