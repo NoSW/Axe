@@ -25,6 +25,8 @@ jobs:
           sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-focal.list http://packages.lunarg.com/vulkan/lunarg-vulkan-focal.list
           sudo apt-get update
           sudo apt-get upgrade
+          sudo apt-get install libjsoncpp1
+          sudo apt-get install qt5-default
           sudo apt-get install vulkan-sdk
           sudo apt-get install python3
           sudo apt-get install cmake
