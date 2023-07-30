@@ -28,11 +28,6 @@ jobs:
           curl -O https://www.python.org/ftp/python/3.11.4/python-3.11.4-amd64.exe
           .\python-3.11.4-amd64.exe /passive
 
-      - name: Download LLVM-15.0.0
-        run: |
-          curl -O https://github.com/llvm/llvm-project/releases/download/llvmorg-15.0.0/LLVM-15.0.0-win64.exe
-          .\LLVM-15.0.0-win64.exe /S
-
       - name: Check version
         run: |
           python --version
