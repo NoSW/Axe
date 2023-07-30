@@ -3,10 +3,10 @@ name: linux_build
 on:
   push:
     branches:
-      - $default-branch
+      - "*"
   pull_request:
     branches:
-      - $default-branch
+      - "*"
 
 env:
   UNUSED_VAR: "This variable is unused, but is here to demonstrate how to set environment variables in a workflow"
