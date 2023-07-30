@@ -52,15 +52,19 @@ endif()
 target_include_directories(${TARGET_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_include_directories(${TARGET_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS}/volk) # for diff dir-tree between windows and linux
 target_include_directories(${TARGET_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS}/vma) # ditto
-if(NOT EXISTS "${Vulkan_INCLUDE_DIRS}/vma")
-	AXE_LOG("Error: Unable to locate Vulkan Library, please specify correct path.")
-    return()
-else()
-    file(GLOB_RECURSE ci_files_list "${Vulkan_INCLUDE_DIRS}/vma/*")
-    foreach(file ${ci_files_list})
-        message(STATUS "VVVVVVVVVVVVVVVVVMA ${file}")
-    endforeach()
-endif()
+
+file(GLOB SUBDIRECTORIES "${Vulkan_INCLUDE_DIRS}/*")
+foreach(SUBDIRECTORY ${SUBDIRECTORIES})
+    if(IS_DIRECTORY ${SUBDIRECTORY})
+        message(STATUS "VVMMMMAAA ${SUBDIRECTORY}")
+    endif()
+endforeach()
+
+file(GLOB_RECURSE ci_files_list "${Vulkan_INCLUDE_DIRS}/vma/*")
+foreach(file ${ci_files_list})
+	message(STATUS "VVVVVVVVVVVVVVVVVMA ${file}")
+endforeach()
+
 ############################################################################################
 ##                                         D3D12
 ############################################################################################
