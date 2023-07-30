@@ -49,7 +49,6 @@ jobs:
           ninja --version
           clang --version
           gcc --version
-          vulkaninfo
 
       - name: Build with clang/clang++
         working-directory: ${{github.workspace}}
