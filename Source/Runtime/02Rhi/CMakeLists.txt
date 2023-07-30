@@ -20,65 +20,38 @@ target_include_directories(${TARGET_NAME} PUBLIC ${TNIY_IMAGEFORMAT_INCLUDE_DIR}
 ############################################################################################
 ##                                         Vulkan
 ############################################################################################
+AXE_LOG("Attempting auto locate Vulkan using CMake......")
 
-# AUTO_LOCATE_VULKAN - accepted value ON or OFF
-# ON  - Use CMake to auto locate the Vulkan SDK.
-# OFF - Vulkan SDK path can be specified manually. This is helpful to test the build on various Vulkan version.
-option(AUTO_LOCATE_VULKAN "AUTO_LOCATE_VULKAN" ON)
+# Find Vulkan Path using CMake's Vulkan Module
+# This will return Boolean 'Vulkan_FOUND' indicating the status of find as success(ON) or fail(OFF).
+# Include directory path - 'Vulkan_INCLUDE_DIRS' and 'Vulkan_LIBRARY' with required libraries.
+find_package(Vulkan)
+	 
+if(NOT Vulkan_FOUND AND WIN32)
+    if (${VK_SDK_PATH} STREQUAL "")
+        set(VK_SDK_PATH "C:/VulkanSDK/1.3.243.0")
+        set(${Vulkan_INCLUDE_DIRS} ${VK_SDK_PATH}/Include)
+        set(${Vulkan_LIBRARY} ${VK_SDK_PATH}/Lib/vulkan-1.lib)
+        AXE_LOG("VK_SDK_PATH not specified, attempting to locate the Vulkan SDK using default path: ${VK_SDK_PATH}")
+	endif()
 
-if(AUTO_LOCATE_VULKAN)
-	AXE_LOG("Attempting auto locate Vulkan using CMake......")
-	
-	# Find Vulkan Path using CMake's Vulkan Module
-	# This will return Boolean 'Vulkan_FOUND' indicating the status of find as success(ON) or fail(OFF).
-	# Include directory path - 'Vulkan_INCLUDE_DIRS' and 'Vulkan_LIBRARY' with required libraries.
-	find_package(Vulkan REQUIRED)
-	
-	# Try extracting VulkanSDK path from ${Vulkan_INCLUDE_DIRS}
-	if (NOT ${Vulkan_INCLUDE_DIRS} STREQUAL "")
-		set(VULKAN_PATH ${Vulkan_INCLUDE_DIRS})
-		STRING(REGEX REPLACE "/Include" "" VULKAN_PATH ${VULKAN_PATH})
-	endif()
-		 
-	if(NOT Vulkan_FOUND)
-		# CMake may fail to locate the libraries but could be able to 
-		# provide some path in Vulkan SDK include directory variable
-		# 'Vulkan_INCLUDE_DIRS', try to extract path from this.
-		message("[${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt/CMakeLists.txt:${CMAKE_CURRENT_LIST_LINE}] Failed to locate Vulkan SDK, retrying again...")
-		if(EXISTS "${VULKAN_PATH}")
-			message("[${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt/CMakeLists.txt:${CMAKE_CURRENT_LIST_LINE}] Successfully located the Vulkan SDK: ${VULKAN_PATH}")
-		else()
-			message("[${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt/CMakeLists.txt:${CMAKE_CURRENT_LIST_LINE}] Error: Unable to locate Vulkan SDK. Please turn off auto locate option by specifying 'AUTO_LOCATE_VULKAN' as 'OFF'")
-			message("[${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt/CMakeLists.txt:${CMAKE_CURRENT_LIST_LINE}] and specify manually path using 'VULKAN_SDK' and 'VULKAN_VERSION' variables in the CMakeLists.txt.")
-			return()
-		endif()
-	endif()
-else()
-	AXE_LOG("Attempting to locate Vulkan SDK using manual path......")
-	set(VULKAN_SDK "C:/VulkanSDK")
-	set(VULKAN_VERSION "1.3.243.0")
-	set(VULKAN_PATH "${VULKAN_SDK}/${VULKAN_VERSION}")
-	AXE_LOG("Using manual specified path: ${VULKAN_PATH}")
-
-	# Check if manual set path exists
-	if(NOT EXISTS "${VULKAN_PATH}")
-		AXE_LOG("Error: Unable to locate this Vulkan SDK path VULKAN_PATH: ${VULKAN_PATH}, please specify correct path.
-		For more information on correct installation process, please refer to subsection 'Getting started with Lunar-G SDK'
-		and 'Setting up first project with CMake' in Chapter 3, 'Shaking hands with the device' in this book 'Learning Vulkan', ISBN - 9781786469809.")
-	   return()
-	endif()
+    if(NOT EXISTS "${VK_SDK_PATH}")
+       AXE_LOG("Error: Unable to locate this Vulkan SDK path VK_SDK_PATH: ${VK_SDK_PATH}, please specify correct path.")
+       return()
+    else()
+        AXE_LOG("Successfully located the Vulkan SDK: ${VK_SDK_PATH}")
+    endif()
 endif()
 
 if(WIN32)
-add_compile_definitions(VK_USE_PLATFORM_WIN32_KHR)
+    add_compile_definitions(VK_USE_PLATFORM_WIN32_KHR)
 elseif(UNIX)
-add_compile_definitions(VK_USE_PLATFORM_XLIB_KHR)
+    add_compile_definitions(VK_USE_PLATFORM_XLIB_KHR)
 endif()
 
 target_include_directories(${TARGET_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS})
 target_include_directories(${TARGET_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS}/volk) # for diff dir-tree between windows and linux
 target_include_directories(${TARGET_NAME} PUBLIC ${Vulkan_INCLUDE_DIRS}/vma) # ditto
-target_link_libraries(${TARGET_NAME} PRIVATE ${Vulkan_LIB_LIST})
 
 ############################################################################################
 ##                                         D3D12

@@ -18,7 +18,7 @@ Axe is a cross multi-platform game engine(a slowly-developed weekend project, no
 
 ## Requirements
 - [CMake>=3.20](https://cmake.org/download/)
-- [Python>=3.10](https://www.python.org/downloads/)
+- [Python>=3.9](https://www.python.org/downloads/)
 - [VulkanSDK>=1.3](https://vulkan.lunarg.com/) ([start on linux](https://vulkan.lunarg.com/doc/view/latest/linux/getting_started.html), [start on windows](https://vulkan.lunarg.com/doc/view/latest/windows/getting_started.html))
 - Windows 10/11 SDK containing [Direct3D 12](https://learn.microsoft.com/en-us/windows/win32/direct3d12/direct3d-12-graphics) if on Windows
 
