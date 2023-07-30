@@ -20,11 +20,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Download vulkan SDK
-        working-directory: ${{github.workspace}}
+        working-directory: ${{github.workspace}}../
         run: |
           pwd
-          wget https://sdk.lunarg.com/sdk/download/1.3.243.0/linux/vulkansdk-linux-x86_64-1.3.243.0.tar.gz
-          tar -xf vulkansdk-linux-x86_64-1.3.243.0.tar.gz
+          wget -q https://sdk.lunarg.com/sdk/download/1.3.243.0/linux/vulkansdk-linux-x86_64-1.3.243.0.tar.gz
+          tar -xf vulkansdk-linux-x86_64-1.3.243.0.tar.gz --quiet
           source 1.3.243.0/setup-env.sh
 
       - name: Install required packages
@@ -46,14 +46,14 @@ jobs:
         run: |
           lsb_release -a
           python3 --version
-          cmake--version
+          cmake --version
           ninja --version
           clang --version
           gcc --version
           vulkaninfo
 
       - name: Build with clang/clang++
-        working-directory: ${{github.workspace}}/Axe
+        working-directory: ${{github.workspace}}
         run: |
           pwd
           cmake -B Build_clang -G "Ninja Multi-Config" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
@@ -61,7 +61,7 @@ jobs:
           cmake --build Build_clang --config Debug -- -j8
 
       - name: Build with gcc/g++
-        working-directory: ${{github.workspace}}/Axe
+        working-directory: ${{github.workspace}}
         run: |
           pwd
           cmake -B Build_gcc -G "Ninja Multi-Config" -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++
