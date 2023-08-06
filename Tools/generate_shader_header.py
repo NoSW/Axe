@@ -1,7 +1,7 @@
 import os
 from os.path import *
 PJ_ROOT = join(split(realpath(__file__))[0], "..")
-with open(join(PJ_ROOT, "Source", "Generated", "ShaderHeader.inl"), "w") as f:
+with open(join(PJ_ROOT, "Source", "Generated", "ShaderHeader.generated.inl"), "w") as f:
     f.write("#pragma once\n\n")
     generate_dir = join(PJ_ROOT, "Source", "Generated")
     for root, dirs, files in os.walk(join(generate_dir, "Spv")):

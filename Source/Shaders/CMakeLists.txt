@@ -92,7 +92,7 @@ foreach(GLSL_FILE ${GLSL_EXECUTABLE_FILES})
     endif()
 endforeach()
 
-set(SHADER_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/../Generated/ShaderHeader.inl" )
+set(SHADER_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/../Generated/ShaderHeader.generated.inl" )
 set(SHADER_HEADER_SCRIPT ${CMAKE_SOURCE_DIR}/Tools/generate_shader_header.py)
 
 add_custom_command(OUTPUT ${SHADER_HEADER} COMMAND ${PYTHON_PATH} ${SHADER_HEADER_SCRIPT} DEPENDS ${SHADER_HEADER_SCRIPT} ${SHADER_BYTE_OUTPUT_FILES} COMMENT "Generating ${SHADER_HEADER}")

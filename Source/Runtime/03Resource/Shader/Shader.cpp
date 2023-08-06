@@ -8,7 +8,7 @@
 namespace axe::resource
 {
 
-#include <ShaderHeader.inl>
+#include <ShaderHeader.generated.inl>  //  containg all spir-v code generated from Shader/**/*.glsl
 
 const std::span<u8> get_spv_byte_code(std::string_view filename) noexcept
 {
