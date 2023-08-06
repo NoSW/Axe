@@ -209,13 +209,13 @@ namespace axe::core
 class RuntimeConfig
 {
 public:
-    u32 getA() const { return _mExampleDataA; }
-    void setA(u32 a) { _mExampleDataA = a; }
+    u32 getA() const { return _mExampleDataA; }  // example attribute
+    void setA(u32 a) { _mExampleDataA = a; }     // example attribute
 
 public:
-    u32 getB() const { return _mExampleDataB; }
+    u32 getB() const { return _mExampleDataB; }  // example attribute
 
-private:  // cna be changed at any time
+private:  // can be changed at any time
     u32 _mExampleDataA = 0;
 
 private:  // only set at start time

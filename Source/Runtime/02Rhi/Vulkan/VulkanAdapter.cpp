@@ -217,7 +217,9 @@ bool VulkanAdapter::isBetterGpu(const VulkanAdapter& a, const VulkanAdapter& b) 
             for (u32 i = 0; i < memProp.memoryProperties.memoryHeapCount; ++i)
             {
                 if (memProp.memoryProperties.memoryHeaps[i].flags & VK_MEMORY_HEAP_DEVICE_LOCAL_BIT)
+                {
                     ret += memProp.memoryProperties.memoryHeaps[i].size;
+                }
             }
             return ret;
         };
